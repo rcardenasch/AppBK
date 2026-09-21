@@ -1,0 +1,578 @@
+{% extends "base.html" %}
+
+{% block title %}
+Registro de multas
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- =====================================================
+         CABECERA
+    ====================================================== -->
+
+   <div class="card card-body border-0 shadow-sm mb-4">
+    <div class="row align-items-center g-3">
+        
+        <!-- Bloque Izquierdo: Botón, Ruta y Título -->
+        <div class="col-12 col-md-8">
+            <!-- Navegación superior (Migas de pan sencillas) -->
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="{{ url_for('socios.index') }}" class="btn btn-light border btn-sm py-0 px-2">
+                    <i class="bi bi-arrow-left fs-6"></i>
+                </a>
+                <span class="text-muted small fw-medium">Socios</span>
+            </div>
+            
+            <!-- Título y Descripción -->
+            <h3 class="fw-bold mb-1 text-dark">Registro de multas</h3>
+            <p class="text-muted small mb-0">
+                Registra las penalidades correspondientes al período vigente.
+            </p>
+        </div>
+
+        <!-- Bloque Derecho: Periodo Actual (Alineado a la derecha en pantallas grandes) -->
+        <div class="col-12 col-md-4 text-start text-md-end">
+            {% if periodo %}
+                <div class="d-inline-flex align-items-center gap-2 bg-light border rounded-pill px-3 py-2 shadow-xs">
+                    <span class="text-secondary small fw-semibold">
+                        <i class="bi bi-calendar3 me-1 text-primary"></i>
+                        Periodo: {{ "%02d"|format(periodo.mes) }} / {{ periodo.anio }}
+                    </span>
+                    
+                    {% if periodo.cerrado %}
+                        <span class="badge bg-danger-subtle text-danger rounded-pill fw-bold px-2 py-1" style="font-size: 0.75rem;">Cerrado</span>
+                    {% else %}
+                        <span class="badge bg-success-subtle text-success rounded-pill fw-bold px-2 py-1" style="font-size: 0.75rem;">Abierto</span>
+                    {% endif %}
+                </div>
+            {% else %}
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-2 fw-semibold">
+                    <i class="bi bi-exclamation-triangle me-1"></i> Sin período vigente
+                </span>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+
+    <!-- =====================================================
+         AVISO
+    ====================================================== -->
+    <div class="alert alert-warning
+                border-0 shadow-sm mb-4">
+
+        <div class="d-flex gap-3">
+
+            <i class="bi bi-exclamation-triangle-fill
+                      fs-4"></i>
+
+            <div>
+
+                <div class="fw-semibold">
+
+                    Registro de penalidades
+
+                </div>
+
+                <div class="small">
+
+                    La multa registrada corresponde al
+                    período actual y será considerada como
+                    deuda para el siguiente período.
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         TARJETAS RESUMEN
+    ====================================================== -->
+
+    {% set total_multas = movimientos
+    |map(attribute='multa')
+    |map('float')
+    |sum %}
+
+    {% set cantidad_multas = movimientos
+    |selectattr('multa')
+    |list
+    |length %}
+
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex
+                                justify-content-between
+                                align-items-center">
+
+                        <div>
+
+                            <div class="text-muted small">
+                                Movimientos
+                            </div>
+
+                            <div class="fs-3 fw-bold">
+                                {{ movimientos|length }}
+                            </div>
+
+                        </div>
+
+                        <div class="rounded-circle
+                                    bg-primary-subtle
+                                    text-primary
+                                    p-3">
+
+                            <i class="bi bi-list-check
+                                      fs-4"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex
+                                justify-content-between
+                                align-items-center">
+
+                        <div>
+
+                            <div class="text-muted small">
+                                Acciones penalizadas
+                            </div>
+
+                            <div class="fs-3 fw-bold">
+                                {{ cantidad_multas }}
+                            </div>
+
+                        </div>
+
+                        <div class="rounded-circle
+                                    bg-warning-subtle
+                                    text-warning
+                                    p-3">
+
+                            <i class="bi bi-exclamation-circle
+                                      fs-4"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex
+                                justify-content-between
+                                align-items-center">
+
+                        <div>
+
+                            <div class="text-muted small">
+                                Total multas
+                            </div>
+
+                            <div class="fs-3 fw-bold">
+
+                                S/
+                                {{ "%.2f"|format(total_multas) }}
+
+                            </div>
+
+                        </div>
+
+                        <div class="rounded-circle
+                                    bg-danger-subtle
+                                    text-danger
+                                    p-3">
+
+                            <i class="bi bi-cash-coin
+                                      fs-4"></i>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         TABLA
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-white
+                    border-0 p-4">
+
+            <div class="row align-items-center g-3">
+
+                <div class="col-md-6">
+
+                    <h5 class="fw-bold mb-1">
+
+                        Movimientos del período
+
+                    </h5>
+
+                    <div class="text-muted small">
+
+                        Multa sugerida: <strong>S/ 50.00</strong>
+                        por acción.
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <div class="input-group">
+
+                        <span class="input-group-text bg-white">
+
+                            <i class="bi bi-search"></i>
+
+                        </span>
+
+                        <input type="text" id="buscarMovimiento" class="form-control"
+                            placeholder="Buscar socio o acción...">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover
+                       align-middle mb-0" id="tablaMultas">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th class="ps-4">
+                            #
+                        </th>
+
+                        <th>
+                            Socio
+                        </th>
+
+                        <th>
+                            Acción
+                        </th>
+
+                        <th class="text-end">
+                            Cuota
+                        </th>
+                        <th class="text-end">
+                            Multa
+                        </th>
+                        <th>
+                            Observación
+                        </th>
+                        <th class="text-center pe-4">
+                            Acción
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movimiento in movimientos %}
+                    <tr>
+                        <td class="ps-4 text-muted">
+                            {{ loop.index }}
+                        </td>
+                        <td>
+                            <div class="fw-semibold">
+                                {{ movimiento.socio.nombres }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if movimiento.accion %}
+                            <span class="badge bg-primary-subtle text-primary">
+                                {{ movimiento.accion.numero_accion }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">
+                                —
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end fs-8">
+                            S/{{ "%.2f"|format(movimiento.cuota_pagada or 0) }}
+                        </td>
+
+                        <td class="text-end">
+
+                            {% if movimiento.multa and
+                            movimiento.multa > 0 %}
+
+                            <span class="badge
+                                           bg-danger-subtle
+                                           text-danger
+                                           fs-8">
+                                S/ {{ "%.2f"|format(movimiento.multa) }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">
+                                -
+                            </span>
+
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="text-truncate" style="max-width:250px;">
+
+                                {{ movimiento.observacion or '—' }}
+
+                            </div>
+                        </td>
+
+                        <td class="text-center pe-4">
+
+                            <button type="button" class="btn btn-sm
+                                       btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalMulta"
+                                data-id="{{ movimiento.id }}" data-multa="{{ movimiento.multa or 0 }}"
+                                data-observacion="{{ movimiento.observacion or '' }}"
+                                data-socio="{{ movimiento.socio.nombres or ''}}"
+                                data-accion="{{ movimiento.accion.numero_accion if movimiento.accion else '' }}">
+
+                                <i class="bi bi-pencil-square me-1"></i>
+                                Registrar
+                            </button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="bi bi-inbox fs-1"></i>
+                                <div class="fw-semibold mt-2">
+                                    No existen movimientos
+                                    en el período.
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================================
+     MODAL
+========================================================= -->
+<div class="modal fade" id="modalMulta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title fw-bold">
+                        Registrar multa
+                    </h5>
+
+                    <div class="small text-muted" id="modalSocio">
+
+                    </div>
+
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <form method="POST" id="formMulta">
+                <div class="modal-body">
+                    <div class="alert alert-light border mb-4">
+                        <div class="small text-muted">
+                            Acción
+                        </div>
+                        <div class="fw-bold" id="modalAccion">
+                        </div>
+                    </div>
+
+                    <!-- MULTA -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Multa
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                S/
+                            </span>
+                            <input type="number" class="form-control" id="inputMulta" name="multa" value="50.00" min="0"
+                                step="0.01" required>
+
+                        </div>
+
+                        <div class="form-text">
+                            Penalidad por no transferir a tiempo por acción:
+                            <strong>S/ 50.00</strong>
+                        </div>
+                    </div>
+                    <!-- OBSERVACIÓN -->
+                    <div class="mb-3 fs-8">
+                        <label class="form-label fw-semibold">
+                            Observación
+                        </label>
+
+                        <textarea class="form-control" id="inputObservacion" name="observacion" rows="4" maxlength="500"
+                            placeholder="Ejemplo: Penalidad por no realizar la transferencia dentro del plazo establecido."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-check-lg me-1"></i>
+                        Guardar multa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            const modal = document.getElementById("modalMulta");
+            const form = document.getElementById("formMulta");
+            const inputMulta = document.getElementById("inputMulta");
+            const inputObservacion = document.getElementById("inputObservacion");
+            const modalSocio = document.getElementById("modalSocio");
+            const modalAccion = document.getElementById("modalAccion");
+
+            modal.addEventListener(
+                "show.bs.modal",
+                function (event) {
+
+                    const button = event.relatedTarget;
+                    const id = button.dataset.id;
+                    const multa = button.dataset.multa;
+                    const observacion = button.dataset.observacion;
+                    const socio = button.dataset.socio;
+                    const accion = button.dataset.accion;
+
+                    form.action =
+                        "{{ url_for(
+                    'socios.actualizar_multa_movimiento',
+                        movimiento_id = 0
+                    )
+        }}".replace(
+                        "/0/multa",
+        "/" + id + "/multa"
+    );
+
+    modalSocio.textContent = socio;
+    modalAccion.textContent =
+        accion
+            ? "Acción " + accion
+            : "Sin acción";
+
+    inputMulta.value =
+        Number(multa) > 0
+            ? Number(multa).toFixed(2)
+            : "50.00";
+
+    inputObservacion.value = observacion || "";
+
+            }
+        );
+
+
+    // =====================================================
+    // BUSCADOR
+    // =====================================================
+
+    const buscador = document.getElementById("buscarMovimiento");
+    const filas = document.querySelectorAll("#tablaMultas tbody tr");
+
+    buscador.addEventListener(
+        "input",
+        function () {
+
+            const texto =
+                this.value
+                    .toLowerCase()
+                    .trim();
+
+
+            filas.forEach(
+                function (fila) {
+
+                    const contenido =
+                        fila.textContent
+                            .toLowerCase();
+
+                    fila.style.display =
+                        contenido.includes(texto)
+                            ? ""
+                            : "none";
+
+                }
+            );
+
+        }
+    );
+
+    }
+);
+
+</script>
+
+{% endblock %}

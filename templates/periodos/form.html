@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<div class="card shadow rounded-4">
+
+    <div class="card-body">
+
+
+        <h4>
+            Nuevo Periodo
+        </h4>
+
+
+        <form method="post">
+
+
+            <div class="row">
+
+
+                <div class="col-md-3">
+
+                    <label>Año</label>
+
+                    <input class="form-control" name="anio" value="{{periodo.anio if periodo else ''}}">
+
+                </div>
+
+                <div class="col-md-3">
+                    <label for="mes">Mes</label>
+                    <select class="form-control" name="mes" id="mes">
+                        <option value="">Seleccione un mes...</option>
+                        <option value="1" {% if periodo and periodo.mes|int==1 %}selected{% endif %}>Enero</option>
+                        <option value="2" {% if periodo and periodo.mes|int==2 %}selected{% endif %}>Febrero</option>
+                        <option value="3" {% if periodo and periodo.mes|int==3 %}selected{% endif %}>Marzo</option>
+                        <option value="4" {% if periodo and periodo.mes|int==4 %}selected{% endif %}>Abril</option>
+                        <option value="5" {% if periodo and periodo.mes|int==5 %}selected{% endif %}>Mayo</option>
+                        <option value="6" {% if periodo and periodo.mes|int==6 %}selected{% endif %}>Junio</option>
+                        <option value="7" {% if periodo and periodo.mes|int==7 %}selected{% endif %}>Julio</option>
+                        <option value="8" {% if periodo and periodo.mes|int==8 %}selected{% endif %}>Agosto</option>
+                        <option value="9" {% if periodo and periodo.mes|int==9 %}selected{% endif %}>Septiembre</option>
+                        <option value="10" {% if periodo and periodo.mes|int==10 %}selected{% endif %}>Octubre</option>
+                        <option value="11" {% if periodo and periodo.mes|int==11 %}selected{% endif %}>Noviembre</option>
+                        <option value="12" {% if periodo and periodo.mes|int==12 %}selected{% endif %}>Diciembre</option>
+                    </select>
+                </div>
+
+
+
+
+                <div class="col-md-3">
+
+                    <label>Fecha Inicio</label>
+
+                    <input type="date" class="form-control" name="fecha_inicio"
+                        value="{{periodo.fecha_inicio if periodo else ''}}">
+
+                </div>
+
+
+
+                <div class="col-md-3">
+
+                    <label>Fecha Fin</label>
+
+                    <input type="date" class="form-control" name="fecha_fin"
+                        value="{{periodo.fecha_fin if periodo else ''}}">
+
+                </div>
+
+
+            </div>
+
+
+            <br>
+
+
+            <button class="btn btn-primary">
+
+                Guardar
+
+            </button>
+
+
+            <a href="{{url_for('periodos.index')}}" class="btn btn-secondary">
+
+                Cancelar
+
+            </a>
+
+
+        </form>
+
+
+    </div>
+
+</div>
+
+
+{% endblock %}

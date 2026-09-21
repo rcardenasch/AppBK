@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+
+    <div class="row mb-3 align-items-end">
+        <!-- Lado Izquierdo: Selección de Socio -->
+        <div class="col-md-6 col-lg-4">
+            <!-- text-muted y small hacen la etiqueta pequeña y discreta -->
+            <label for="socio" class="form-label small text-muted mb-1">Seleccionar Socio:</label>
+
+            <!-- form-select-sm reduce el tamaño del input y de su texto interno -->
+            <select id="socio" class="form-select form-select-sm border-secondary-subtle"
+                onchange="irADetalleSocio(this.value)">
+                <option value="" class="small">Seleccione...</option>
+                {% for socio in socios %}
+                <option value="{{ socio.id }}" class="small">
+                    {{ socio.nombres }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Lado Derecho: Período Vigente (Ahora dentro de una columna alineada a la derecha) -->
+        <div class="col-md-6 col-lg-8 text-md-end mt-3 mt-md-0">
+            <!-- Badge de Periodo Actual -->
+            <div class="text-md-end">
+                {% if periodo %}
+                <span
+                    class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-semibold">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    Periodo: {{ "%02d"|format(periodo.mes) }} / {{ periodo.anio }} {% if periodo.cerrado %}
+                    <span class="badge bg-danger semibold">Cerrado</span>{%else%} <span
+                        class="badge bg-info semibold">Abierto</span>
+                    {%endif%}
+                </span>
+                {% else %}
+                <span
+                    class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-2 fw-semibold">
+                    <i class="bi bi-exclamation-triangle me-1"></i> Sin período vigente
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+
+    </div>
+
+
+    <!-- DATOS DEL SOCIO -->
+    <!-- TARJETA PRINCIPAL: DETALLE DE SOCIO -->
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-0">
+            <div class="card-body d-flex flex-column justify-content-between p-4">
+                <!-- Cabecera de la Tarjeta -->
+                <div>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+
+                        <div>
+                            <span class="badge bg-primary-subtle text-primary mb-2 px-2 py-1">
+                                <i class="bi bi-person-badge-fill me-1"></i>Socio
+                            </span>
+                            <h4 class="fw-bold mb-1 text-dark">{{ socio.nombres }}</h4>
+                            <div class="small text-muted">
+                                <i class="bi bi-card-text me-1"></i>Doc: {{ socio.documento }}
+                            </div>
+                        </div>
+                        <div>
+                            {% if socio.estado %}
+                            <span
+                                class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5">ACTIVO</span>
+                            {% else %}
+                            <span
+                                class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1.5">INACTIVO</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        <a href="{{url_for('socios.nuevo')}}" class="btn btn-info" title="Registrar Nuevo Socio">
+
+                            <i class="bi bi-person-plus"></i>
+
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Cuerpo / Información Financiera -->
+                <div class="bg-body-tertiary p-3 rounded-3 border border-light-subtle mt-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            {% if valor_accion %}
+                            <small class="text-muted d-block text-uppercase fw-bold tracking-wider mb-1"
+                                style="font-size: 0.7rem;">
+                                Valor acción
+                            </small>
+                            <h4 class="mb-0 fw-bold text-primary">S/ {{ "{:,.2f}".format(valor_accion) }}</h4>
+                            {% else %}
+                            <span class="small text-danger fw-medium">
+                                <i class="bi bi-explanations-circle me-1"></i>Sin acciones registradas
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% if valor_accion %}
+                        <div class="bg-primary bg-opacity-10 p-2.5 rounded-3 text-primary">
+                            <i class="bi bi-cash-coin fs-4 animate-pulse"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- RESUMEN FINANCIERO -->
+    <div class="col-md-8">
+        <div class="row g-4">
+
+            <!-- ACCIONES -->
+            <div class="col-md-6 col-lg-4">
+
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-3 me-3">
+                            <i class="bi bi-layers fs-3"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block text-uppercase fw-semibold"
+                                style="font-size: 0.75rem;">Acciones</small>
+                            <h3 class="fw-bold mb-0 text-dark">{{ socio.total_acciones }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VALOR ACCIONES -->
+            <div class="col-md-6 col-lg-4">
+
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="p-3 bg-success bg-opacity-10 text-success rounded-3 me-3">
+                            <i class="bi bi-cash-stack fs-3"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block text-uppercase fw-semibold"
+                                style="font-size: 0.75rem;">Valor total</small>
+                            <h3 class="fw-bold mb-0 text-dark">S/ {{ "{:,.2f}".format(socio.valor_total_acciones) }}
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- PRÉSTAMOS ACTIVOS -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-3 me-3">
+                            <i class="bi bi-file-earmark-check fs-3"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block text-uppercase fw-semibold"
+                                style="font-size: 0.75rem;">Préstamos activos</small>
+                            <h3 class="fw-bold mb-0 text-dark">{{ prestamos_activos|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SALDO PRÉSTAMOS -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-3 me-3">
+                            <i class="bi bi-exclamation-circle fs-3"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block text-uppercase fw-semibold"
+                                style="font-size: 0.75rem;">Saldo pendiente</small>
+                            <h3 class="fw-bold mb-0 text-danger">S/ {{ "{:,.2f}".format(saldo_prestamos | float) }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- TOTAL CANCELAR PERIODO -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="p-3 bg-success bg-opacity-10 text-success rounded-3 me-3">
+                            <i class="bi bi-cash-coin fs-3"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block text-uppercase fw-semibold"
+                                style="font-size: 0.75rem;">Total a pagar</small>
+                            <h3 class="fw-bold mb-0 text-dark">S/ {{ "{:,.2f}".format(cancelar| float)}}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- TOTAL SOBRES -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <!-- Icono mejorado: Representa un sobre con dinero/papel -->
+                        <div class="p-3 bg-success bg-opacity-10 text-success rounded-3 me-3 d-flex align-items-center justify-content-center"
+                            style="width: 60px; height: 60px;">
+                            <i class="bi bi-envelope-paper-fill fs-3"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block text-uppercase fw-semibold"
+                                style="font-size: 0.75rem; letter-spacing: 0.5px;">Total a sobres</small>
+                            <h3 class="fw-bold mb-0 text-dark">S/ {{ "{:,.2f}".format(cuota_sobre | float) }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Campo oculto fuera de las tarjetas visuales para mantener limpieza -->
+    <input type="hidden" name="socio_id" value="{{ socio.id }}">
+
+
+    <!-- ACCIONES -->
+
+    <div class="card shadow rounded-4 mt-4">
+
+        <div class="card-header bg-primary text-white">
+
+            <div class="d-flex justify-content-between">
+                <h5>
+                    <i class="bi bi-bank2"></i>
+                    Acciones del socio
+                </h5>
+                <a href="{{ url_for('socios.adquirir_accion', socio_id=socio.id) }}" class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-circle"></i>
+                    Nueva acción
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped datatable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center">Acción</th>
+                            <th class="text-center">Préstamos</th>
+                            <th class="text-center">Movimientos</th>
+                            <th class="text-center">Saldo</th>
+                            <th class="text-center">Cuota</th>
+                            <th class="text-center">Aporte</th>
+                            <th class="text-center">Amortización</th>
+                            <th class="text-center">Sobre</th>
+                            <th width="320">Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!--|sort ordena ascendentemente por id de acciones. descendente: |sort(attribute='id', reverse=True)-->
+                        {% for accion in socio.acciones |sort(attribute='id')%}
+                        <tr>
+                            <td class="ps-3 fw-bold text-dark align-middle">
+                                <!-- Icono redondo con iniciales -->
+                                <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center fw-bold border border-secondary-subtle"
+                                    style="width: 32px; height: 32px; font-size: 0.75rem; min-width: 32px;"
+                                    title="{{ accion.numero_accion }}">
+                                    {{ accion.numero_accion }}
+                                </div>
+                            </td>
+
+                            <td class="text-center align-middle">
+                                {% if accion.prestamos|length > 0 %}
+                                <div class="d-flex align-items-center justify-content-center mx-auto bg-success-subtle text-success rounded-circle border border-success-subtle"
+                                    style="width: 32px; height: 32px;"
+                                    title="Tiene préstamo ({{ accion.prestamos|length }})">
+                                    <span class="fw-bold small">{{ accion.prestamos|length }}</span>
+                                </div>
+                                {% else %}
+                                <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center align-middle">
+                                {% if accion.movimientos|length > 0 %}
+                                <div class="d-flex align-items-center justify-content-center mx-auto bg-success-subtle text-success rounded-circle border border-success-subtle"
+                                    style="width: 32px; height: 32px;"
+                                    title="Tiene movimientos ({{ accion.movimientos|length }})">
+                                    <span class="fw-bold small">{{ accion.movimientos|length }}</span>
+                                </div>
+                                {% else %}
+                                <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% set saldo = namespace(total=0) %}
+                                {% for p in accion.prestamos %}
+
+                                {% if p.estado=="ACTIVO" %}
+
+                                {% set saldo.total = saldo.total + p.saldo_actual %}
+
+                                {% endif %}
+
+                                {% endfor %}
+
+                                S/
+
+                                {{ "{:,.2f}".format(saldo.total) }}
+                            </td>
+                            {% for movimiento in socio.movimientos | sort(attribute='id') %}
+                            {% if movimiento.periodo_id == periodo.id %}
+                            {% if movimiento.accion_id == accion.id %}
+
+                            <td>
+                                {{ "{:,.2f}".format(movimiento.cuota_pagada) }}
+                            </td>
+                            <td>
+                                {{ "{:,.2f}".format(movimiento.aporte) }}
+                            </td>
+                            <td>
+                                {{ "{:,.2f}".format(movimiento.amortizacion) }}
+                            </td>
+                            <td>
+                                {{ "{:,.2f}".format(movimiento.sobre) }}
+                            </td>
+                            {% endif %}
+                            {% endif %}
+                            {% endfor %}
+                            <td>
+                                <a href="{{ url_for('acciones.detalle',id=accion.id) }}"
+                                    class="btn btn-outline-primary btn-sm" title="Ver acción">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                                <a href="{{ url_for('prestamos.nuevo',socio_id=socio.id,accion_id=accion.id) }}"
+                                    class="btn btn-outline-warning btn-sm" title="Nuevo Préstamo">
+                                    <i class="bi bi-cash-stack"></i>
+                                </a>
+
+                                <a href="{{ url_for('movimientos.nuevo',socio_id=socio.id,accion_id=accion.id) }}"
+                                    class="btn btn-success btn-sm" title="Nuevo Movimiento">
+                                    <i class="bi bi-wallet2"></i>
+                                </a>
+
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    function irADetalleSocio(socioId) {
+        // Si el usuario selecciona la opción por defecto vacía, no hace nada
+        if (!socioId) return;
+
+        // Redirige a la URL combinando la ruta con el ID del socio
+        window.location.href = "/socios/detalle/" + socioId;
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <a href="{{ url_for('socio_portal.mi_estado_cuenta', periodo_Id=periodo.id) }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i>
+        Ir a portal
+    </a>
+
+</div>
+<div class="card shadow">
+
+    <div class="card-header bg-white">
+        <div class="d-flex justify-content-between">
+            <h4>
+                <i class="bi bi-cash-stack"></i>
+                Solicitudes de préstamo
+            </h4>
+            <a href="{{ url_for('solicitudes.nuevo') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i>
+                Nueva solicitud
+            </a>
+        </div>
+    </div>
+
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped datatable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Periodo</th>
+                        <th>Socio</th>
+                        <th>Acción</th>
+                        <th>Monto S/</th>
+                        <th>Estado</th>
+                        <th width="220">
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in solicitudes %}
+                    <tr>
+                        <td>
+                            {{s.fecha_solicitud}}
+                        </td>
+                        <td>
+                            {{s.periodo.anio}}-{{"%02d"|format(s.periodo.mes)}}
+                        </td>
+                        <td class="ps-3 fw-bold text-dark d-flex align-items-center gap-2">
+                            <!-- Definimos la lista de palabras del nombre completo -->
+                            {% set palabras = s.socio.nombres.split() %}
+
+                            <!-- Icono redondo con iniciales extraídas de una sola cadena -->
+                            <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center fw-bold border border-secondary-subtle"
+                                style="width: 32px; height: 32px; font-size: 0.8rem; min-width: 32px;"
+                                title="{{ s.socio.nombres }}">
+                                {% if palabras | length > 0 %}
+                                {{ palabras[0][:1] | upper }}{{ palabras[-1][:1] | upper if palabras | length > 1 else
+                                '' }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </div>
+                            <!-- Nombre completo -->
+                            <span>
+                                {{ s.socio.nombres }} {{ s.socio.apellidos if s.socio.apellidos else '' }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{s.accion.numero_accion}}</span>
+                        </td>
+                        <td>
+                            {{"{:,.2f}".format(s.monto_solicitado|float)}}
+                        </td>
+                        <td>
+
+                            <span
+                                class="badge {% if s.estado == 'ANULADA' %}bg-secondary{% elif s.estado == 'PENDIENTE' %}bg-success{% else %}bg-info{% endif %}">
+                                {{ s.estado }}
+                            </span>
+
+                        </td>
+
+                        <td>
+
+                            <a href="{{ url_for('solicitudes.editar',id=s.id) }}" class="btn btn-warning btn-sm">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('solicitudes.eliminar',id=s.id) }}" class="d-inline"
+                                onsubmit="return confirm('¿Eliminar solicitud de préstamo?');">
+
+                                <button class="btn btn-danger btn-sm">
+
+                                    <i class="bi bi-trash"></i>
+
+                                </button>
+
+                            </form>
+
+                            {% if s.estado=="PENDIENTE" %}
+
+                            <form method="POST" action="{{ url_for('solicitudes.anular',id=s.id) }}" class="d-inline"
+                                onsubmit="return confirm('¿Cancelar solicitud?');">
+
+                                <button class="btn btn-secondary btn-sm">
+
+                                    <i class="bi bi-x-circle"></i>
+
+                                </button>
+
+                            </form>
+
+                            {% endif %}
+
+                        </td>
+
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

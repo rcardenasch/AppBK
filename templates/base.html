@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>
+
+        {% block title %}
+            BK FAMILIAR
+        {% endblock %}
+
+    </title>
+
+    <!-- Bootstrap -->
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
+        rel="stylesheet">
+
+    <!-- Google Font -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com">
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- DataTables -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.datatables.net/2.3.2/css/dataTables.bootstrap5.css">
+
+    <!-- Select2 -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+        rel="stylesheet">
+
+    <!-- CSS Sistema -->
+    <link
+        href="{{ url_for('static', filename='css/style.css') }}"
+        rel="stylesheet">
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    {% block css %}
+    {% endblock %}
+
+</head>
+
+<body>
+
+<div class="wrapper">
+
+    <!-- SIDEBAR -->
+
+    {% include 'components/sidebar.html' %}
+
+    <!-- CONTENIDO -->
+
+    <div class="main">
+
+        <!-- NAVBAR -->
+
+        {% include 'components/navbar.html' %}
+
+        <!-- BREADCRUMB -->
+
+        <div class="container-fluid mt-3">
+
+            {% block breadcrumb %}
+            {% endblock %}
+
+        </div>
+
+        <!-- CONTENIDO -->
+
+        <main class="container-fluid py-3">
+
+            <!-- MENSAJES -->
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+                {% if messages %}
+
+                    {% for categoria,mensaje in messages %}
+
+                        <div class="alert alert-{{categoria}} alert-dismissible fade show shadow-sm">
+
+                            {{mensaje}}
+
+                            <button
+                                class="btn-close"
+                                data-bs-dismiss="alert">
+
+                            </button>
+
+                        </div>
+
+                    {% endfor %}
+
+                {% endif %}
+
+            {% endwith %}
+
+            {% block content %}
+            {% endblock %}
+
+        </main>
+
+        <!-- FOOTER -->
+
+        {% include 'components/footer.html' %}
+
+    </div>
+
+</div>
+
+
+<!-- Spinner Global -->
+
+<div
+    id="loading"
+    class="d-none position-fixed top-50 start-50 translate-middle"
+    style="z-index:9999;">
+
+    <div class="spinner-border text-primary">
+
+    </div>
+
+</div>
+
+
+<!-- JQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- Bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<!-- DataTables -->
+<script src="https://cdn.datatables.net/2.3.2/js/dataTables.js"></script>
+<script src="https://cdn.datatables.net/2.3.2/js/dataTables.bootstrap5.js"></script>
+<!-- Select2 -->
+
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- ChartJS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<script>
+
+$(function(){
+
+    $('.select2').select2({
+
+        width:'100%'
+
+    });
+
+});
+
+
+// Spinner Global
+
+$(document).ajaxStart(function(){
+
+    $("#loading").removeClass("d-none");
+
+});
+
+$(document).ajaxStop(function(){
+
+    $("#loading").addClass("d-none");
+
+});
+
+</script>
+
+<script>
+
+$('.datatable').each(function () {
+
+    if ($.fn.DataTable.isDataTable(this)) {
+        return;
+    }
+
+    $(this).DataTable({
+
+        responsive: false, // Desactivas el colapso nativo de DataTables para usar el scroll de Bootstrap
+        scrollX: true, 
+        //responsive:true,
+        pageLength:10,
+        lengthMenu:[
+            [5,10,25,50,100,-1],
+            [5,10,25,50,100,"Todos"]
+        ],
+
+        order:[],
+        language:{
+
+            search:"🔎 Buscar:",
+            placeholder:"Buscar...",
+
+            lengthMenu:"Mostrar _MENU_ registros",
+            zeroRecords:"No se encontraron registros",
+            info:"Mostrando _START_ a _END_ de _TOTAL_ registros",
+            infoEmpty:"Sin registros",
+            infoFiltered:"(filtrado de _MAX_ registros)",
+
+            paginate:{
+
+                first:"Inicio",
+                last:"Final",
+                next:"»",
+                previous:"«"
+
+            }
+
+        }
+
+    });
+
+});
+
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('sidebar');
+
+    if (sidebarToggle && sidebar) {
+      sidebarToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Alterna la clase 'toggled' para abrir o cerrar
+        sidebar.classList.toggle('toggled');
+      });
+    }
+  });
+</script>
+
+{% block scripts %}
+{% endblock %}
+
+</body>
+
+</html>

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card shadow rounded-4">
+
+    <div class="card-body">
+
+        <h4>
+            Datos del socio
+        </h4>
+
+        <form method="post">
+
+            <label>
+                Nombres
+            </label>
+
+            <input class="form-control" name="nombres" required value="{{socio.nombres if socio else ''}}">
+
+            <br>
+
+            <label>
+                Documento
+            </label>
+            <input class="form-control" name="documento" value="{{socio.documento if socio else ''}}">
+
+            <br>
+
+            <label>
+                Teléfono
+            </label>
+
+            <input class="form-control" name="telefono" value="{{socio.telefono if socio else ''}}">
+
+            <br>
+
+            <button class="btn btn-primary">
+                Guardar
+            </button>
+
+            <a href="{{url_for('socios.index')}}" class="btn btn-secondary">
+
+                Cancelar
+
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

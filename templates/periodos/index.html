@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<div class="card shadow-sm rounded-4">
+
+
+    <div class="card-header bg-white">
+
+        <div class="d-flex justify-content-between">
+
+            <h4>
+                <i class="bi bi-calendar"></i>
+                Periodos
+            </h4>
+            <a href="{{ url_for('periodos.nuevo') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i>
+                Nuevo
+
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped datatable">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center align-middle">Año</th>
+                        <th class="text-center align-middle">Mes</th>
+                        <th class="text-center align-middle">Inicio</th>
+                        <th class="text-center align-middle">Fin</th>
+                        <th class="text-center align-middle">Estado</th>
+                        <th colspan="3" class="text-center align-middle">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in periodos %}
+                    <tr>
+                        <td>{{p.anio}}</td>
+                        <td>{{p.mes}}</td>
+                        <td>{{p.fecha_inicio}}</td>
+                        <td>{{p.fecha_fin}}</td>
+                        <td>
+                            {% if p.cerrado %}
+                            <span class="badge bg-danger">
+                                CERRADO
+                            </span>
+                            {% else %}
+                            <span class="badge bg-success">
+                                ABIERTO
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <!-- Generar Movimientos Automáticos -->
+                            <form method="post" action="{{url_for('movimientos.generar',periodo_id=p.id)}}">
+                                <button class="btn btn-primary btn-sm" title="Generar movimientos masivos">
+                                    <i class="bi bi-lightning-charge"></i>
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-1">
+                                <!-- Cierre de Periodo -->
+                                <form method="post" id="formCierre-{{ p.id }}"
+                                    action="{{ url_for('periodos.cerrar', periodo_id=p.id) }}"
+                                    class="d-inline-block m-0">
+                                    <button type="button" title="Generar cierre de periodo"
+                                        class="btn btn-lg btn-outline-warning btn-sm text-dark btn-abrir-confirmacion-cierre"
+                                        data-form-id="formCierre-{{ p.id }}">
+                                        <i class="bi bi-lock-fill"></i> Cierre
+                                    </button>
+                                </form>
+
+                                <!-- Extornar cierre-->
+                                <form method="POST"
+                                    action="{{ url_for('periodos.extornar_cierre_periodo', periodo_id=p.id) }}"
+                                    class="d-inline-block m-0"
+                                    onsubmit="return confirm('¿Está seguro de extornar el cierre de este período?');">
+                                    <button title="Extornar cierre de periodo" type="submit"
+                                        class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                        <td>
+                            <a title="Editar Periodo" href="{{url_for('periodos.editar',id=p.id)}}" class="btn btn-sm btn-warning">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="post" style="display:inline"
+                                action="{{url_for('periodos.eliminar',id=p.id)}}">
+                                <button class="btn btn-sm btn-danger" title="Eliminar Periodo" onclick="return confirm('Eliminar periodo?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL DE CONFIRMACIÓN DE CIERRE -->
+<div class="modal fade" id="modalConfirmarCierre" tabindex="-1" aria-labelledby="modalConfirmarCierreLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-warning text-dark border-0">
+                <h5 class="modal-title fw-bold" id="modalConfirmarCierreLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmar Cierre de Periodo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="text-warning mb-3">
+                    <i class="bi bi-lock-fill" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="text-dark fw-bold mb-2">¿Estás completamente seguro?</h5>
+                <p class="text-muted mb-0">Esta acción procederá a bloquear y cerrar el periodo seleccionado. No se
+                    podrán realizar modificaciones posteriores.</p>
+            </div>
+            <div class="modal-footer bg-light border-0 d-flex justify-content-center gap-2">
+                <button type="button" id="btnConfirmarCierreEjecutar"
+                    class="btn btn-warning text-dark fw-semibold px-4">
+                    <i class="bi bi-check-circle me-1"></i>Sí, cerrar periodo
+                </button>
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Variable para almacenar temporalmente el formulario que se va a enviar
+    let formularioAEnviar = null;
+
+    // Al hacer click en el botón de la tabla, guardamos el formulario y abrimos el modal
+    $(document).on("click", ".btn-abrir-confirmacion-cierre", function () {
+        const formId = $(this).data("form-id");
+        formularioAEnviar = document.getElementById(formId);
+
+        // Mostramos el modal de Bootstrap de forma limpia
+        $("#modalConfirmarCierre").modal("show");
+    });
+
+    // Si el usuario confirma en el modal, enviamos el formulario guardado
+    $("#btnConfirmarCierreEjecutar").on("click", function () {
+        if (formularioAEnviar) {
+            formularioAEnviar.submit();
+        }
+    });
+</script>
+
+
+{% if resultado_generacion %}
+
+<div
+    class="modal fade"
+    id="modalResultadoGeneracion"
+    tabindex="-1"
+    aria-labelledby="modalResultadoGeneracionLabel"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-success text-white">
+
+                <h5
+                    class="modal-title"
+                    id="modalResultadoGeneracionLabel"
+                >
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    Generación completada
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                ></button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div class="text-center mb-4">
+
+                    <div
+                        class="rounded-circle bg-success bg-opacity-10
+                               d-inline-flex align-items-center
+                               justify-content-center mb-3"
+                        style="width:70px;height:70px;"
+                    >
+                        <i
+                            class="bi bi-check-lg text-success"
+                            style="font-size:2rem;"
+                        ></i>
+                    </div>
+
+                    <h5 class="fw-bold">
+                        Movimientos generados correctamente
+                    </h5>
+
+                    <p class="text-muted mb-0">
+                        El proceso de generación masiva
+                        terminó correctamente.
+                    </p>
+
+                </div>
+
+                <div class="row g-3">
+
+                    <!-- SOCIOS -->
+
+                    <div class="col-md-4">
+
+                        <div class="card border-0 bg-light h-100">
+
+                            <div class="card-body text-center">
+
+                                <i
+                                    class="bi bi-people-fill
+                                           text-primary"
+                                    style="font-size:1.7rem;"
+                                ></i>
+
+                                <div
+                                    class="fs-3 fw-bold mt-2"
+                                >
+                                    {{
+                                        resultado_generacion
+                                        .socios_procesados
+                                    }}
+                                </div>
+
+                                <small class="text-muted">
+                                    Socios procesados
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- MOVIMIENTOS -->
+
+                    <div class="col-md-4">
+
+                        <div class="card border-0 bg-light h-100">
+
+                            <div class="card-body text-center">
+
+                                <i
+                                    class="bi bi-journal-check
+                                           text-success"
+                                    style="font-size:1.7rem;"
+                                ></i>
+
+                                <div
+                                    class="fs-3 fw-bold mt-2"
+                                >
+                                    {{
+                                        resultado_generacion
+                                        .movimientos_creados
+                                    }}
+                                </div>
+
+                                <small class="text-muted">
+                                    Movimientos creados
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- PRÉSTAMOS -->
+
+                    <div class="col-md-4">
+
+                        <div class="card border-0 bg-light h-100">
+
+                            <div class="card-body text-center">
+
+                                <i
+                                    class="bi bi-cash-stack
+                                           text-warning"
+                                    style="font-size:1.7rem;"
+                                ></i>
+
+                                <div
+                                    class="fs-3 fw-bold mt-2"
+                                >
+                                    {{
+                                        resultado_generacion
+                                        .prestamos_actualizados
+                                    }}
+                                </div>
+
+                                <small class="text-muted">
+                                    Préstamos actualizados
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-success px-4"
+                    data-bs-dismiss="modal"
+                >
+                    <i class="bi bi-check-lg me-1"></i>
+                    Aceptar
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const modalElement =
+            document.getElementById(
+                "modalResultadoGeneracion"
+            );
+
+        if (modalElement) {
+
+            const modal =
+                new bootstrap.Modal(
+                    modalElement
+                );
+
+            modal.show();
+        }
+
+    }
+);
+</script>
+
+{% endif %}
+
+
+{% endblock %}

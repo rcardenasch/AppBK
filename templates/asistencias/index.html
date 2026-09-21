@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="bi bi-calendar-check-fill text-success"></i>
+                Registro de Asistencia
+            </h2>
+            <small class="text-muted">
+                Periodo
+                {{ periodo.anio }}
+                -
+                {{ "%02d"|format(periodo.mes) }}
+            </small>
+        </div>
+        <button id="btnGuardar" class="btn btn-success" data-periodo="{{ periodo.id }}">
+
+            <i class="bi bi-save"></i>
+            Guardar Asistencia
+
+        </button>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h3 id="cAsistio">0</h3>
+                    <small>Asistieron</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-warning bg-opacity-10">
+                <div class="card-body text-center">
+                    <h3 id="cTarde">0</h3>
+                    <small>Tardanzas</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-danger bg-opacity-10">
+                <div class="card-body text-center">
+                    <h3 id="cFalta">0</h3>
+                    <small>Inasistencias</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-success bg-opacity-10">
+                <div class="card-body text-center">
+                    <h3 id="cMultas">S/0.00</h3>
+                    <small>Multas</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between">
+            <div>
+                <b>Lista de Socios</b>
+            </div>
+            <div>
+                <button id="btnTodos" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-check-all"></i>
+                    Marcar todos Asistió
+                </button>
+            </div>
+        </div>
+
+        <!-- Agrega id="tablaAsistencias" aquí -->
+        <div class="table-responsive">
+            <table id="tablaAsistencias" class="table table-hover table-striped datatable">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Socio</th>
+                        <th>Acciones</th>
+                        <th class="text-center">
+                            Estado
+                        </th>
+                        <th>
+                            Multa
+                        </th>
+                        <th>
+                            Observación
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for socio in socios %}
+                    <tr>
+                        <td>
+                            {{ loop.index }}
+                        </td>
+                        <td class="ps-3 fw-bold text-dark d-flex align-items-center gap-2">
+                            <!-- Definimos la lista de palabras del nombre completo -->
+                            {% set palabras = socio.nombres.split() %}
+
+                            <!-- Icono redondo con iniciales extraídas de una sola cadena -->
+                            <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center fw-bold border border-secondary-subtle"
+                                style="width: 32px; height: 32px; font-size: 0.8rem; min-width: 32px;"
+                                title="{{ socio.nombres }}">
+                                {% if palabras | length > 0 %}
+                                {{ palabras[0][:1] | upper }}{{ palabras[-1][:1] | upper if palabras | length > 1 else
+                                '' }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </div>
+                            <!-- Nombre completo -->
+                            <span>
+                                {{ socio.nombres }} {{ socio.apellidos if socio.apellidos else '' }}
+                            </span>
+                        </td>
+                        <td> <span class="badge bg-info">
+                                {{ socio.acciones|length }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="btn-group estado" data-socio="{{ socio.id }}"
+                                data-acciones="{{ socio.acciones|length }}">
+                                <button class="btn btn-outline-success estado-btn" data-estado="ASISTIO"
+                                    title="Asistió">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                                <button class="btn btn-outline-warning estado-btn" data-estado="TARDANZA"
+                                    title="Tardanza">
+                                    <i class="bi bi-clock-history"></i>
+                                </button>
+                                <button class="btn btn-outline-danger estado-btn" data-estado="FALTA" title="Falta">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary estado-btn" data-estado="PERMISO"
+                                    title="Permiso">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                </button>
+                            </div>
+
+                        </td>
+
+                        <td>
+                            <span class="badge bg-success multa">
+                                S/0.00
+                            </span>
+                        </td>
+
+                        <td>
+                            <input type="text" class="form-control observacion">
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- =======================================================
+     Modal Confirmar Guardar Asistencia
+======================================================== -->
+
+<dialog id="modalGuardar" class="rounded border-0 shadow-lg p-0">
+    <div class="card border-0">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-question-circle"></i>
+                Confirmar registro
+            </h5>
+        </div>
+        <div class="card-body">
+            <p id="modalGuardarTexto" class="mb-0"></p>
+        </div>
+        <div class="card-footer text-end">
+            <button id="btnCancelarGuardar" class="btn btn-secondary">
+                Cancelar
+            </button>
+            <button id="btnConfirmarGuardar" class="btn btn-success">
+                <i class="bi bi-check-circle"></i>
+                Guardar
+            </button>
+
+        </div>
+
+    </div>
+
+</dialog>
+
+<!-- =======================================================
+     Modal Resultado
+======================================================== -->
+
+<dialog id="modalResultado" class="rounded border-0 shadow-lg p-0">
+    <div class="card border-0">
+        <div id="resultadoHeader" class="card-header text-white">
+            <h5 class="mb-0">
+                Resultado
+            </h5>
+        </div>
+        <div class="card-body">
+            <p id="resultadoTexto"></p>
+        </div>
+        <div class="card-footer text-end">
+            <button id="btnCerrarResultado" class="btn btn-primary">
+                Aceptar
+            </button>
+        </div>
+    </div>
+</dialog>
+
+<!-- Enviamos variables de configuracion a JavaScript -->
+<script>
+    const MULTA_TARDANZA = {{ config.multa_tardanza }};
+    const MULTA_FALTA = {{ config.multa_falta }};
+</script>
+
+
+<script src="{{url_for('static',filename='js/asistencia_reunion.js')}}"></script>
+
+{% endblock %}

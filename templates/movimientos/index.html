@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card shadow">
+
+    <div class="card-header bg-primary text-white d-flex justify-content-between">
+
+        <h5>
+            <i class="bi bi-cash-stack"></i>
+            Movimientos
+        </h5>
+    </div>
+
+    <div class="card-body">
+
+        <table class="table table-bordered table-hover">
+
+            <thead class="table-light">
+
+                <tr>
+                    <th>Fecha</th>
+                    <th>Periodo</th>
+                    <th>Socio</th>
+                    <th>Acción</th>
+                    <th>Préstamo</th>
+                    <th>Aporte</th>
+                    <th>Cuota</th>
+                    <th>Interés</th>
+                    <th>Amortización</th>
+                    <th>Saldo</th>
+                    <th>Opciones</th>
+                </tr>
+
+            </thead>
+            <tbody>
+                {% for m in movimientos %}
+                <tr>
+                    <td>{{ m.fecha_registro }}</td>
+                    <td>
+                        {{m.periodo.anio}}-{{"%02d"|format(m.periodo.mes)}}
+                    </td>
+
+                    <td>{{m.socio.nombres}}</td>
+                    <td>{{m.accion.numero_accion}}</td>
+                    <td>
+                        {% if m.prestamo %}
+                            #{{m.prestamo.id}}
+                        {% else %}
+                            -
+                        {% endif %}
+
+                    </td>
+                    <td>S/{{m.aporte}}</td>
+                    <td>S/{{m.cuota_pagada}}</td>
+                    <td>S/{{m.interes}}</td>
+                    <td>S/{{m.amortizacion}}</td>
+                    <td>S/{{m.saldo_prestamo}}</td>
+                    <td>
+                        <a class="btn btn-info btn-sm">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

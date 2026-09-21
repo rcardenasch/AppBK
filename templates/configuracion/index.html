@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="bi bi-sliders text-success"></i>
+                Registro de Configuración
+            </h2>
+            <small class="text-muted">
+                Periodo
+                {{ periodo.anio }}
+                -
+                {{ "%02d"|format(periodo.mes) }}
+            </small>
+        </div>
+        <!-- Botón Nuevo agregado de forma visible en la parte superior derecha -->
+        <a href="{{ url_for('configuracion.nuevo') }}" class="btn btn-success shadow-sm">
+            <i class="bi bi-plus-circle me-1"></i> Nueva Configuración
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between">
+            <div>
+                <b>Lista de Parámetros</b>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="tablaAsistencias" class="table table-hover table-striped datatable mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th class="text-end">Aporte Mínimo</th>
+                        <th class="text-end">Sobre por Acción</th>
+                        <th class="text-end">Interés Mensual</th>
+                        <th class="text-end">Método Distribución</th>
+                        <th class="text-end">Multa Tardanza</th>
+                        <th class="text-end">Multa Falta</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end pe-3">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for c in configuracion %}
+                    <tr>
+                        <td>
+                            {{ c.id }}
+                        </td>
+                        <td class="text-end fw-semibold text-dark">
+                            {{ "{:,.2f}".format(c.aporte_minimo | float) }}
+                        </td>
+                        <td class="text-end text-secondary">
+                            {{ "{:,.2f}".format(c.sobre_por_accion | float) }}
+                        </td>
+                        <td class="text-end fw-bold text-primary">
+                            {{ "{:,.2f}".format(c.interes_mensual | float) }}%
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border font-monospace">{{ c.metodo_distribucion
+                                }}</span>
+                        </td>
+                        <td class="text-end text-danger-emphasis">
+                            {{ "{:,.2f}".format(c.multa_tardanza | float) }}
+
+                        </td>
+                        <td class="text-end text-danger">
+                            {{ "{:,.2f}".format(c.multa_falta | float) }}
+
+                        </td>
+                        <td class="text-center">
+                            {% if c.estado == True or c.estado == 1 %}
+                            <span
+                                class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
+                                Activo
+                            </span>
+                            {% else %}
+                            <span
+                                class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3">
+                                Inactivo
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-3">
+                            <div class="btn-group" role="group">
+                                <!-- Editar -->
+                                <a href="{{ url_for('configuracion.editar', id=c.id) }}"
+                                    class="btn btn-sm btn-outline-warning" title="Editar Parámetros">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+
+                                <!-- Cambiar Estado -->
+                                <form method="post" action="{{ url_for('configuracion.estado', id=c.id) }}"
+                                    style="display:inline">
+                                    {% if c.estado == True or c.estado == 1 %}
+                                    <button class="btn btn-sm btn-outline-secondary"
+                                        onclick="return confirm('¿Está seguro de desactivar esta configuración?')"
+                                        title="Desactivar">
+                                        <i class="bi bi-toggle-on text-success"></i>
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-outline-success"
+                                        onclick="return confirm('¿Está seguro de activar esta configuración?')"
+                                        title="Activar">
+                                        <i class="bi bi-toggle-off"></i>
+                                    </button>
+                                    {% endif %}
+                                </form>
+
+                                <!-- BOTÓN ELIMINAR CON CONFIRMACIÓN -->
+                                <form method="post" action="{{ url_for('configuracion.eliminar', id=c.id) }}"
+                                    style="display:inline">
+                                    <button class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('¿Está seguro de eliminar esta configuración de forma permanente?')"
+                                        title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-5">
+                            <i class="bi bi-sliders fs-3 d-block mb-2 text-secondary"></i>
+                            No se han encontrado registros de configuración.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- =======================================================
+     Modal Confirmar Guardar configuración
+======================================================== -->
+<dialog id="modalGuardar" class="rounded border-0 shadow-lg p-0">
+    <div class="card border-0" style="min-width: 350px;">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-question-circle"></i>
+                Confirmar registro
+            </h5>
+        </div>
+        <div class="card-body">
+            <p id="modalGuardarTexto" class="mb-0">¿Está seguro de que desea guardar los cambios en la configuración?
+            </p>
+        </div>
+        <div class="card-footer text-end">
+            <button id="btnCancelarGuardar" class="btn btn-secondary">
+                Cancelar
+            </button>
+            <button id="btnConfirmarGuardar" class="btn btn-success">
+                <i class="bi bi-check-circle"></i>
+                Guardar
+            </button>
+        </div>
+    </div>
+</dialog>
+
+<!-- =======================================================
+     Modal Resultado
+======================================================== -->
+<dialog id="modalResultado" class="rounded border-0 shadow-lg p-0">
+    <div class="card border-0" style="min-width: 350px;">
+        <div id="resultadoHeader" class="card-header text-white">
+            <h5 class="mb-0">
+                Resultado
+            </h5>
+        </div>
+        <div class="card-body">
+            <p id="resultadoTexto"></p>
+        </div>
+        <div class="card-footer text-end">
+            <button id="btnCerrarResultado" class="btn btn-primary">
+                Aceptar
+            </button>
+        </div>
+    </div>
+</dialog>
+
+<script src="{{ url_for('static', filename='js/configuracion.js') }}"></script>
+
+{% endblock %}

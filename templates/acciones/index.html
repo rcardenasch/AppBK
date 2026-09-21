@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-white">
+
+        <div class="d-flex justify-content-between">
+            <h4>
+                <i class="bi bi-currency-exchange"></i>
+                Acciones
+            </h4>
+            <a href="{{url_for('acciones.nuevo')}}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>
+                Nueva acción
+            </a>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped datatable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Socio</th>
+                            <th>Acción</th>
+                            <th class="text-end">Valor Acción S/</th>
+                            <th class="text-end">Saldo Préstamos S/</th>
+                            <th class="text-center">Estado</th>
+                            <th>Fecha</th>
+                            <th class="text-end pe-3">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in acciones %}
+                        <tr>
+                            <td class="ps-3 fw-bold text-dark d-flex align-items-center gap-2">
+                                <!-- Definimos la lista de palabras del nombre completo -->
+                                {% set palabras = a.socio.nombres.split() %}
+
+                                <!-- Icono redondo con iniciales extraídas de una sola cadena -->
+                                <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center fw-bold border border-secondary-subtle"
+                                    style="width: 32px; height: 32px; font-size: 0.8rem; min-width: 32px;"
+                                    title="{{ a.socio.nombres }}">
+                                    {% if palabras | length > 0 %}
+                                    {{ palabras[0][:1] | upper }}{{ palabras[-1][:1] | upper if palabras | length > 1
+                                    else
+                                    '' }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </div>
+                                <!-- Nombre completo -->
+                                <span>
+                                    {{ a.socio.nombres }} {{ a.socio.apellidos if a.socio.apellidos else '' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary font-monospace">{{ a.numero_accion }}</span>
+                            </td>
+                            <td class="text-end fw-semibold">
+                                {{ "{:,.2f}".format(a.valor | float) }}
+                            </td>
+                            <!-- Nueva columna con formato seguro de dos decimales -->
+                            <td
+                                class="text-end fw-semibold {{ 'text-danger' if (a.saldo_prestamos | float) > 0 else 'text-success' }}">
+                                {{ "{:,.2f}".format(a.saldo_prestamos | float) if a.saldo_prestamos is defined else
+                                "0.00"
+                                }}
+                            </td>
+
+                            <td class="text-center">
+                                {% if a.estado | lower == 'activo' %}
+                                <span
+                                    class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Activo</span>
+                                {% else %}
+                                <span
+                                    class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3">{{
+                                    a.estado }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">
+                                {{ a.fecha_registro.strftime('%d/%m/%Y') if a.fecha_registro.strftime else
+                                a.fecha_registro
+                                }}
+                            </td>
+                            <td class="text-end pe-3">
+                                <div class="btn-group" role="group">
+                                    <!-- Botón Detalle (Opcional, muy útil si ya tienes la ruta def detalle) -->
+                                    <a href="{{ url_for('acciones.detalle', id=a.id) }}"
+                                        class="btn btn-sm btn-outline-info" title="Ver Detalle">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('acciones.editar', id=a.id) }}"
+                                        class="btn btn-sm btn-outline-warning" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form method="post" action="{{ url_for('acciones.eliminar', id=a.id) }}"
+                                        style="display:inline">
+                                        <button class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('¿Está seguro de eliminar esta acción?')"
+                                            title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="bi bi-exclamation-circle fs-4 d-block mb-2"></i>
+                                No se encontraron acciones registradas.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endblock %}

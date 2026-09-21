@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- =====================================================
+         CABECERA
+    ====================================================== -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold">
+                <i class="bi bi-arrow-left-right text-success"></i>
+                Visor de Transferencias
+            </h2>
+
+            <div class="text-muted">
+                Período
+                {{ periodo.anio }}-
+                {{ "%02d"|format(periodo.mes) }}
+            </div>
+
+        </div>
+
+        <div class="d-flex gap-2">
+
+            <a
+                href="{{ url_for(
+                    'distribucion.exportar_transferencias_excel',
+                    periodo_id=periodo.id
+                ) }}"
+                class="btn btn-success"
+            >
+
+                <i class="bi bi-file-earmark-excel"></i>
+
+                Descargar Excel
+
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         RESUMEN
+    ====================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <!-- APORTE PROPIO -->
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        APORTE PROPIO
+                    </small>
+
+                    <h3 class="fw-bold text-primary">
+
+                        S/
+                        {{ "{:,.2f}".format(
+                            total_aporte_propio|float
+                        ) }}
+
+                    </h3>
+
+                    <small class="text-muted">
+                        Aporte propio aplicado por los beneficiarios
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TRANSFERENCIAS -->
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        TRANSFERENCIAS
+                    </small>
+
+                    <h3 class="fw-bold text-success">
+
+                        S/
+                        {{ "{:,.2f}".format(
+                            total_transferencias|float
+                        ) }}
+
+                    </h3>
+
+                    <small class="text-muted">
+
+                        {{ cantidad_transferencias }}
+                        transferencias confirmadas
+
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TOTAL -->
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <small class="text-muted">
+                        TOTAL APORTE + TRANSFERENCIAS
+                    </small>
+
+                    <h3 class="fw-bold text-dark">
+
+                        S/
+                        {{ "{:,.2f}".format(
+                            total_final|float
+                        ) }}
+
+                    </h3>
+
+                    <small class="text-muted">
+                        Total financiado para los beneficiarios
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         AVISO
+    ====================================================== -->
+
+    <div class="alert alert-info">
+
+        <i class="bi bi-info-circle me-2 fs-6"></i>
+
+        <strong>Importante:</strong>
+
+        El importe mostrado como
+        <strong>aporte propio</strong>
+        corresponde al aporte del propio socio.
+
+        El importe de
+        <strong>transferencias</strong>
+        corresponde únicamente al dinero que otros socios
+        deben transferirle.
+
+        El
+        <strong>total aporte + transferencias</strong>
+        representa la suma de ambos conceptos.
+
+        Representa el monto de préstamo aprobado.
+
+    </div>
+
+
+    <!-- =====================================================
+         BENEFICIARIOS
+    ====================================================== -->
+
+    {% for beneficiario in beneficiarios %}
+
+    <div class="card shadow-sm mb-4">
+
+        <!-- ================================================
+             CABECERA BENEFICIARIO
+        ================================================= -->
+
+        <div class="card-header">
+
+            <div class="row align-items-center">
+
+                <div class="col-md-5">
+
+                    <div class="fw-bold fs-5">
+
+                        <i class="bi bi-person-circle me-2"></i>
+
+                        {{ beneficiario.beneficiario }}
+
+                    </div>
+
+                    <small class="text-muted">
+                        Beneficiario de la distribución
+                    </small>
+
+                </div>
+
+
+                <div class="col-md-7">
+
+                    <div class="row text-end">
+
+                        <div class="col-md-4">
+
+                            <small class="text-muted d-block">
+                                APORTE PROPIO
+                            </small>
+
+                            <strong class="text-primary">
+
+                                S/
+                                {{
+                                    "{:,.2f}".format(
+                                        beneficiario.aporte_propio
+                                    )
+                                }}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="col-md-4">
+
+                            <small class="text-muted d-block">
+                                TRANSFERENCIAS
+                            </small>
+
+                            <strong class="text-success">
+
+                                S/
+                                {{
+                                    "{:,.2f}".format(
+                                        beneficiario.transferencias
+                                    )
+                                }}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="col-md-4">
+
+                            <small class="text-muted d-block">
+                                TOTAL
+                            </small>
+
+                            <strong class="text-dark">
+
+                                S/
+                                {{
+                                    "{:,.2f}".format(
+                                        beneficiario.total_final
+                                    )
+                                }}
+
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================
+             DETALLE
+        ================================================= -->
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th style="width:60px;">
+                                #
+                            </th>
+
+                            <th>
+                                Beneficiario
+                            </th>
+
+                            <th>
+                                Origen / Detalle
+                            </th>
+
+                            <th>
+                                Moneda
+                            </th>
+
+                            <th class="text-end">
+                                Monto
+                            </th>
+
+                            <th>
+                                Tipo de fila
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for fila in beneficiario.filas %}
+
+                        <tr>
+
+                            <td>
+                                {{ loop.index }}
+                            </td>
+
+
+                            <td class="fw-semibold">
+
+                                {{ beneficiario.beneficiario }}
+
+                            </td>
+
+
+                            <td>
+
+                                {% if fila.tipo == "APORTE PROPIO" %}
+
+                                <i class="bi bi-person-check text-primary me-1"></i>
+
+                                {{ fila.origen }}
+
+                                {% else %}
+
+                                <i class="bi bi-arrow-left-right text-success me-1"></i>
+
+                                {{ fila.origen }}
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td>
+                                S/
+                            </td>
+
+
+                            <td class="text-end fw-semibold">
+
+                                {{
+                                    "{:,.2f}".format(
+                                        fila.monto
+                                    )
+                                }}
+
+                            </td>
+
+
+                            <td>
+
+                                {% if fila.tipo == "APORTE PROPIO" %}
+
+                                <span class="badge bg-primary">
+                                    APORTE PROPIO
+                                </span>
+
+                                {% else %}
+
+                                <span class="badge bg-success">
+                                    TRANSFERENCIA
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+
+                        <!-- =================================
+                             TOTAL BENEFICIARIO
+                        ================================== -->
+
+                        <tr class="table-secondary">
+
+                            <td colspan="4" class="text-end fw-bold">
+
+                                TOTAL APORTE + TRANSFERENCIAS
+
+                            </td>
+
+                            <td class="text-end fw-bold">
+
+                                S/
+                                {{
+                                    "{:,.2f}".format(
+                                        beneficiario.total_final
+                                    )
+                                }}
+
+                            </td>
+
+                            <td>
+
+                                <span class="badge bg-dark">
+                                    TOTAL
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% else %}
+
+    <!-- =====================================================
+         SIN TRANSFERENCIAS
+    ====================================================== -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-body text-center py-5">
+
+            <i class="bi bi-info-circle fs-1 text-muted"></i>
+
+            <h5 class="mt-3">
+                No existen transferencias confirmadas
+            </h5>
+
+            <p class="text-muted mb-0">
+                Para este período todavía no se han confirmado
+                transferencias.
+            </p>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+<style>
+
+@media print {
+
+    .btn,
+    nav,
+    .navbar,
+    .sidebar {
+        display: none !important;
+    }
+
+    .card {
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    body {
+        background: white !important;
+    }
+
+}
+
+</style>
+
+{% endblock %}

@@ -1,0 +1,858 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card shadow-sm border-0">
+
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-plus-circle me-2"></i>
+            Nuevo movimiento
+        </h5>
+    </div>
+
+    <div class="card-body">
+
+        <form method="POST" action="{{ url_for('movimientos.guardar') }}" id="formMovimiento">
+
+            <input type="hidden" name="socio_id" value="{{ accion.socio.id }}">
+
+            <input type="hidden" name="accion_id" value="{{ accion.id }}">
+
+            <!-- ===================================================== -->
+            <!-- SOCIO / ACCIÓN -->
+            <!-- ===================================================== -->
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">
+                        Socio
+                    </label>
+
+                    <input class="form-control" readonly value="{{ accion.socio.nombres }}">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">
+                        Acción
+                    </label>
+
+                    <input class="form-control" readonly value="{{ accion.numero_accion }}">
+                </div>
+
+            </div>
+
+            <hr class="my-4">
+
+            <!-- ===================================================== -->
+            <!-- PERIODO / PRÉSTAMO -->
+            <!-- ===================================================== -->
+
+            <div class="row g-3">
+
+                <div class="col-md-4">
+
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-calendar3 me-1"></i>
+                        Período
+                    </label>
+
+                    <select name="periodo_id" id="periodo_id" class="form-select" required>
+
+                        {% for p in periodos %}
+
+                        <option value="{{ p.id }}" {% if not p.cerrado %}selected{% endif %}>
+
+                            {{ p.anio }}-{{ "%02d"|format(p.mes) }}
+
+                            {% if p.cerrado %}
+                            🔒
+                            {% else %}
+                            🟢
+                            {% endif %}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-8">
+
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-cash-stack me-1"></i>
+                        Préstamo
+                    </label>
+
+                    <select name="prestamo_id" id="prestamo_id" class="form-select">
+                        <input type="hidden" id="accion_id" value="{{ accion.id }}">
+                        <option value="" disabled selected>
+                            -- Seleccione --
+                        </option>
+
+                        <option value="0">
+                            Solo aporte
+                        </option>
+
+                        {% for p in prestamos %}
+
+                        <option value="{{ p.id }}">
+
+                            Préstamo {{ p.id }}
+                            -
+                            Saldo actual:
+                            S/ {{ "{:,.2f}".format(p.saldo_actual or 0) }}
+
+                        </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <!-- ===================================================== -->
+            <!-- INFORMACIÓN DEL PRÉSTAMO -->
+            <!-- ===================================================== -->
+
+            <div id="panelPrestamo" class="mt-4" style="display:none;">
+
+                <div class="alert alert-light border">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-3">
+
+                            <small class="text-muted d-block">
+                                Saldo apertura
+                            </small>
+
+                            <strong id="infoSaldoApertura">
+                                S/ 0.00
+                            </strong>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <small class="text-muted d-block">
+                                Multa período anterior
+                            </small>
+
+                            <strong id="infoMultaAnterior" class="text-danger">
+                                S/ 0.00
+                            </strong>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <small class="text-muted d-block">
+                                Saldo base
+                            </small>
+
+                            <strong id="infoSaldoBase">
+                                S/ 0.00
+                            </strong>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <small class="text-muted d-block">
+                                Interés
+                            </small>
+
+                            <strong id="infoInteres" class="text-primary">
+                                S/ 0.00
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <hr class="my-4">
+
+            <!-- ===================================================== -->
+            <!-- DATOS DEL MOVIMIENTO -->
+            <!-- ===================================================== -->
+
+            <div class="row g-3">
+
+                <!-- CUOTA SUGERIDA -->
+
+                <div class="col-md-3">
+
+                    <label class="form-label fw-semibold">
+                        Cuota sugerida
+                    </label>
+
+                    <input id="cuota_sugerida" readonly class="form-control bg-warning-subtle fw-bold">
+
+                </div>
+
+                <!-- APORTE -->
+
+                <div class="col-md-3">
+
+                    <label class="form-label fw-semibold">
+
+                        <i class="bi bi-wallet2 text-secondary me-1"></i>
+                        Aporte
+
+                    </label>
+
+                    <input type="number" step="0.01" min="0" id="aporte" name="aporte" value="0" class="form-control"
+                        required>
+
+                </div>
+
+                <!-- CUOTA -->
+
+                <div class="col-md-3">
+
+                    <label class="form-label fw-bold text-primary">
+
+                        <i class="bi bi-cash-coin me-1"></i>
+                        Cuota pagada
+
+                    </label>
+
+                    <input type="number" step="0.01" min="0" id="cuota" name="cuota" value="0"
+                        class="form-control border-primary bg-light-subtle" required>
+
+                </div>
+
+                <!-- SOBRE -->
+
+                <div class="col-md-3">
+
+                    <label class="form-label fw-bold text-success">
+
+                        <i class="bi bi-envelope-paper-fill me-1"></i>
+                        Sobre
+
+                    </label>
+
+                    <input type="number" step="0.01" min="0" name="sobre" id="sobre" value="0"
+                        class="form-control border-success bg-light-subtle">
+
+                </div>
+
+                <!-- MULTA ACTUAL -->
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+
+                        <i class="bi bi-exclamation-triangle text-secondary me-1"></i>
+                        Multa
+
+                    </label>
+
+                    <input type="number" step="0.01" min="0" name="multa" id="multa" value="0" class="form-control">
+
+                    <small class="text-muted">
+                        Multa registrada para este período
+                    </small>
+
+                </div>
+
+            </div>
+
+            <hr class="my-4">
+
+            <!-- ===================================================== -->
+            <!-- RESULTADO DEL CÁLCULO -->
+            <!-- ===================================================== -->
+
+            <div class="row g-3">
+
+                <div class="col-md-3">
+
+                    <label class="form-label fw-semibold">
+                        Saldo base
+                    </label>
+
+                    <input type="text" id="saldo" readonly class="form-control bg-light">
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <label class="form-label fw-semibold">
+                        Interés
+                    </label>
+
+                    <input type="text" id="interes" readonly class="form-control bg-primary-subtle fw-bold">
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <label class="form-label fw-semibold">
+                        Amortización
+                    </label>
+
+                    <input type="text" id="amortizacion" readonly class="form-control bg-light">
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <label class="form-label fw-semibold">
+                        Nuevo saldo
+                    </label>
+
+                    <input type="text" id="nuevo_saldo" readonly class="form-control bg-success-subtle fw-bold">
+
+                </div>
+
+            </div>
+
+            <!-- ===================================================== -->
+            <!-- OBSERVACIÓN -->
+            <!-- ===================================================== -->
+
+            <div class="mt-4">
+
+                <label class="form-label fw-semibold">
+                    Observación
+                </label>
+
+                <textarea name="observacion" class="form-control" rows="2"></textarea>
+
+            </div>
+
+            <!-- ===================================================== -->
+            <!-- BOTONES -->
+            <!-- ===================================================== -->
+
+            <div class="mt-4">
+
+                <button type="submit" class="btn btn-success">
+
+                    <i class="bi bi-check-circle me-1"></i>
+                    Guardar movimiento
+
+                </button>
+
+                <a href="{{ url_for('acciones.detalle', id=accion.id) }}" class="btn btn-secondary">
+
+                    <i class="bi bi-x-circle me-1"></i>
+                    Cancelar
+
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    const periodo = document.getElementById("periodo_id");
+    const prestamo = document.getElementById("prestamo_id");
+
+    const saldo = document.getElementById("saldo");
+    const interes = document.getElementById("interes");
+
+    const aporte = document.getElementById("aporte");
+    const cuota = document.getElementById("cuota");
+
+    const cuotaSugerida =
+        document.getElementById("cuota_sugerida");
+
+    const amortizacion =
+        document.getElementById("amortizacion");
+
+    const nuevoSaldo =
+        document.getElementById("nuevo_saldo");
+
+    const multa =
+        document.getElementById("multa");
+
+    const panelPrestamo =
+        document.getElementById("panelPrestamo");
+
+    const infoSaldoApertura =
+        document.getElementById("infoSaldoApertura");
+
+    const infoMultaAnterior =
+        document.getElementById("infoMultaAnterior");
+
+    const infoSaldoBase =
+        document.getElementById("infoSaldoBase");
+
+    const infoInteres =
+        document.getElementById("infoInteres");
+    
+    const accionId =
+    document.getElementById("accion_id").value;
+
+
+    /* ==========================================================
+       FORMATEADOR
+       ========================================================== */
+
+    const formatearMoneda = new Intl.NumberFormat(
+        'es-PE',
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }
+    );
+
+
+    /* ==========================================================
+       CONVERTIR NUMERO
+       ========================================================== */
+
+    function numero(valor) {
+
+        if (
+            valor === null ||
+            valor === undefined ||
+            valor === ""
+        ) {
+            return 0;
+        }
+
+        return parseFloat(valor) || 0;
+    }
+
+    /* ==========================================================
+       CARGAR DATOS DEL PRÉSTAMO / SOLO APORTE
+       ========================================================== */
+
+    function cargarPrestamo() {
+
+        const prestamoId = prestamo.value;
+        const periodoId = periodo.value;
+
+        /*
+        * ======================================================
+        * VALIDAR SELECCIÓN
+        * ======================================================
+        */
+
+        if (prestamoId === "") {
+
+            panelPrestamo.style.display = "none";
+
+            saldo.value = formatearMoneda.format(0);
+            interes.value = formatearMoneda.format(0);
+
+            cuotaSugerida.value =
+                formatearMoneda.format(0);
+
+            amortizacion.value =
+                formatearMoneda.format(0);
+
+            nuevoSaldo.value =
+                formatearMoneda.format(0);
+
+            aporte.value = "0.00";
+            cuota.value = "0.00";
+
+            return;
+        }
+
+
+        /*
+        * ======================================================
+        * NECESITAMOS PERÍODO
+        * ======================================================
+        */
+
+        if (!periodoId) {
+
+            alert("Debe seleccionar un período.");
+
+            return;
+        }
+
+
+        /*
+        * ======================================================
+        * CONSULTAR API
+        *
+        * prestamoId = 0  -> Solo aporte
+        * prestamoId > 0  -> Préstamo
+        * ======================================================
+        */
+
+        fetch(
+            `/movimientos/api/accion/${accionId}?periodo_id=${periodoId}`
+        )
+
+            .then(response => {
+
+                if (!response.ok) {
+
+                    return response.json()
+                        .then(data => {
+                            throw new Error(
+                                data.error ||
+                                "Error al obtener información."
+                            );
+                        });
+                }
+
+                return response.json();
+
+            })
+
+            .then(data => {
+
+                /*
+                * ==================================================
+                * VALIDAR RESPUESTA
+                * ==================================================
+                */
+
+                if (data.error) {
+
+                    throw new Error(data.error);
+
+                }
+
+
+                /*
+                * ==================================================
+                * SI ES SOLO APORTE
+                * ==================================================
+                */
+
+                if (prestamoId === "0") {
+
+                    panelPrestamo.style.display = "none";
+
+                    /*
+                    * No hay préstamo
+                    */
+                    saldo.value =
+                        formatearMoneda.format(0);
+
+                    interes.value =
+                        formatearMoneda.format(0);
+
+                    amortizacion.value =
+                        formatearMoneda.format(0);
+
+                    nuevoSaldo.value =
+                        formatearMoneda.format(0);
+
+
+                    /*
+                    * Aporte mínimo desde servidor
+                    */
+                    const aporteServidor =
+                        numero(data.aporte);
+
+                    aporte.value =
+                        aporteServidor.toFixed(2);
+
+
+                    /*
+                    * Cuota sugerida para solo aporte
+                    *
+                    * La API devuelve cuota = aporte_minimo
+                    */
+                    const cuotaServidor =
+                        numero(data.cuota);
+
+                    cuotaSugerida.value =
+                        formatearMoneda.format(
+                            cuotaServidor
+                        );
+
+
+                    /*
+                    * Para solo aporte:
+                    * cuota pagada = aporte mínimo
+                    */
+                    cuota.value =
+                        cuotaServidor.toFixed(2);
+
+
+                    return;
+                }
+
+
+                /*
+                * ==================================================
+                * PRÉSTAMO
+                * ==================================================
+                */
+
+                panelPrestamo.style.display = "block";
+
+
+                /*
+                * ==================================================
+                * VALORES DEL SERVIDOR
+                * ==================================================
+                */
+
+                const saldoApertura =
+                    numero(data.saldo_apertura);
+
+                const multaAnterior =
+                    numero(data.multa_periodo_anterior);
+
+                const saldoBase =
+                    numero(data.saldo_base);
+
+                const interesServidor =
+                    numero(data.interes);
+
+                const cuotaServidor =
+                    numero(data.cuota);
+
+                const aporteServidor =
+                    numero(data.aporte);
+
+
+                /*
+                * ==================================================
+                * INFORMACIÓN DEL PRÉSTAMO
+                * ==================================================
+                */
+
+                infoSaldoApertura.textContent =
+                    "S/ " +
+                    formatearMoneda.format(
+                        saldoApertura
+                    );
+
+                infoMultaAnterior.textContent =
+                    "S/ " +
+                    formatearMoneda.format(
+                        multaAnterior
+                    );
+
+                infoSaldoBase.textContent =
+                    "S/ " +
+                    formatearMoneda.format(
+                        saldoBase
+                    );
+
+                infoInteres.textContent =
+                    "S/ " +
+                    formatearMoneda.format(
+                        interesServidor
+                    );
+
+
+                /*
+                * ==================================================
+                * CAMPOS PRINCIPALES
+                * ==================================================
+                */
+
+                saldo.value =
+                    formatearMoneda.format(
+                        saldoBase
+                    );
+
+                interes.value =
+                    formatearMoneda.format(
+                        interesServidor
+                    );
+
+                cuotaSugerida.value =
+                    formatearMoneda.format(
+                        cuotaServidor
+                    );
+
+
+                /*
+                * ==================================================
+                * VALORES SUGERIDOS
+                * ==================================================
+                */
+
+                aporte.value =
+                    aporteServidor.toFixed(2);
+
+                cuota.value =
+                    cuotaServidor.toFixed(2);
+
+
+                /*
+                * ==================================================
+                * CALCULAR RESULTADO
+                * ==================================================
+                */
+
+                recalcular();
+
+            })
+
+            .catch(error => {
+
+                console.error(
+                    "Error API préstamo:",
+                    error
+                );
+
+                panelPrestamo.style.display = "none";
+
+                alert(
+                    error.message ||
+                    "No fue posible obtener los datos del préstamo."
+                );
+
+            });
+
+    }
+
+
+    /* ==========================================================
+       RECALCULAR
+       ========================================================== */
+
+    function recalcular() {
+
+        const s = numero(
+            saldo.value.replace(/,/g, '')
+        );
+
+        const i = numero(
+            interes.value.replace(/,/g, '')
+        );
+
+        const a = numero(
+            aporte.value
+        );
+
+        const c = numero(
+            cuota.value
+        );
+
+
+        /*
+         * IMPORTANTE:
+         *
+         * cuota_pagada = aporte + amortización + interés
+         *
+         * Por eso:
+         *
+         * amortización =
+         * cuota - aporte - interés
+         */
+
+        let amort =
+            c - a - i;
+
+
+        if (amort < 0) {
+            amort = 0;
+        }
+
+
+        /*
+         * Nunca permitir saldo negativo
+         */
+
+        let nuevo =
+            s - amort;
+
+
+        if (nuevo < 0) {
+            nuevo = 0;
+        }
+
+
+        amortizacion.value =
+            formatearMoneda.format(amort);
+
+        nuevoSaldo.value =
+            formatearMoneda.format(nuevo);
+
+    }
+
+
+    /* ==========================================================
+       EVENTOS
+       ========================================================== */
+
+    prestamo.addEventListener(
+        "change",
+        cargarPrestamo
+    );
+
+    periodo.addEventListener(
+        "change",
+        function () {
+
+            /*
+             * Si ya seleccionó préstamo,
+             * debemos volver a consultar porque
+             * cambia la multa del período anterior
+             * y puede cambiar el saldo de apertura.
+             */
+
+            if (prestamo.value) {
+                cargarPrestamo();
+            }
+
+        }
+    );
+
+
+    cuota.addEventListener(
+        "input",
+        recalcular
+    );
+
+
+    aporte.addEventListener(
+        "input",
+        recalcular
+    );
+
+
+    /* ==========================================================
+       ENTER
+       ========================================================== */
+
+    document
+        .getElementById("formMovimiento")
+        .addEventListener(
+            "keydown",
+            function (evento) {
+
+                if (evento.key === "Enter") {
+
+                    if (
+                        evento.target.nodeName ===
+                        "TEXTAREA"
+                    ) {
+                        return;
+                    }
+
+                    evento.preventDefault();
+
+                }
+
+            }
+        );
+
+</script>
+
+{% endblock %}

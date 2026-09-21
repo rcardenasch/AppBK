@@ -1,0 +1,1029 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<div class="portal-wrapper">
+
+    <!-- =====================================================
+         CABECERA
+    ===================================================== -->
+
+    <div class="hero-periodo shadow-sm mb-4">
+
+        <div class="hero-content p-4 p-lg-5">
+
+            <div class="d-flex flex-column flex-md-row
+                        justify-content-between
+                        align-items-md-center gap-4">
+
+                <div class="d-flex align-items-center gap-3">
+
+                    <div class="socio-avatar">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+
+                    <div>
+
+                        <div class="small opacity-75 mb-1">
+                            MI ESTADO DE CUENTA
+                        </div>
+
+                        <h3 class="fw-bold mb-1">
+                            {{ socio.nombres }}
+                        </h3>
+
+                        <div class="small opacity-75">
+
+                            <i class="bi bi-card-text me-1"></i>
+                            Documento:
+                            {{ socio.documento or 'No registrado' }}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Bloque Derecho: Periodo Actual e Selector Integrado -->
+                <div
+                    class="d-flex flex-column flex-sm-row flex-md-column align-items-start align-items-sm-center align-items-md-end gap-3 w-100 w-md-auto">
+
+                    <!-- Badge de Periodo Actual -->
+                    <div class="text-md-end">
+                        {% if periodo %}
+                        <span
+                            class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-semibold">
+                            <i class="bi bi-calendar3 me-1"></i>
+                            Periodo: {{ "%02d"|format(periodo.mes) }} / {{ periodo.anio }} {% if periodo.cerrado %}
+                            <span class="badge bg-danger semibold">Cerrado</span>{%else%} <span
+                                class="badge bg-info semibold">Abierto</span>
+                            {%endif%}
+                        </span>
+                        {% else %}
+                        <span
+                            class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-2 fw-semibold">
+                            <i class="bi bi-exclamation-triangle me-1"></i> Sin período vigente
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Selector de cambio rápido (Alineado y estilizado) -->
+                    <div style="min-width: 10px;" class="w-10 w-sm-auto">
+                        <label for="periodo_Id" class="visually-hidden">Cambiar Periodo</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light text-secondary border-secondary-subtle">
+                                <i class="bi bi-filter-left"></i>
+                            </span>
+                            <!-- CORRECCIÓN: Se cambió 'periodo.id' por 'p.id' dentro del bucle -->
+                            <select id="periodo_Id" class="form-select border-secondary-subtle"
+                                onchange="irADetallePortal(this.value);">
+                                <option value="">-- Cambiar mes --</option>
+                                {% for p in periodos %}
+                                <option value="{{ p.id }}" {% if periodo and p.id|int==periodo.id|int %}selected{% endif
+                                    %}>
+                                    {{ "%02d"|format(p.mes) }} / {{ p.anio }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    {% if periodo %}
+
+    <!-- =====================================================
+         RESUMEN PRINCIPAL
+    ===================================================== -->
+
+    <div class="row g-3 mb-4">
+        <!-- ACCIONES -->
+        <div class="col-6 col-xl-3">
+            <div class="card summary-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="summary-icon bg-primary-subtle text-primary">
+                            <i class="bi bi-layers-fill"></i>
+                        </div>
+                        <div>
+                            <div class="summary-label">
+                                Acciones
+                            </div>
+                            <div class="summary-value">
+                                {{ resumen.cantidad_acciones }}
+                            </div>
+
+                            <small class="text-muted">
+                                {{ resumen.acciones_activas }}
+                                activas
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- VALOR ACCIONES -->
+        <div class="col-6 col-xl-3">
+            <div class="card summary-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="summary-icon bg-success-subtle text-success">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                        <div>
+                            <div class="summary-label">
+                                Mis acciones
+                            </div>
+
+                            <div class="summary-value">
+                                S/
+                                {{ "{:,.2f}".format(
+                                resumen.valor_acciones_activas
+                                ) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APORTES -->
+
+        <div class="col-6 col-xl-3">
+            <div class="card summary-card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="summary-icon
+                                    bg-info-subtle
+                                    text-info">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
+                        <div>
+                            <div class="summary-label">
+                                Aportes
+                            </div>
+
+                            <div class="summary-value">
+                                S/
+                                {{ "{:,.2f}".format(
+                                resumen.total_aportes
+                                ) }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!-- ASISTENCIA -->
+        <div class="col-6 col-xl-3">
+            <div class="card section-card shadow-sm h-100">
+                <div class="section-header">
+                    <h5 class="section-title">
+                        <i class="bi bi-person-check text-success me-2"></i>
+                        Asistencia
+                    </h5>
+                    <div class="section-subtitle">
+                        Registro del período
+                    </div>
+                </div>
+                <div class="card-body p-2">
+                    {% if asistencia %}
+                    <!-- Contenedor horizontal con separación automática y alineación vertical centrada -->
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+                        <!-- Bloque Izquierdo: Ícono y Estado -->
+                        <div class="d-flex align-items-center gap-2">
+                            {% if asistencia.estado == "ASISTIO" %}
+                            <div class="summary-icon bg-success-subtle text-success d-flex align-items-center justify-content-center rounded-circle"
+                                style="width: 28px; height: 28px; font-size: 0.9rem;">
+                                <i class="bi bi-check-lg"></i>
+                            </div>
+                            <span class="fw-bold text-success small">Presente</span>
+                            {% else %}
+                            <div class="summary-icon bg-danger-subtle text-danger d-flex align-items-center justify-content-center rounded-circle"
+                                style="width: 28px; height: 28px; font-size: 0.9rem;">
+                                <i class="bi bi-x-lg"></i>
+                            </div>
+                            <span class="fw-bold text-danger small">{{ asistencia.estado }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Bloque Derecho: Acciones y Multa (Inline) -->
+                        <div class="d-flex align-items-center gap-2 ms-auto">
+                            <div class="text-muted small" style="font-size: 0.75rem;">
+                                Acciones: <strong>{{ asistencia.acciones }}</strong>
+                            </div>
+
+                            {% if asistencia.multa %}
+                            <span class="badge badge-soft-danger px-2 py-1" style="font-size: 0.7rem;">
+                                Multa: S/ {{ "{:,.2f}".format(asistencia.multa) }}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                    {% else %}
+                    <!-- Vista vacía compactada en una sola línea -->
+                    <div class="d-flex align-items-center justify-content-center gap-2 text-muted py-1">
+                        <i class="bi bi-calendar-x fs-6"></i>
+                        <span class="small" style="font-size: 0.75rem;">Sin registro de asistencia.</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+    <!-- =====================================================
+         SEGUNDO RESUMEN
+    ===================================================== -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+
+            <div class="financial-box">
+
+                <div class="financial-label">
+                    Cuota a pagar
+                </div>
+
+                <div class="financial-value text-primary">
+                    S/
+                    {{ "{:,.2f}".format(
+                    resumen.total_cuotas
+                    ) }}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+            <div class="financial-box">
+                <div class="financial-label">
+                    Amortización
+                </div>
+
+                <div class="financial-value text-success">
+                    S/
+                    {{ "{:,.2f}".format(
+                    resumen.total_amortizacion
+                    ) }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+
+            <div class="financial-box">
+
+                <div class="financial-label">
+                    Intereses
+                </div>
+
+                <div class="financial-value text-warning">
+                    S/
+                    {{ "{:,.2f}".format(
+                    resumen.total_intereses
+                    ) }}
+                </div>
+
+            </div>
+
+        </div>
+        <div class="col-md-3">
+            <div class="financial-box">
+                <div class="financial-label">
+                    Sobre
+                </div>
+                <div class="financial-value text-info">
+                    S/
+                    {{ "{:,.2f}".format(
+                    resumen.total_sobre
+                    ) }}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- =========================================================
+     PRÉSTAMOS ACTIVOS - GRÁFICO POR CADA PRÉSTAMO
+    ========================================================= -->
+
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+
+            <!-- CABECERA -->
+            <div class="card-header bg-transparent border-0 px-3 pt-3 pb-2">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+                        <h6 class="mb-0 fw-bold">
+                            <i class="bi bi-bank2 me-1 text-warning"></i>
+                            Mis Préstamos
+                        </h6>
+
+                        <small class="text-muted" style="font-size: .72rem;">
+                            Avance de pago de cada préstamo
+                        </small>
+                    </div>
+
+                    <!-- RESUMEN TOTAL -->
+                    <div class="d-flex align-items-center gap-2">
+
+                        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">
+                            {{ resumen.cantidad_prestamos }} activos
+                        </span>
+
+                        <div class="text-end">
+
+                            <div class="text-muted" style="font-size: .58rem; line-height: 1;">
+                                SALDO TOTAL
+                            </div>
+
+                            <div class="fw-bold text-danger" style="font-size: .85rem;">
+                                S/ {{ "{:,.2f}".format(resumen.saldo_prestamos) }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+            
+            <div class="card-body px-4 pb-4">
+
+                {% if prestamos %}
+
+                <div class="row g-3">
+
+                    {% for prestamo in prestamos %}
+
+                    {% set porcentaje = prestamo.porcentaje_avance | float %}
+                    {% set circunferencia = 251.2 %}
+                    {% set progreso = porcentaje * circunferencia / 100 %}
+
+                    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+
+                        <div class="card h-100 border shadow-sm">
+
+                            <div class="card-body p-2">
+
+                                <!-- CABECERA -->
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+
+                                    <div>
+                                        <span class="text-muted" style="font-size:.6rem;">
+                                            PRÉSTAMO
+                                        </span>
+
+                                        <div class="fw-bold" style="font-size:.85rem;">
+                                            #{{ prestamo.id }}
+                                        </div>
+                                    </div>
+
+                                    <span class="badge bg-success-subtle text-success rounded-pill"
+                                        style="font-size:.58rem;">
+                                        ACTIVO
+                                    </span>
+
+                                </div>
+
+
+                                <!-- GRÁFICO -->
+                                <div class="d-flex justify-content-center my-1">
+
+                                    <div class="position-relative" style="width:90px;height:90px;">
+
+                                        <svg width="90" height="90" viewBox="0 0 100 100"
+                                            style="transform:rotate(-90deg);">
+
+                                            <!-- Fondo -->
+                                            <circle cx="50" cy="50" r="40" stroke="currentColor"
+                                                class="text-body-secondary opacity-25" stroke-width="8" fill="none" />
+
+                                            <!-- Avance -->
+                                            <circle cx="50" cy="50" r="40" stroke="currentColor" class="
+                                    {% if porcentaje >= 75 %}
+                                        text-success
+                                    {% elif porcentaje >= 40 %}
+                                        text-warning
+                                    {% else %}
+                                        text-danger
+                                    {% endif %}
+                                " stroke-width="8" stroke-linecap="round" fill="none"
+                                                stroke-dasharray="{{ progreso | round(2) }} {{ circunferencia }}" />
+
+                                        </svg>
+
+                                        <!-- Porcentaje -->
+                                        <div class="position-absolute top-50 start-50 translate-middle text-center">
+
+                                            <div class="fw-bold
+                                {% if porcentaje >= 75 %}
+                                    text-success
+                                {% elif porcentaje >= 40 %}
+                                    text-warning
+                                {% else %}
+                                    text-danger
+                                {% endif %}
+                            " style="font-size:1rem;line-height:1;">
+                                                {{ porcentaje }}%
+                                            </div>
+
+                                            <small class="text-muted fw-semibold" style="font-size:.45rem;">
+                                                PAGADO
+                                            </small>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- DATOS -->
+                                <div class="border-top pt-1 mt-1">
+
+                                    <div class="d-flex justify-content-between">
+
+                                        <small class="text-muted" style="font-size:.65rem;">
+                                            Monto
+                                        </small>
+
+                                        <small class="fw-semibold" style="font-size:.68rem;">
+                                            S/ {{ "{:,.2f}".format(prestamo.monto_float) }}
+                                        </small>
+
+                                    </div>
+
+                                    <div class="d-flex justify-content-between">
+
+                                        <small class="text-success" style="font-size:.65rem;">
+                                            Pagado
+                                        </small>
+
+                                        <small class="fw-semibold text-success" style="font-size:.68rem;">
+                                            S/ {{ "{:,.2f}".format(prestamo.pagado_float) }}
+                                        </small>
+
+                                    </div>
+
+                                    <div class="d-flex justify-content-between">
+
+                                        <small class="text-danger" style="font-size:.65rem;">
+                                            Saldo
+                                        </small>
+
+                                        <small class="fw-semibold text-danger" style="font-size:.68rem;">
+                                            S/ {{ "{:,.2f}".format(prestamo.saldo_periodo_float) }}
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- BARRA -->
+                                <div class="progress mt-2" style="height:4px;">
+
+                                    <div class="progress-bar
+                            {% if porcentaje >= 75 %}
+                                bg-success
+                            {% elif porcentaje >= 40 %}
+                                bg-warning
+                            {% else %}
+                                bg-danger
+                            {% endif %}
+                        " style="width:{{ porcentaje }}%;">
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+                {% else %}
+
+                <!-- SIN PRÉSTAMOS -->
+
+                <div class="text-center py-5">
+
+                    <div class="mb-3">
+
+                        <i class="bi bi-bank2 text-muted" style="font-size: 3rem;"></i>
+
+                    </div>
+
+                    <h6 class="fw-bold">
+                        No tienes préstamos activos
+                    </h6>
+
+                    <p class="text-muted small mb-0">
+                        Actualmente no existen préstamos activos registrados.
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+    </div>
+
+    </br>
+
+
+    <!-- =====================================================
+         FILA ACCIONES 
+    ===================================================== -->
+    <div class="card section-card shadow-sm mb-4">
+        <!-- ACCIONES -->
+        <div class="col-lg-12">
+            <div class="card section-card shadow-sm h-100">
+                <div class="section-header">
+                    <h5 class="section-title">
+                        <i class="bi bi-layers text-primary me-2"></i>
+                        Mis acciones
+                    </h5>
+                    <div class="section-subtitle">
+                        Resumen de las acciones registradas
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table portal-table table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>Acción</th>
+                                <th>Valor</th>
+                                <th>Estado</th>
+                                <th>Préstamos</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for accion in acciones %}
+                            <tr>
+                                <td class="fw-semibold">
+                                    <span class="badge bg-primary-subtle text-primary">
+                                        {{ accion.numero_accion }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    S/
+                                    {{ "{:,.2f}".format(
+                                    accion.valor or 0
+                                    ) }}
+                                </td>
+                                <td>
+                                    {% if accion.estado == "ACTIVO" %}
+                                    <span class="badge badge-soft-success">
+                                        Activa
+                                    </span>
+                                    {% else %}
+                                    <span class="badge badge-soft-secondary">
+                                        {{ accion.estado }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ accion.prestamos|length }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         MOVIMIENTOS
+         ===================================================== -->
+    <div class="card section-card shadow-sm mb-4">
+        <div class="section-header">
+            <h5 class="section-title">
+                <i class="bi bi-arrow-left-right
+                          text-primary me-2"></i>
+                Movimientos del período
+            </h5>
+            <div class="section-subtitle">
+                Aportes, cuotas, intereses, amortizaciones y multas
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table portal-table table-hover datatable">
+                <thead>
+                    <tr>
+                        <th>Periodo</th>
+                        <th>Acción</th>
+                        <th>Aporte</th>
+                        <th>Cuota</th>
+                        <th>Interés</th>
+                        <th>Amortización</th>
+                        <th>Multa</th>
+                        <th>Saldo préstamo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movimiento in movimientos %}
+                    <tr>
+                        <td>
+                            {%if periodo.id==movimiento.periodo.id%}
+                            <span class="badge bg-primary">
+                                {{movimiento.periodo.anio}}-{{"%02d"|format(movimiento.periodo.mes)}}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                {{movimiento.periodo.anio}}-{{"%02d"|format(movimiento.periodo.mes)}}
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="fw-semibold">
+                            {% if movimiento.accion %}
+                            <span class="badge bg-primary-subtle text-primary">
+                                {{ movimiento.accion.numero_accion }}
+                            </span>
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                        <td class="text-success fw-semibold text-nowrap">
+                            S/ {{ "{:,.2f}".format(movimiento.aporte or 0) }}
+                        </td>
+                        <td class="text-nowrap">
+                            S/ {{ "{:,.2f}".format(movimiento.cuota_pagada or 0) }}
+                        </td>
+                        <td class="text-warning text-nowrap">
+                            S/ {{ "{:,.2f}".format(movimiento.interes or 0) }}
+                        </td>
+                        <td class="text-primary text-nowrap">
+                            S/ {{ "{:,.2f}".format(movimiento.amortizacion or 0) }}
+                        </td>
+                        <td class="text-nowrap">
+                            {% if movimiento.multa and movimiento.multa > 0 %}
+                            <span class="badge badge-soft-danger">
+                                S/ {{ "{:,.2f}".format(movimiento.multa) }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold text-nowrap">
+                            S/ {{ "{:,.2f}".format(movimiento.saldo_prestamo or 0) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+<!-- =====================================================
+         SOLICITUDES
+         ===================================================== -->
+    <div class="card section-card shadow-sm mb-4">
+        <div class="section-header">
+            <h5 class="section-title">
+                <i class="bi bi-file-earmark-text
+                          text-primary me-2"></i>
+                Solicitudes de préstamo
+            </h5>
+            <div class="section-subtitle">
+                Solicitudes registradas en el período
+            </div>
+        </div>
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between">
+                <h4>
+                    <i class="bi bi-cash-stack"></i>
+                    Solicitudes de préstamo
+                </h4>
+                <a href="{{ url_for('solicitudes.nuevo') }}"
+                    class="btn btn-outline-primary border-primary-subtle bg-primary-subtle bg-opacity-10 d-inline-flex align-items-center gap-2 fw-semibold px-2 py-1 shadow-sm rounded-3">
+                    <i class="bi bi-cash-coin fs-5"></i>
+                    <span>Nueva Solicitud</span>
+                </a>
+
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table portal-table table-hover datatable">
+                <thead>
+                    <tr>
+                        <th>Periodo</th>
+                        <th>Acción</th>
+                        <th>Solicitado</th>
+                        <th>Aprobado</th>
+                        <th>Prioridad</th>
+                        <th>Score</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for solicitud in solicitudes %}
+                    <tr>
+                        <td>
+                            {%if periodo.id==solicitud.periodo.id%}
+                            <span class="badge bg-primary">
+                                {{solicitud.periodo.anio}}-{{"%02d"|format(solicitud.periodo.mes)}}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                {{solicitud.periodo.anio}}-{{"%02d"|format(solicitud.periodo.mes)}}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if solicitud.accion %}
+
+                            {{ solicitud.accion.numero_accion }}
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                        <td class="fw-semibold">
+                            S/
+                            {{ "{:,.2f}".format(
+                            solicitud.monto_solicitado or 0
+                            ) }}
+                        </td>
+                        <td>
+                            S/
+                            {{ "{:,.2f}".format(
+                            solicitud.monto_aprobado or 0
+                            ) }}
+                        </td>
+                        <td>
+                            {{ solicitud.prioridad }}
+                        </td>
+                        <td>
+                            {{ "{:,.2f}".format(
+                            solicitud.score or 0
+                            ) }}
+                        </td>
+                        <td>
+                            {% if solicitud.estado == "ATENDIDA" %}
+                            <span class="badge badge-soft-success">
+                                ATENDIDO
+                            </span>
+                            {% elif solicitud.estado == "PENDIENTE" %}
+                            <span class="badge badge-soft-warning">
+                                PENDIENTE
+                            </span>
+                            {% elif solicitud.estado == "RECHAZADO" %}
+                            <span class="badge badge-soft-danger">
+                                RECHAZADO
+                            </span>
+                            {% else %}
+                            <span class="badge badge-soft-secondary">
+                                {{ solicitud.estado }}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ====================================================
+         TRANSFERENCIAS
+         ===================================================== -->
+
+    <div class="row g-4 mb-4">
+        <!-- REALIZADAS -->
+        <div class="col-lg-6">
+            <div class="card section-card shadow-sm h-100">
+                <div class="section-header">
+                    <h5 class="section-title">
+                        <i class="bi bi-send text-danger me-2"></i>
+                        Transferencias a realizar
+                    </h5>
+
+                    <div class="section-subtitle">
+                        Realizar las Transferencias del período hasta la fecha límite.
+                    </div>
+
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table portal-table table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>Destino</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transferencia in transferencias %}
+                            <tr>
+                                <td class="fw-semibold">
+                                    {{ transferencia.socio_destino.nombres }}
+                                </td>
+                                <td class="text-danger fw-bold">
+                                    S/
+                                    {{ "{:,.2f}".format(
+                                    transferencia.monto
+                                    ) }}
+                                </td>
+                                <td>
+                                    {% if transferencia.estado
+                                    == "CONFIRMADA" %}
+                                    <span class="badge badge-soft-success">
+                                        Confirmada
+                                    </span>
+                                    {% else %}
+                                    <span class="badge badge-soft-secondary">
+                                        {{ transferencia.estado }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECIBIDAS -->
+
+        <div class="col-lg-6">
+            <div class="card section-card shadow-sm h-100">
+                <div class="section-header">
+                    <h5 class="section-title">
+                        <i class="bi bi-download text-success me-2"></i>
+                        Transferencias a recibir
+                    </h5>
+                    <div class="section-subtitle">
+                        Confirmar las Transferencias recibidas hasta la fecha límite.
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table portal-table table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>Origen</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transferencia
+                            in transferencias_recibidas %}
+                            <tr>
+                                <td class="fw-semibold">
+                                    {{ transferencia.socio_origen.nombres }}
+                                </td>
+                                <td class="text-success fw-bold">
+                                    S/
+                                    {{ "{:,.2f}".format(
+                                    transferencia.monto
+                                    ) }}
+                                </td>
+                                <td>
+                                    {% if transferencia.estado
+                                    == "CONFIRMADA" %}
+                                    <span class="badge badge-soft-success">
+                                        CONFIRMADA
+                                    </span>
+                                    {% else %}
+
+                                    <span class="badge badge-soft-secondary">
+                                        {{ transferencia.estado }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         RESUMEN FINAL
+         ===================================================== -->
+    <div class="card section-card shadow-sm mb-4">
+        <div class="section-header">
+            <h5 class="section-title">
+                <i class="bi bi-bar-chart-line text-primary me-2"></i>
+                Resumen financiero del período
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <div class="financial-box">
+                        <div class="financial-label">
+                            Aportes
+                        </div>
+                        <div class="financial-value text-success">
+                            S/
+                            {{ "{:,.2f}".format(
+                            resumen.total_aportes
+                            ) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="financial-box">
+                        <div class="financial-label">
+                            Multas
+                        </div>
+                        <div class="financial-value text-danger">
+                            S/
+                            {{ "{:,.2f}".format(
+                            resumen.total_multas
+                            ) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="financial-box">
+                        <div class="financial-label">
+                            Transferido
+                        </div>
+                        <div class="financial-value text-danger">
+                            S/
+                            {{ "{:,.2f}".format(
+                            resumen.total_transferido
+                            ) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="financial-box">
+                        <div class="financial-label">
+                            Recibido
+                        </div>
+                        <div class="financial-value text-success">
+                            S/
+                            {{ "{:,.2f}".format(
+                            resumen.total_recibido
+                            ) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        window.irADetallePortal = function (periodo_Id) {
+            // console.log para depurar en la consola del navegador
+            // Si el usuario selecciona la opción por defecto vacía, no hace nada
+            if (!periodo_Id) return;
+
+            // Redirige a la URL combinando la ruta con el ID del socio
+            window.location.href = "/socio_portal/mi_estado_cuenta/" + periodo_Id;
+        };
+
+    });
+</script>
+
+{% endblock %}

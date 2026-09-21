@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-cash-stack"></i>
+            Nuevo préstamo
+        </h5>
+    </div>
+
+    <div class="card-body">
+        <form method="post">
+
+            <!-- SOCIO -->
+            <div class="mb-3">
+                <label class="form-label">Socio</label>
+
+                <select id="socio" class="form-select" required {% if socio_seleccionado %}disabled{% endif %}>
+                    <option value="">Seleccione un socio</option>
+                    {% for socio in socios %}
+                    <option value="{{ socio.id }}" {% if socio.id==socio_seleccionado %}selected{% endif %}>
+                        {{ socio.nombres }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <!-- Si el socio viene precargado, este input oculto enviará su ID al servidor -->
+                {% if socio_seleccionado %}
+                <input type="hidden" name="socio_id" value="{{ socio_seleccionado }}">
+                {% endif %}
+
+            </div>
+            <!-- ACCION -->
+            <div class="mb-3">
+                <label class="form-label">
+                    Acción
+                </label>
+
+                <!-- 1. Si existe accion_seleccionada, añadimos el atributo disabled -->
+                <select id="accion" class="form-select" required {% if accion_seleccionada %}disabled{% endif %}>
+                    <option value="">Seleccione una accion</option>
+
+                    {% for accion in acciones %}
+                    <option value="{{ accion.id }}" {% if accion.id==accion_seleccionada %}selected{% endif %}>
+                        {{ accion.numero_accion }} - Valor S/ {{ accion.valor }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <!-- 2. Campo oculto de respaldo para el POST -->
+                <!-- Como quitamos el atributo 'name="accion_id"' del select de arriba para cuando está deshabilitado, -->
+                <!-- este input hidden enviará el valor correcto al backend sin romper tu ruta de Flask. -->
+                {% if accion_seleccionada %}
+                <input type="hidden" name="accion_id" value="{{ accion_seleccionada }}">
+                {% endif %}
+
+            </div>
+            <hr>
+
+            <!-- NUEVO PRESTAMO -->
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">
+                        Nuevo préstamo
+                    </label>
+                    <input type="number" step="0.01" value="0" id="monto" name="monto" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">
+                        Cuota mínima
+                    </label>
+                    <input id="cuota_minima" class="form-control bg-light" readonly>
+                </div>
+                <div class="col-md-4">
+
+                    <label class="form-label">
+                        Interés mensual
+                    </label>
+                    <input class="form-control bg-light" readonly value="{{ interes }}">
+                </div>
+            </div>
+            <hr>
+            <div class="form-check form-switch">
+
+                <input class="form-check-input" type="checkbox" id="chkAnterior">
+
+                <label class="form-check-label">
+                    El socio tiene un préstamo pendiente del período anterior
+                </label>
+            </div>
+
+            <br>
+
+            <div class="row" id="panelAnterior" style="display:none">
+
+                <div class="col-md-4">
+
+                    <label>
+                        Saldo pendiente al cierre del período anterior
+                    </label>
+                    <input type="number" step="0.01" id="saldo_anterior" name="saldo_anterior" value="0"
+                        class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label>
+                        Deuda total resultante
+                    </label>
+                    <input id="saldo_total" class="form-control bg-warning" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label>
+                        Base para calcular interés de este período
+                    </label>
+                    <input id="saldo_interes" class="form-control bg-info text-white" readonly>
+                </div>
+            </div>
+            <br>
+            <button class="btn btn-success">
+
+                Guadar préstamo
+            </button>
+
+            {% if socio_seleccionado %}
+            <!-- Si viene precargado, regresa a la página anterior del historial -->
+            <button type="button" onclick="history.back();" class="btn btn-secondary">
+                Cancelar
+            </button>
+            {% else %}
+            <!-- Si entró de forma normal, va al índice por defecto -->
+            <a href="{{ url_for('prestamos.index') }}" class="btn btn-secondary">
+                Cancelar
+            </a>
+            {% endif %}
+
+
+        </form>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    $("#socio").change(function () {
+        let socio = $(this).val();
+        let combo = $("#accion");
+
+        combo.empty();
+
+        if (socio == "") {
+            combo.append("<option value=''>Primero seleccione un socio</option>");
+            return;
+        }
+
+        combo.append("<option>Cargando...</option>");
+
+        $.get("/prestamos/acciones/" + socio, function (data) {
+            combo.empty();
+
+            if (data.length == 0) {
+                combo.append("<option value=''>No existen acciones disponibles</option>");
+                return;
+            }
+
+            combo.append("<option value=''>Seleccione...</option>");
+            data.forEach(function (a) {
+                combo.append(`
+                <option value="${a.id}">
+                    ${a.numero} - Valor S/ ${a.valor}
+                </option>
+            `);
+            });
+        });
+    });
+
+    $("#chkAnterior").change(function () {
+
+        if ($(this).is(":checked")) {
+
+            $("#panelAnterior").slideDown();
+
+        } else {
+
+            $("#panelAnterior").slideUp();
+
+            $("#saldo_anterior").val(0);
+
+            actualizarSaldoAnterior();
+
+        }
+
+    });
+
+
+    $("#saldo_anterior").on("keyup change", function () {
+
+        actualizarSaldoAnterior();
+
+    });
+
+    $("input[name='monto']").on("keyup change", function () {
+
+        actualizarSaldoAnterior();
+
+    });
+
+
+    function actualizarSaldoAnterior() {
+
+        let saldoAnterior = parseFloat($("#saldo_anterior").val()) || 0;
+
+        let monto = parseFloat($("input[name='monto']").val()) || 0;
+
+        $("#saldo_total").val(
+
+            (saldoAnterior + monto).toFixed(2)
+
+        );
+
+        $("#saldo_interes").val(
+
+            saldoAnterior.toFixed(2)
+
+        );
+
+    }    
+</script>
+{% endblock %}
+{% endblock %}

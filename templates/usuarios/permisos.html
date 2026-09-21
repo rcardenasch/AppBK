@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}
+Permisos del rol
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between
+                align-items-center mb-4">
+
+        <div>
+
+            <h3 class="fw-bold mb-1">
+
+                <i class="bi bi-shield-lock me-2"></i>
+
+                Permisos del rol
+
+            </h3>
+
+            <span class="badge text-bg-primary">
+
+                {{ rol.nombre }}
+
+            </span>
+
+        </div>
+
+        <a href="{{ url_for('usuarios.roles') }}" class="btn btn-light">
+
+            <i class="bi bi-arrow-left me-1"></i>
+
+            Volver
+
+        </a>
+
+    </div>
+
+    <form method="POST">
+        <div class="card border-0 shadow-sm">
+            <!-- Cabecera principal con el "Seleccionar Todo" Global -->
+            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-2 px-3">
+                <span class="text-dark fw-bold m-font-small">Configuración de Permisos</span>
+
+                <!-- Interruptor Global -->
+                <div class="form-check form-switch m-0 m-font-small">
+                    <input class="form-check-input" type="checkbox" id="seleccionar-todo-global"
+                        style="cursor: pointer;">
+                    <label class="form-check-label text-primary fw-semibold" for="seleccionar-todo-global">Seleccionar
+                        todo</label>
+                </div>
+            </div>
+
+            <div class="card-body p-2">
+                <!-- Fila con espaciado ajustado (g-2) para optimizar el espacio horizontal -->
+                <div class="row g-2">
+
+                    {% for modulo, grupo_permisos in permisos|groupby('modulo') %}
+                    <!-- col-xl-2 fuerza exactamente 6 módulos por fila en pantallas grandes -->
+                    <div class="col-sm-6 col-md-4 col-lg-3 col-xl-2">
+                        <div class="p-2 bg-white border rounded-2 h-100 shadow-xs">
+
+                            <!-- Encabezado del Módulo -->
+                            <div class="border-bottom pb-1 mb-2">
+                                <h6 class="text-secondary fw-bold text-capitalize m-0 m-font-small text-truncate"
+                                    title="{{ modulo|replace('_', ' ') }}">
+                                    <i class="bi bi-folder2 text-primary me-1"></i>{{ modulo|replace('_', ' ') }}
+                                </h6>
+                            </div>
+
+                            <!-- Lista vertical súper compacta de acciones -->
+                            <div class="d-flex flex-column">
+                                {% for permiso in grupo_permisos %}
+                                <label
+                                    class="p-1 px-2 rounded cursor-pointer d-flex align-items-center style-permiso-card my-1"
+                                    title="{{ permiso.accion|replace('_', ' ') }}">
+                                    <div class="form-check m-0 w-100 m-font-small">
+                                        <input class="form-check-input check-permiso" type="checkbox" name="permisos"
+                                            value="{{ permiso.id }}" {% if permiso.id in permisos_asignados %} checked
+                                            {% endif %}>
+                                        <span
+                                            class="form-check-label ms-1 text-dark text-capitalize fw-medium d-inline-block text-truncate align-middle"
+                                            style="max-width: 80%;">
+                                            {{ permiso.accion|replace('_', ' ') }}
+                                        </span>
+                                    </div>
+                                </label>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center py-4">
+                        <i class="bi bi-shield-lock text-muted fs-3"></i>
+                        <p class="text-muted small mt-2 mb-0">No existen permisos registrados.</p>
+                    </div>
+                    {% endfor %}
+
+                </div> <!-- /row principal -->
+            </div>
+
+            <!-- Botonera de acciones -->
+            <div class="card-footer bg-light border-top p-2 px-3">
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm fw-medium">
+                        <i class="bi bi-save me-1"></i>Guardar cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<!-- Estilos CSS optimizados para alta densidad de información -->
+<style>
+    .m-font-small {
+        font-size: 0.75rem !important;
+        /* Fuente ligeramente más pequeña para el diseño de 6 columnas */
+    }
+
+    .style-permiso-card {
+        transition: background-color 0.1s ease;
+        cursor: pointer;
+        background-color: #f8f9fa;
+    }
+
+    .style-permiso-card:hover {
+        background-color: #e9ecef !important;
+    }
+
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    /* Estilizado del checkbox para que no se vea tosco en texto pequeño */
+    .form-check-input {
+        width: 0.9em;
+        height: 0.9em;
+        margin-top: 0.2em;
+    }
+</style>
+
+<!-- Lógica JavaScript para el Seleccionar Todo Global -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const globalCheck = document.getElementById("seleccionar-todo-global");
+        const todosLosChecks = document.querySelectorAll(".check-permiso");
+
+        const actualizarEstadoGlobal = () => {
+            if (todosLosChecks.length === 0) return;
+            const todosMarcados = Array.from(todosLosChecks).every(c => c.checked);
+            globalCheck.checked = todosMarcados;
+        };
+
+        globalCheck.addEventListener("change", function () {
+            todosLosChecks.forEach(check => {
+                check.checked = globalCheck.checked;
+            });
+        });
+
+        todosLosChecks.forEach(check => {
+            check.addEventListener("change", actualizarEstadoGlobal);
+        });
+
+        actualizarEstadoGlobal();
+    });
+</script>
+
+
+
+<script>
+
+    async function cambiarEstado(rolId) {
+
+        if (
+            !confirm(
+                "¿Desea cambiar el estado de este rol?"
+            )
+        ) {
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/roles/estado/${rolId}`,
+                    {
+                        method: "POST"
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok || !data.ok) {
+
+                throw new Error(
+                    data.mensaje ||
+                    "No se pudo cambiar el estado."
+                );
+
+            }
+
+            location.reload();
+
+        }
+        catch (error) {
+
+            alert(
+                error.message
+            );
+
+        }
+
+    }
+</script>
+
+{% endblock %}

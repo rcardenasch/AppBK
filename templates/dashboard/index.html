@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Título del Dashboard y Período en la misma fila -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-light-subtle">
+        <!-- Lado Izquierdo: Título y Subtítulo -->
+        <div>
+            <h2 class="fw-extrabold text-dark mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-speedometer2 text-primary"></i>
+                Dashboard
+            </h2>
+            <p class="text-muted small mb-0">Resumen financiero del Banquito Familiar</p>
+        </div>
+
+        <!-- Lado Derecho: Período Vigente -->
+        <div class="text-end">
+            <!-- Badge de Periodo Actual -->
+            <div class="text-md-end">
+                {% if periodo %}
+                <span
+                    class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-semibold">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    Periodo: {{ "%02d"|format(periodo.mes) }} / {{ periodo.anio }} {% if periodo.cerrado %}
+                    <span class="badge bg-danger semibold">Cerrado</span>{%else%} <span
+                        class="badge bg-info semibold">Abierto</span>
+                    {%endif%}
+                </span>
+                {% else %}
+                <span
+                    class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-2 fw-semibold">
+                    <i class="bi bi-exclamation-triangle me-1"></i> Sin período vigente
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ===================== KPIs (4 en fila) ======================= -->
+    <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-4">
+
+        <!-- Tarjeta: Socios -->
+        <div class="col">
+            <div class="card border-0 shadow-sm h-100 rounded-4 transition-hover">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span
+                            class="text-muted small fw-semibold text-uppercase tracking-wider d-block mb-1">Socios</span>
+                        <h2 class="fw-bold text-dark mb-0 fs-1">{{ total_socios }}</h2>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-4 text-primary">
+                        <i class="bi bi-people-fill fs-2 lh-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta: Acciones -->
+        <div class="col">
+            <div class="card border-0 shadow-sm h-100 rounded-4 transition-hover">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span
+                            class="text-muted small fw-semibold text-uppercase tracking-wider d-block mb-1">Acciones</span>
+                        <h2 class="fw-bold text-dark mb-0 fs-1">{{ total_acciones }}</h2>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded-4 text-success">
+                        <i class="bi bi-bank2 fs-2 lh-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta: Préstamos Activos -->
+        <div class="col">
+            <div class="card border-0 shadow-sm h-100 rounded-4 transition-hover">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small fw-semibold text-uppercase tracking-wider d-block mb-1">Préstamos
+                            activos</span>
+                        <h2 class="fw-bold text-dark mb-0 fs-1">{{ prestamos_activos }}</h2>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-3 rounded-4 text-warning">
+                        <i class="bi bi-cash-stack fs-2 lh-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta: Solicitudes -->
+        <div class="col">
+            <div class="card border-0 shadow-sm h-100 rounded-4 transition-hover">
+                <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span
+                            class="text-muted small fw-semibold text-uppercase tracking-wider d-block mb-1">Solicitudes</span>
+                        <h2 class="fw-bold text-dark mb-0 fs-1">{{ solicitudes }}</h2>
+                    </div>
+                    <div class="bg-danger bg-opacity-10 p-3 rounded-4 text-danger">
+                        <i class="bi bi-file-earmark-text fs-2 lh-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ================= FINANZAS ================= -->
+
+    <div class="row mt-4 g-4">
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6>Aportes</h6>
+
+                    <h3 class="text-primary">
+
+                        S/ {{ "{:,.2f}".format(total_aportes) }}
+
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+                    <h6>Amortización</h6>
+                    <h3 class="text-warning">
+                        S/ {{ "{:,.2f}".format(total_amortizacion) }}
+                    </h3>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+                    <h6>Sobres</h6>
+                    <h3 class="text-success">
+                        S/ {{ "{:,.2f}".format(total_sobres) }}
+                    </h3>
+                </div>
+
+            </div>
+
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+                    <h6>Intereses</h6>
+                    <h3 class="text-warning">
+                        S/ {{ "{:,.2f}".format(total_intereses) }}
+                    </h3>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h6>Multas</h6>
+                    <h3 class="text-danger">
+                        S/ {{ "{:,.2f}".format(total_multas) }}
+                    </h3>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================== TOTALES (Diseño Limpio) ==================== -->
+    <div class="row mt-3 g-4">
+        <!-- Total Recaudado -->
+        <div class="col-md-4">
+            <div class="card border-0 bg-body-flat shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="p-1.5 bg-primary bg-opacity-10 rounded-circle d-inline-block"></span>
+                        <h6 class="text-muted small fw-semibold text-uppercase tracking-wider mb-0">Total Recaudado</h6>
+                    </div>
+                    <h2 class="fw-bold text-dark mb-0">
+                        <span class="text-secondary fw-normal fs-4">S/</span> {{ "{:,.2f}".format(total_recaudado) }}
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <!-- Saldo Prestado -->
+        <div class="col-md-4">
+            <div class="card border-0 bg-body-flat shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="p-1.5 bg-warning bg-opacity-15 rounded-circle d-inline-block"></span>
+                        <h6 class="text-muted small fw-semibold text-uppercase tracking-wider mb-0">Saldo Prestado</h6>
+                    </div>
+                    <h2 class="fw-bold text-dark mb-0">
+                        <span class="text-secondary fw-normal fs-4">S/</span> {{ "{:,.2f}".format(saldo_prestamos) }}
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disponible para prestar -->
+        <div class="col-md-4">
+            <div class="card border-0 bg-body-flat shadow-sm rounded-4 border-start border-3 border-success">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="p-1.5 bg-success bg-opacity-10 rounded-circle d-inline-block"></span>
+                        <h6 class="text-muted small fw-semibold text-uppercase tracking-wider mb-0">Disponible para
+                            prestar</h6>
+                    </div>
+                    <h2 class="fw-bold text-success mb-0">
+                        <span class="text-success bg-opacity-50 fw-normal fs-4">S/</span> {{
+                        "{:,.2f}".format(disponible) }}
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ===================== GRAFICOS ==================== -->
+    <div class="row mt-4">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header">
+                    Aportes por Mes
+                </div>
+                <div class="card-body">
+                    <canvas id="chartAportes"></canvas>
+                </div>
+
+            </div>
+
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header">
+                    Préstamos Otorgados
+                </div>
+                <div class="card-body">
+                    <canvas id="chartPrestamos"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================== MOVIMIENTOS =================== -->
+    <div class="card shadow mt-4">
+        <div class="card-header bg-dark text-white">
+            Movimientos del periodo
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped datatable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Socio</th>
+                            <th>Acción</th>
+                            <th>Aporte</th>
+                            <th>Sobre</th>
+                            <th>Cuota</th>
+                            <th>Saldo</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for m in movimientos %}
+                        <tr>
+                            <td>
+                                {{ m.fecha_registro.strftime('%d/%m/%Y') }}
+                            </td>
+                            <td>
+                                {{ m.socio.nombres }}
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">
+                                {{ m.accion.numero_accion }}
+                                </span>
+                            </td>
+                            <td>
+                                {{ "{:,.2f}".format(m.aporte)}}
+                            </td>
+                            <td>
+                                {{ "{:,.2f}".format(m.sobre)}}
+                            </td>
+                            <td>
+                                {{ "{:,.2f}".format(m.cuota_pagada) }}
+                            </td>
+                            <td>
+                                {{ "{:,.2f}".format(m.saldo_prestamo) }}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <!-- Botón Detalle (Opcional, muy útil si ya tienes la ruta def detalle) -->
+                                    <a href="{{ url_for('acciones.detalle', id=m.accion.id) }}"
+                                        class="btn btn-sm btn-outline-info" title="Ver Acción">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>
+    new Chart(document.getElementById("chartAportes"), {
+        type: "bar",
+        data: {
+            labels: {{ mes_nombre_aportes | tojson }},
+        datasets: [{
+            label: "Aportes (S/)",
+            data: {{ aportes_mes | tojson }},
+        backgroundColor: 'rgba(40, 167, 69, 0.2)', // Color verde éxito transparente
+        borderColor: 'rgba(40, 167, 69, 1)',       // Borde verde sólido
+        borderWidth: 1
+            }]
+        },
+        options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+    });
+
+    new Chart(document.getElementById("chartPrestamos"), {
+        type: "bar",
+        data: {
+            labels: {{ mes_nombre_prestamos | tojson }},
+        datasets: [{
+            label: "Prestamos (S/)",
+            data: {{ prestamos_mes | tojson }},
+        backgroundColor: 'rgba(13, 202, 240, 0.2)', // Celeste bajito transparente
+        borderColor: 'rgba(13, 202, 240, 1)',       // Borde celeste sólido
+        borderWidth: 1
+            }]
+        },
+        options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+    });
+</script>
+
+
+{% endblock %}

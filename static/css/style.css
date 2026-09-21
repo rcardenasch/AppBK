@@ -1,0 +1,634 @@
+body{
+
+    background:#f4f7fb;
+    font-family:'Inter',sans-serif;
+    font-size: 14px; /* ⬅️ AGREGA ESTO: Reduce la letra general de la app (por defecto es 16px) */
+
+}
+
+/* Agrega este margen superior al contenedor principal para que no lo tape el menú fijo */
+.wrapper {
+    display: flex;
+    margin-top: 56px; 
+    position: relative;
+    overflow-x: hidden;
+}
+
+.sidebar {
+    width: 270px;
+    height: calc(100vh - 56px);
+    min-height: 0;
+
+    background: #0f172a;
+    color: white;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 20px;
+
+    /* IMPORTANTE: scroll vertical propio */
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    transition: transform 0.3s ease, margin-left 0.3s ease;
+
+    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: #475569 transparent;
+}
+
+/* =====================================================
+   SCROLLBAR DEL SIDEBAR
+   ===================================================== */
+
+.sidebar::-webkit-scrollbar {
+    width: 7px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 10px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+.logo{
+
+    display:flex;
+    gap:15px;
+    align-items:center;
+    margin-bottom:20px;
+
+}
+
+.logo i{
+
+    font-size: 32px; /* ⬅️ REDUCE ESTO: El icono del logo baja de 40px a 32px */
+    color:#38bdf8;
+
+}
+
+.sidebar .nav-link{
+
+    color:#cbd5e1;
+    border-radius:10px;
+    margin-bottom:5px;
+    padding:12px;
+    transition:.25s;
+
+}
+
+.sidebar .nav-link:hover{
+
+    background:#2563eb;
+    color:white;
+
+}
+
+.main{
+
+    flex: 1;
+    padding: 20px;
+    min-width: 0; /* Evita que las tablas rompan el layout flexible */
+}
+
+.card{
+
+    border-radius:18px;
+
+}
+
+.navbar{
+
+    border-radius:18px;
+
+}
+
+.sidebar-footer {
+    margin-top: 20px;
+}
+/* Clase que se aplicará al ocultar en pantallas grandes */
+.sidebar.toggled {
+    margin-left: -270px;
+}
+
+
+/*=====================================================
+=            ESTILOS DATATABLES
+=====================================================*/
+
+.dataTables_wrapper{
+    padding-top:10px;
+}
+
+.dataTables_filter{
+    margin-bottom:15px;
+}
+.dataTables_filter label{
+
+    width:100%;
+    font-weight:600;
+
+}
+
+.dataTables_filter input{
+
+    width:300px !important;
+    border-radius:12px !important;
+    border:1px solid #d1d5db !important;
+    padding:8px 12px !important;
+    margin-left:10px;
+    box-shadow:none !important;
+
+}
+
+.dataTables_length{
+    margin-bottom:15px;
+}
+
+.dataTables_length select{
+    border-radius:10px;
+    padding:5px 25px 5px 10px;
+}
+
+.table{
+    border-radius:15px;
+    overflow:hidden;
+}
+
+.table thead{
+    background:#1e3a8a;
+    color:white;
+}
+
+.table thead th{
+    border:none;
+    font-weight:600;
+    vertical-align:middle;
+}
+
+.table tbody tr{
+    transition:.20s;
+
+}
+
+.table tbody tr:hover{
+    background:#eef6ff;
+}
+
+.table td{
+    vertical-align:middle;
+}
+
+.dataTables_info{
+    font-size: 12px;
+    font-size:14px;
+    color:#64748b;
+}
+
+.dataTables_paginate{
+    margin-top:15px;
+}
+
+.dataTables_paginate .paginate_button{
+    border-radius:10px !important;
+    margin:2px;
+    border:none !important;
+}
+
+.page-item.active .page-link{
+    background:#2563eb;
+    border-color:#2563eb;
+}
+
+.page-link{
+    color:#2563eb;
+}
+
+.page-link:hover{
+    background:#dbeafe;
+    color:#1d4ed8;
+}
+
+.dataTables_processing{
+    border-radius:12px;
+    padding:20px;
+}
+.badge{
+    border-radius:20px;
+    padding: 5px 10px; /* ⬅️ MODIFICA ESTO: Reduce el relleno de las etiquetas para que vayan acorde a la letra */
+    font-size: 12px;
+}
+.btn{
+
+    border-radius:10px;
+    font-size: 13px; /* ⬅️ AGREGA ESTO: Letra de los botones más pequeña */
+
+}
+
+.card{
+
+    border:none;
+    box-shadow:0 .25rem .8rem rgba(0,0,0,.08);
+
+}
+.table{
+
+    margin-bottom:0;
+
+}
+
+.table tbody tr{
+
+    border-bottom:1px solid #eef2f7;
+
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 10px 14px; /* ⬅️ MODIFICA ESTO: Reduce el padding vertical de 14px a 10px para compactar la tabla */
+    font-size: 13px; /* ⬅️ AGREGA ESTO: Letra de las celdas de la tabla más pequeña */
+}
+
+
+
+/* =====================================================
+   = RESPONSIVO: Comportamiento en Celulares (Menos de 992px)
+   ===================================================== */
+@media (max-width: 991.98px) {
+    .sidebar {
+        position: fixed;
+        top: 56px;
+        left: 0;
+        height: calc(100vh - 56px);
+        z-index: 1030;
+        /* Por defecto está oculto hacia la izquierda en celulares */
+        transform: translateX(-100%); 
+        margin-left: 0 !important; 
+    }
+
+    /* Clase que se aplicará al mostrar en celulares */
+    .sidebar.toggled {
+        transform: translateX(0);
+    }
+}
+
+/* =====================================================
+   = ESTILOS DE LA HAMBURGUESA PERSONALIZADA
+   ===================================================== */
+.btn-hamburguesa {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 26px;
+    height: 22px;
+    padding: 0;
+    z-index: 1050;
+    outline: none !important;
+    box-shadow: none !important;
+    transition: transform 0.3s ease;
+}
+
+/* Estilo individual para cada línea de la hamburguesa */
+.btn-hamburguesa .linea {
+    width: 100%;
+    height: 3px;
+    background-color: #cbd5e1; /* Color gris claro a juego con tu sidebar */
+    border-radius: 5px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: left center;
+}
+
+/* Efecto Hover: Brillo celeste del sistema al pasar el mouse */
+.btn-hamburguesa:hover .linea {
+    background-color: #38bdf8; 
+}
+
+/* =====================================================
+   = ANIMACIÓN: Transformación en "X" (Cuando el menú cambia)
+   ===================================================== */
+/* Rotación de la línea superior */
+.sidebar.toggled ~ .main #sidebarToggle .linea:nth-child(1),
+.wrapper:has(.sidebar.toggled) #sidebarToggle .linea:nth-child(1) {
+    transform: rotate(45deg) translateY(-2px);
+    background-color: #38bdf8;
+}
+
+/* Desaparición de la línea central con desvanecimiento */
+.sidebar.toggled ~ .main #sidebarToggle .linea:nth-child(2),
+.wrapper:has(.sidebar.toggled) #sidebarToggle .linea:nth-child(2) {
+    width: 0%;
+    opacity: 0;
+}
+
+/* Rotación de la línea inferior */
+.sidebar.toggled ~ .main #sidebarToggle .linea:nth-child(3),
+.wrapper:has(.sidebar.toggled) #sidebarToggle .linea:nth-child(3) {
+    transform: rotate(-45deg) translateY(2px);
+    background-color: #38bdf8;
+}
+
+
+/* Portal*/
+   /* =========================================================
+       ESTADO DE CUENTA
+       ========================================================= */
+
+    .portal-wrapper {
+        max-width: 1500px;
+        margin: 0 auto;
+    }
+
+    .hero-periodo {
+        border: 0;
+        border-radius: 1.25rem;
+        background:
+            linear-gradient(135deg,
+                #0d6efd 0%,
+                #084298 100%);
+        color: white;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .hero-periodo::after {
+        content: "";
+        position: absolute;
+        width: 240px;
+        height: 240px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .07);
+        right: -70px;
+        top: -90px;
+    }
+
+    .hero-periodo::before {
+        content: "";
+        position: absolute;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .05);
+        right: 130px;
+        bottom: -100px;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .socio-avatar {
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, .15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, .18);
+    }
+
+    .periodo-badge {
+        background: rgba(255, 255, 255, .15);
+        border: 1px solid rgba(255, 255, 255, .20);
+        backdrop-filter: blur(5px);
+    }
+
+    /* =========================================================
+       CARDS
+       ========================================================= */
+
+    .summary-card {
+        border: 0;
+        border-radius: 1rem;
+        transition: transform .18s ease,
+            box-shadow .18s ease;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 .5rem 1.5rem rgba(0, 0, 0, .08) !important;
+    }
+
+    .summary-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .summary-label {
+        font-size: .70rem;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        color: #6c757d;
+        font-weight: 700;
+    }
+
+    .summary-value {
+        font-size: 1.35rem;
+        font-weight: 750;
+        color: #212529;
+    }
+
+    /* =========================================================
+       SECTION
+       ========================================================= */
+
+    .section-card {
+        border: 0;
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+    .section-header {
+        background: white;
+        border-bottom: 1px solid #eef0f2;
+        padding: 1rem 1.25rem;
+    }
+
+    .section-title {
+        font-weight: 700;
+        margin: 0;
+        font-size: 1rem;
+    }
+
+    .section-subtitle {
+        font-size: .78rem;
+        color: #6c757d;
+        margin-top: .15rem;
+    }
+
+    /* =========================================================
+       TABLE
+       ========================================================= */
+
+    .portal-table {
+        margin-bottom: 0;
+        vertical-align: middle;
+    }
+
+    .portal-table thead th {
+        font-size: .70rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #6c757d;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        white-space: nowrap;
+        padding: .85rem 1rem;
+    }
+
+    .portal-table tbody td {
+        padding: .85rem 1rem;
+        border-color: #f0f1f2;
+        font-size: .85rem;
+    }
+
+    .portal-table tbody tr:hover {
+        background: #f8fbff;
+    }
+
+    /* =========================================================
+       BADGES
+       ========================================================= */
+
+    .badge-soft-success {
+        color: #146c43;
+        background: #d1e7dd;
+    }
+
+    .badge-soft-warning {
+        color: #997404;
+        background: #fff3cd;
+    }
+
+    .badge-soft-danger {
+        color: #b02a37;
+        background: #f8d7da;
+    }
+
+    .badge-soft-primary {
+        color: #084298;
+        background: #cfe2ff;
+    }
+
+    .badge-soft-secondary {
+        color: #495057;
+        background: #e9ecef;
+    }
+
+    /* =========================================================
+       FINANCIAL BOX
+       ========================================================= */
+
+    .financial-box {
+        border-radius: .9rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border: 1px solid #edf0f2;
+    }
+
+    .financial-label {
+        font-size: .72rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+
+    .financial-value {
+        font-size: 1.15rem;
+        font-weight: 750;
+    }
+
+    /* =========================================================
+       DATA TABLES
+       ========================================================= */
+
+    .dataTables_wrapper {
+        padding: 1rem;
+        font-size: .7rem !important;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        border: 1px solid #dee2e6;
+        border-radius: .5rem;
+        padding: .35rem .65rem;
+        margin-left: .4rem;
+    }
+
+    .dataTables_wrapper .dataTables_length select {
+        border: 1px solid #dee2e6;
+        border-radius: .5rem;
+        padding: .3rem 1.8rem .3rem .5rem;
+        font-size: .6rem;
+    }
+
+    .dataTables_wrapper .dataTables_info {
+        color: #6c757d;
+        font-size: .6rem;
+    }
+
+    .dataTables_wrapper .pagination {
+        margin-bottom: 0;
+    }
+
+    .dataTables_wrapper .page-link {
+        border: 0;
+        margin: 0 2px;
+        border-radius: .45rem !important;
+        color: #495057;
+        font-size: .6rem;
+    }
+
+    .dataTables_wrapper .page-item.active .page-link {
+        background: #0d6efd;
+        color: white;
+    }
+
+    .dataTables_wrapper .page-item.disabled .page-link {
+        background: #f8f9fa;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+       ========================================================= */
+
+    @media (max-width: 767.98px) {
+
+        .hero-periodo {
+            border-radius: 1rem;
+        }
+
+        .summary-value {
+            font-size: 1.15rem;
+        }
+
+        .dataTables_wrapper {
+            padding: .75rem;
+        }
+
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_length {
+            text-align: left !important;
+            margin-bottom: .6rem;
+        }
+
+    }
+

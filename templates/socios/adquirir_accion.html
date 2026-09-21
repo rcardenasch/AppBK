@@ -1,0 +1,737 @@
+{% extends "base.html" %}
+
+{% block title %}
+Adquirir nueva acción
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- =====================================================
+         CABECERA
+    ====================================================== -->
+
+    <div class="d-flex flex-wrap justify-content-between
+                align-items-center gap-3 mb-4">
+
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+
+                <a href="{{ url_for('socios.detalle', id=socio.id ) }}"
+                   class="btn btn-sm btn-light border">
+
+                    <i class="bi bi-arrow-left"></i>
+
+                </a>
+
+                <span class="text-muted small">
+                    Socios
+                </span>
+
+            </div>
+
+            <h3 class="fw-bold mb-1">
+                Adquirir nueva acción
+            </h3>
+
+            <p class="text-muted mb-0">
+                Registra una nueva acción para el socio
+                y calcula automáticamente su obligación.
+            </p>
+        </div>
+
+        <!-- Lado Derecho: Período Vigente -->
+        <div class="text-end">
+            <!-- Badge de Periodo Actual -->
+            <div class="text-md-end">
+                {% if periodo %}
+                <span
+                    class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-semibold">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    Periodo: {{ "%02d"|format(periodo.mes) }} / {{ periodo.anio }} {% if periodo.cerrado %}
+                    <span class="badge bg-danger semibold">Cerrado</span>{%else%} <span
+                        class="badge bg-info semibold">Abierto</span>
+                    {%endif%}
+                </span>
+                {% else %}
+                <span
+                    class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-2 fw-semibold">
+                    <i class="bi bi-exclamation-triangle me-1"></i> Sin período vigente
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SOCIO
+    ====================================================== -->
+
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <div class="row align-items-center">
+
+                <div class="col-md-8">
+
+                    <div class="d-flex align-items-center gap-3">
+
+                        <div class="rounded-circle
+                                    bg-primary-subtle
+                                    text-primary
+                                    d-flex align-items-center
+                                    justify-content-center"
+                             style="
+                             width:52px;
+                             height:52px;
+                             font-size:22px;">
+                            <i class="bi bi-person"></i>
+                        </div>
+
+                        <div>
+                            <div class="fw-bold fs-5">
+                                {{ socio.nombres }}
+
+                            </div>
+
+                            <div class="text-muted small">
+
+                                Socio #{{ socio.id }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+
+                    <span class="badge rounded-pill
+                                 bg-success">
+
+                        ACTIVO
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="row g-4">
+
+        <!-- =================================================
+             FORMULARIO
+        ================================================== -->
+
+        <div class="col-lg-7">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-header bg-white
+                            border-0 pt-4 px-4">
+
+                    <h5 class="fw-bold mb-1">
+
+                        <i class="bi bi-plus-circle
+                                  text-primary me-2"></i>
+
+                        Datos de la nueva acción
+
+                    </h5>
+
+                    <p class="text-muted small mb-0">
+
+                        Ingresa el valor de la acción que
+                        deseas adquirir.
+
+                    </p>
+
+                </div>
+
+                <div class="card-body p-4">
+
+                    <form method="POST"
+                          action="{{ url_for(
+                              'socios.guardar_adquisicion_accion',
+                              socio_id=socio.id
+                          ) }}"
+                          id="formAdquisicion">
+
+                        <input type="hidden"
+                               name="periodo_id"
+                               id="periodo_id"
+                               value="{{ periodo.id }}">
+
+
+                        <!-- VALOR -->
+                        <div class="mb-4">
+                            <label
+                                class="form-label fw-semibold">
+                                Valor de la acción
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">
+                                    S/
+                                </span>
+                                <input
+                                    type="number"
+                                    class="form-control"
+                                    name="valor_accion"
+                                    id="valor_accion"
+                                    value="4800.00"
+                                    min="0.01"
+                                    step="0.01"
+                                    required>
+                            </div>
+                            <div class="form-text">
+                                Ejemplo: S/ 4,800.00
+                            </div>
+
+                        </div>
+
+
+                        <!-- PERIODO -->
+
+                        <div class="mb-4">
+
+                            <label class="form-label fw-semibold">
+                                Período de adquisición
+                            </label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="{{ periodo.mes }}/{{ periodo.anio }}"
+                                readonly>
+                            <input
+                                type="hidden"
+                                name="periodo_id"
+                                value="{{ periodo.id }}">
+                        </div>
+
+                        <!-- INFORMACIÓN -->
+                        <div class="alert alert-info border-0">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-info-circle fs-5"></i>
+                                <div>
+                                    <div class="fw-semibold">
+                                        Compra en el período actual
+                                    </div>
+                                    <div class="small">
+                                        La acción se registrará
+                                        asociada a un nuevo préstamo
+                                        que será cancelado en este
+                                        mismo período.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="btn btn-primary btn-lg
+                                   w-100"
+                            id="btnCalcular">
+                            <i class="bi bi-calculator me-2"></i>
+                            Calcular adquisición
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================
+             RESUMEN
+        ================================================== -->
+
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-bold mb-1">
+                        Resumen de la operación
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        Verifica los importes antes
+                        de confirmar.
+                    </p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between
+                                py-3 border-bottom">
+                        <span class="text-muted">
+                            Valor de acción
+                        </span>
+                        <strong id="resumenValor">
+                            S/ 4,800.00
+                        </strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between
+                                py-3 border-bottom">
+
+                        <span class="text-muted">
+                            Interés
+                        </span>
+                        <strong id="resumenInteres">
+                            S/ 0.00
+                        </strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between
+                                py-4">
+                        <span class="fw-bold fs-5">
+                            Total a pagar
+                        </span>
+                        <strong
+                            class="text-primary fs-4"
+                            id="resumenTotal">
+
+                            S/ 0.00
+
+                        </strong>
+
+                    </div>
+
+
+                    <div class="alert alert-success
+                                border-0 mt-3">
+
+                        <div class="d-flex gap-2">
+
+                            <i class="bi bi-check-circle
+                                      fs-5"></i>
+
+                            <div>
+
+                                <div class="fw-semibold">
+
+                                    Cancelación inmediata
+
+                                </div>
+
+                                <div class="small">
+
+                                    El nuevo préstamo quedará
+                                    cancelado al registrar el
+                                    pago correspondiente.
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="btn btn-success
+                               btn-lg w-100 d-none"
+                        id="btnConfirmar">
+
+                        <i class="bi bi-check2-circle me-2"></i>
+
+                        Confirmar adquisición
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     MODAL CONFIRMACIÓN
+========================================================= -->
+
+<div class="modal fade"
+     id="modalConfirmacion"
+     tabindex="-1">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title fw-bold">
+
+                    Confirmar adquisición
+
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <p>
+
+                    Se registrará una nueva acción
+                    y un préstamo cancelado en el
+                    período actual.
+
+                </p>
+
+                <div class="rounded-3 bg-light p-3">
+
+                    <div class="d-flex justify-content-between mb-2">
+
+                        <span>
+                            Acción
+                        </span>
+
+                        <strong id="modalValor">
+                            S/ 4,800.00
+                        </strong>
+
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+
+                        <span>
+                            Interés
+                        </span>
+
+                        <strong id="modalInteres">
+                            S/ 00.00
+                        </strong>
+
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between">
+
+                        <span class="fw-bold">
+                            Total
+                        </span>
+
+                        <strong
+                            class="text-success"
+                            id="modalTotal">
+
+                            S/ 00.00
+
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    class="btn btn-light"
+                    data-bs-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-success"
+                    id="btnGuardar">
+
+                    <i class="bi bi-check-lg me-1"></i>
+
+                    Registrar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{% if resultado_proceso_nueva_accion %}
+
+<div class="modal fade" id="modalResultadoGeneracion" tabindex="-1" aria-labelledby="modalResultadoGeneracionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <!-- Header: Se usa un tono más suave (success-subtle) para un look moderno o se mantiene limpio -->
+            <div class="modal-header bg-success text-white border-bottom-0 rounded-top">
+                <h5 class="modal-title fs-5" id="modalResultadoGeneracionLabel">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    Acción Registrada
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <!-- Sección de Éxito Principal -->
+                <div class="text-center mb-4">
+                    <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-3 animated scaleIn" style="width: 75px; height: 75px;">
+                        <i class="bi bi-check-lg text-success" style="font-size: 2.2rem;"></i>
+                    </div>
+                
+                    <h5 class="fw-bold text-dark mb-2">
+                        Acción <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace px-2 py-1 fs-6">{{ resultado_proceso_nueva_accion.numero_accion }}</span> creada correctamente
+                    </h5>
+
+                    <p class="text-muted small mb-0 px-3">
+                        El proceso de apertura e inscripción de la nueva acción finalizó con éxito en el sistema.
+                    </p>
+                </div>
+
+                <!-- Tarjetas de Resumen Financiero -->
+                <div class="row g-3">
+                    <!-- VALOR ACCIÓN -->
+                    <div class="col-4">
+                        <div class="card border border-light-subtle bg-body-tertiary h-100 rounded-3">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div>
+                                    <i class="bi bi-gem text-primary fs-4"></i>
+                                    <div class="fs-5 fw-bold text-dark mt-1">
+                                        S/ {{ "{:,.2f}".format(resultado_proceso_nueva_accion.valor_accion|float) }}
+                                    </div>
+                                </div>
+                                <small class="text-muted lh-sm d-block mt-1" style="font-size: 0.75rem;">Valor Acción</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INTERESES -->
+                    <div class="col-4">
+                        <div class="card border border-light-subtle bg-body-tertiary h-100 rounded-3">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div>
+                                    <i class="bi bi-graph-up-arrow text-success fs-4"></i>
+                                    <div class="fs-5 fw-bold text-dark mt-1">
+                                        S/ {{ "{:,.2f}".format(resultado_proceso_nueva_accion.intereses|float) }}
+                                    </div>
+                                </div>
+                                <small class="text-muted lh-sm d-block mt-1" style="font-size: 0.75rem;">Intereses</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CUOTA PAGADA -->
+                    <div class="col-4">
+                        <div class="card border border-light-subtle bg-body-tertiary h-100 rounded-3">
+                            <div class="card-body p-3 text-center d-flex flex-column justify-content-between">
+                                <div>
+                                    <i class="bi bi-cash-stack text-warning fs-4"></i>
+                                    <div class="fs-5 fw-bold text-dark mt-1">
+                                        S/ {{ "{:,.2f}".format(resultado_generacion.cuota_final|float) }}
+                                    </div>
+                                </div>
+                                <small class="text-muted lh-sm d-block mt-1" style="font-size: 0.75rem;">Cuota Pagada</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer limpio sin bordes innecesarios -->
+            <div class="modal-footer border-top-0 p-3 pt-0">
+                <button type="button" class="btn btn-success px-4 py-2 w-100 rounded-3 fw-bold" data-bs-dismiss="modal">
+                    <i class="bi bi-check-lg me-1"></i> Aceptar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const modalElement =
+            document.getElementById(
+                "modalResultadoGeneracion"
+            );
+
+        if (modalElement) {
+
+            const modal =
+                new bootstrap.Modal(
+                    modalElement
+                );
+
+            modal.show();
+        }
+
+    }
+);
+</script>
+
+{% endif %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+        const valorInput = document.getElementById("valor_accion");
+        const periodoInput = document.getElementById("periodo_id");
+        const btnCalcular = document.getElementById("btnCalcular");
+        const btnConfirmar = document.getElementById("btnConfirmar");
+        const btnGuardar = document.getElementById("btnGuardar");
+        const form = document.getElementById("formAdquisicion");
+
+        function moneda(valor) {
+
+            return new Intl.NumberFormat(
+                "es-PE",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
+            ).format(
+                Number(valor)
+            );
+
+        }
+
+        async function calcular() {
+
+            const valor =
+                valorInput.value;
+
+            if (
+                !valor ||
+                Number(valor) <= 0
+            ) {
+                alert("Ingrese un valor válido.");
+                return;
+            }
+
+            btnCalcular.disabled = true;
+            btnCalcular.innerHTML =
+                '<span class="spinner-border ' +
+                'spinner-border-sm me-2"></span>' +
+                'Calculando...';
+
+            try {
+
+                const formData = new FormData();
+
+                formData.append("valor_accion",valor);
+                formData.append("periodo_id",periodoInput.value);
+
+                const response =
+                    await fetch(
+                        "{{ url_for('socios.calcular_adquisicion_accion',socio_id=socio.id) }}",
+                        {
+                            method: "POST",
+                            body: formData,
+                            headers: {
+                                "X-Requested-With":
+                                    "XMLHttpRequest"
+                            }
+                        }
+                    );
+
+                const data =
+                    await response.json();
+
+                if (!data.ok) {
+
+                    throw new Error(
+                        data.mensaje
+                    );
+                }
+
+                document.getElementById("resumenValor").textContent = "S/ " + moneda(data.valor_accion);
+                document.getElementById("resumenInteres").textContent ="S/ " + moneda(data.intereses);
+                document.getElementById("resumenTotal").textContent ="S/ " + moneda(data.cuota_pagar);
+                document.getElementById("modalValor").textContent ="S/ " + moneda(data.valor_accion);
+                document.getElementById("modalInteres").textContent ="S/ " + moneda(data.intereses);
+                document.getElementById("modalTotal").textContent ="S/ " + moneda(data.cuota_pagar);
+                btnConfirmar.classList.remove("d-none");
+
+            } catch (error) {
+
+                alert(
+                    error.message
+                );
+
+            } finally {
+
+                btnCalcular.disabled = false;
+                btnCalcular.innerHTML =
+                    '<i class="bi bi-calculator me-2"></i>' +
+                    'Calcular adquisición';
+            }
+
+        }
+
+        btnCalcular.addEventListener(
+            "click",
+            calcular
+        );
+
+        btnConfirmar.addEventListener(
+            "click",
+            function () {
+
+                const modal =
+                    new bootstrap.Modal(
+                        document.getElementById(
+                            "modalConfirmacion"
+                        )
+                    );
+
+                modal.show();
+
+            }
+        );
+
+
+        btnGuardar.addEventListener(
+            "click",
+            function () {
+
+                btnGuardar.disabled = true;
+
+                btnGuardar.innerHTML =
+                    '<span class="spinner-border ' +
+                    'spinner-border-sm me-2"></span>' +
+                    'Registrando...';
+
+                form.submit();
+
+            }
+        );
+
+    }
+);
+
+</script>
+
+
+
+
+{% endblock %}

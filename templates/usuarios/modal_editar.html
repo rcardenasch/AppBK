@@ -1,0 +1,169 @@
+<div
+    class="modal fade"
+    id="modalEditar"
+    tabindex="-1">
+
+    <div class="modal-dialog modal-lg">
+
+        <div class="modal-content">
+
+            <form
+                id="formEditar"
+                method="POST">
+
+                <div class="modal-header bg-warning">
+
+                    <h5>
+
+                        <i class="bi bi-pencil-square"></i>
+
+                        Editar Usuario
+
+                    </h5>
+
+                    <button
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                    </button>
+
+                </div>
+
+
+                <div class="modal-body">
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label>
+
+                                Nombres
+
+                            </label>
+
+                            <input
+                                id="edit_nombres"
+                                name="nombres"
+                                class="form-control">
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label>
+
+                                Usuario
+
+                            </label>
+
+                            <input
+                                id="edit_usuario"
+                                name="usuario"
+                                class="form-control">
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label>
+
+                                Correo
+
+                            </label>
+
+                            <input
+                                id="edit_correo"
+                                name="correo"
+                                class="form-control">
+
+                        </div>
+
+
+                        <div class="col-md-6 mb-3">
+
+                            <label>
+
+                                Rol
+
+                            </label>
+
+                            <select
+                                id="edit_rol"
+                                name="rol_id"
+                                class="form-select">
+
+                                {% for rol in roles %}
+
+                                <option value="{{rol.id}}">
+
+                                    {{rol.nombre}}
+
+                                </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="col-md-6">
+
+                            <label>
+
+                                Estado
+
+                            </label>
+
+                            <select
+                                id="edit_estado"
+                                name="estado"
+                                class="form-select">
+
+                                <option value="1">
+
+                                    Activo
+
+                                </option>
+
+                                <option value="">
+
+                                    Inactivo
+
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                        Cancelar
+
+                    </button>
+
+                    <button
+                        class="btn btn-warning">
+
+                        Actualizar
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
