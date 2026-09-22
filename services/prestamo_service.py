@@ -413,39 +413,28 @@ class PrestamoService:
         saldo_nuevos = saldo_nuevos.quantize(
             CENTAVOS
         )
-
         # =====================================================
-        # 8. DETERMINAR SI EL SALDO ACTUAL ESTÁ CONTAMINADO
+        # 8. DETERMINAR CÓMO SE APLICÓ LA AMORTIZACIÓN ANTERIOR
         # =====================================================
         #
-        # Esta es la parte que evita el problema de la SEGUNDA
-        # EDICIÓN.
+        # La amortización anterior pudo haber sido aplicada:
         #
-        # Movimiento anterior:
+        #   a) completamente al capital
+        #   b) parcialmente a la multa y el resto al capital
+        #   c) completamente a la multa
         #
-        #   saldo_prestamo =
-        #       capital_apertura
-        #       + multa
-        #       + préstamos_nuevos
-        #       - amortización
+        # Además, existen movimientos antiguos donde la multa
+        # pudo haber quedado incorporada al saldo del préstamo.
         #
-        # Por tanto, el capital después del movimiento debería ser:
+        # Por eso NO asumimos cómo se hizo.
         #
-        #   saldo_movimiento
-        #       - multa
-        #       - préstamos_nuevos
+        # Lo reconstruimos comparando:
         #
-        # Si Prestamo.saldo_actual coincide con:
+        #   saldo total del movimiento anterior
+        #   contra
+        #   capital actualmente almacenado.
         #
-        #   saldo_movimiento - préstamos_nuevos
-        #
-        # significa que la multa está contaminando el capital.
-        #
-        # Si coincide con:
-        #
-        #   saldo_movimiento - multa - préstamos_nuevos
-        #
-        # el capital ya está correcto.
+        # Esto permite que la edición sea idempotente.
         # =====================================================
 
         saldo_movimiento_anterior = Decimal(
@@ -454,122 +443,162 @@ class PrestamoService:
             )
         ).quantize(CENTAVOS)
 
-        capital_esperado_limpio = (
-            saldo_movimiento_anterior
-            - multa_anterior
-            - saldo_nuevos
-        ).quantize(CENTAVOS)
-
-        capital_esperado_contaminado = (
-            saldo_movimiento_anterior
-            - saldo_nuevos
-        ).quantize(CENTAVOS)
-
-        diferencia_limpio = abs(
-            saldo_capital_actual
-            - capital_esperado_limpio
-        ).quantize(CENTAVOS)
-
-        diferencia_contaminado = abs(
-            saldo_capital_actual
-            - capital_esperado_contaminado
-        ).quantize(CENTAVOS)
-
-        multa_separada = Decimal("0.00")
-
-        # =====================================================
-        # 9. CORREGIR CONTAMINACIÓN SOLAMENTE SI EXISTE
-        # =====================================================
-
-        if (
-            multa_anterior > Decimal("0.00")
-            and diferencia_contaminado <= CENTAVOS
-            and diferencia_limpio > CENTAVOS
-        ):
-
-            print("\n*** SALDO CONTAMINADO DETECTADO ***")
-            print(
-                f"Capital actual        : "
-                f"{saldo_capital_actual}"
-            )
-            print(
-                f"Capital esperado      : "
-                f"{capital_esperado_limpio}"
-            )
-            print(
-                f"Multa a separar       : "
-                f"{multa_anterior}"
-            )
-
-            multa_a_quitar = multa_anterior
-
-            for prestamo in prestamos:
-
-                if multa_a_quitar <= Decimal("0.00"):
-                    break
-
-                saldo_actual = Decimal(
-                    str(
-                        prestamo.saldo_actual or 0
-                    )
-                ).quantize(CENTAVOS)
-
-                if saldo_actual <= Decimal("0.00"):
-                    continue
-
-                quitar = min(
-                    saldo_actual,
-                    multa_a_quitar
-                ).quantize(CENTAVOS)
-
-                prestamo.saldo_actual = (
-                    saldo_actual - quitar
-                ).quantize(CENTAVOS)
-
-                multa_a_quitar = (
-                    multa_a_quitar - quitar
-                ).quantize(CENTAVOS)
-
-                multa_separada += quitar
-
-                if prestamo.saldo_actual > Decimal("0.00"):
-                    prestamo.estado = "ACTIVO"
-                else:
-                    prestamo.estado = "CANCELADO"
-
-                print(
-                    f"  MULTA SEPARADA -> "
-                    f"Préstamo {prestamo.id} "
-                    f"| -{quitar} "
-                    f"| capital={prestamo.saldo_actual}"
-                )
-
-            multa_separada = multa_separada.quantize(
-                CENTAVOS
-            )
-
-        else:
-
-            print("\n*** SALDO YA ESTÁ LIMPIO ***")
-            print(
-                f"Capital actual        : "
-                f"{saldo_capital_actual}"
-            )
-            print(
-                f"Capital esperado      : "
-                f"{capital_esperado_limpio}"
-            )
-            print(
-                "NO se vuelve a descontar la multa."
-            )
-
-        # =====================================================
-        # 10. RESTAURAR LA AMORTIZACIÓN ANTERIOR
+        # -----------------------------------------------------
+        # PRÉSTAMOS NUEVOS DEL MISMO PERÍODO
         #
-        # SOLO CAPITAL.
+        # No forman parte del capital de apertura que estamos
+        # restaurando, pero sí pueden estar incluidos en
+        # movimiento.saldo_prestamo.
+        # -----------------------------------------------------
+
+        prestamos_nuevos = (
+            db.query(Prestamo)
+            .filter(
+                Prestamo.accion_id == movimiento.accion_id,
+                Prestamo.periodo_id == movimiento.periodo_id
+            )
+            .all()
+        )
+
+        saldo_nuevos = Decimal("0.00")
+
+        for prestamo in prestamos_nuevos:
+
+            monto = Decimal(
+                str(
+                    prestamo.monto or 0
+                )
+            ).quantize(CENTAVOS)
+
+            if monto > Decimal("0.00"):
+                saldo_nuevos += monto
+
+        saldo_nuevos = saldo_nuevos.quantize(CENTAVOS)
+
+        # -----------------------------------------------------
+        # SALDO TOTAL DEL MOVIMIENTO CORRESPONDIENTE A LA
+        # APERTURA + MULTA.
+        #
+        # Quitamos únicamente los préstamos nuevos.
+        # -----------------------------------------------------
+
+        saldo_total_anterior = (
+            saldo_movimiento_anterior
+            - saldo_nuevos
+        ).quantize(CENTAVOS)
+
+        if saldo_total_anterior < Decimal("0.00"):
+            saldo_total_anterior = Decimal("0.00")
+
+
+        # =====================================================
+        # 9. DETERMINAR MULTA QUE QUEDÓ PENDIENTE
+        # =====================================================
+        #
+        # Si:
+        #
+        #   saldo_total_anterior - capital_actual = multa pendiente
+        #
+        # entonces podemos saber cuánto de la multa fue pagado
+        # con la amortización anterior.
+        #
+        # Esto funciona para los tres casos:
+        #
+        #   A) No se pagó multa
+        #   B) Se pagó parte de la multa
+        #   C) Se pagó toda la multa
         # =====================================================
 
-        pendiente = amortizacion_anterior
+        multa_pendiente_inferida = (
+            saldo_total_anterior
+            - saldo_capital_actual
+        ).quantize(CENTAVOS)
+
+        if multa_pendiente_inferida < Decimal("0.00"):
+            multa_pendiente_inferida = Decimal("0.00")
+
+        if multa_pendiente_inferida > multa_anterior:
+            multa_pendiente_inferida = multa_anterior
+
+
+        # =====================================================
+        # 10. DETERMINAR MULTA PAGADA
+        # =====================================================
+
+        multa_pagada_anterior = (
+            multa_anterior
+            - multa_pendiente_inferida
+        ).quantize(CENTAVOS)
+
+        if multa_pagada_anterior < Decimal("0.00"):
+            multa_pagada_anterior = Decimal("0.00")
+
+
+        # =====================================================
+        # 11. DETERMINAR AMORTIZACIÓN QUE REALMENTE AFECTÓ
+        #     AL CAPITAL
+        # =====================================================
+
+        amortizacion_capital_anterior = (
+            amortizacion_anterior
+            - multa_pagada_anterior
+        ).quantize(CENTAVOS)
+
+        if amortizacion_capital_anterior < Decimal("0.00"):
+            amortizacion_capital_anterior = Decimal("0.00")
+
+
+        print("\n==============================================")
+        print("RESTAURACIÓN DE AMORTIZACIÓN")
+        print("==============================================")
+        print(
+            f"Movimiento              : "
+            f"{movimiento.id}"
+        )
+        print(
+            f"Amortización anterior   : "
+            f"{amortizacion_anterior}"
+        )
+        print(
+            f"Multa anterior          : "
+            f"{multa_anterior}"
+        )
+        print(
+            f"Saldo movimiento       : "
+            f"{saldo_movimiento_anterior}"
+        )
+        print(
+            f"Préstamos nuevos       : "
+            f"{saldo_nuevos}"
+        )
+        print(
+            f"Saldo total anterior   : "
+            f"{saldo_total_anterior}"
+        )
+        print(
+            f"Capital actual          : "
+            f"{saldo_capital_actual}"
+        )
+        print(
+            f"Multa pendiente inferida: "
+            f"{multa_pendiente_inferida}"
+        )
+        print(
+            f"Multa pagada anterior  : "
+            f"{multa_pagada_anterior}"
+        )
+        print(
+            f"Amortización capital   : "
+            f"{amortizacion_capital_anterior}"
+        )
+        print("==============================================\n")
+
+
+        # =====================================================
+        # 12. RESTAURAR SOLO LA PARTE QUE AFECTÓ AL CAPITAL
+        # =====================================================
+
+        pendiente = amortizacion_capital_anterior
         restaurada = Decimal("0.00")
         prestamos_restaurados = 0
 
@@ -600,7 +629,7 @@ class PrestamoService:
             prestamos_restaurados += 1
 
             print(
-                f"  AMORTIZACIÓN RESTAURADA -> "
+                f"  CAPITAL RESTAURADO -> "
                 f"Préstamo {prestamo.id} "
                 f"| +{restaurar} "
                 f"| capital={prestamo.saldo_actual}"
@@ -612,13 +641,11 @@ class PrestamoService:
         if pendiente > Decimal("0.00"):
             raise Exception(
                 "No fue posible restaurar completamente "
-                "la amortización anterior. "
+                "la amortización de capital anterior. "
                 f"Pendiente: S/ {pendiente}"
             )
 
-        # =====================================================
-        # 11. SALDO RESTAURADO
-        # =====================================================
+        db.flush()
 
         saldo_restaurado = (
             db.query(
@@ -643,41 +670,6 @@ class PrestamoService:
             )
         ).quantize(CENTAVOS)
 
-        db.flush()
-
-        # =====================================================
-        # DEBUG FINAL
-        # =====================================================
-
-        print("\n==============================================")
-        print("RESTAURACIÓN FINAL")
-        print("==============================================")
-        print(
-            f"Movimiento             : "
-            f"{movimiento.id}"
-        )
-        print(
-            f"Amortización anterior  : "
-            f"{amortizacion_anterior}"
-        )
-        print(
-            f"Multa anterior         : "
-            f"{multa_anterior}"
-        )
-        print(
-            f"Multa separada         : "
-            f"{multa_separada}"
-        )
-        print(
-            f"Amortización restaurada: "
-            f"{restaurada}"
-        )
-        print(
-            f"Capital restaurado     : "
-            f"{saldo_restaurado}"
-        )
-        print("==============================================\n")
-
         return {
             "ok": True,
             "accion_id": movimiento.accion_id,
@@ -685,8 +677,12 @@ class PrestamoService:
             "amortizacion_restaurada": restaurada,
             "prestamos_restaurados": prestamos_restaurados,
             "saldo_total_restaurado": saldo_restaurado,
-            "saldo_multa_restaurado": Decimal("0.00"),
-            "multa_separada": multa_separada,
+
+            # La multa que fue pagada por la amortización anterior
+            # vuelve a estar pendiente al editar.
+            "saldo_multa_restaurado": multa_pagada_anterior,
+
+            "multa_separada": multa_pagada_anterior,
             "solo_multa": False
         }
 
@@ -877,14 +873,61 @@ class PrestamoService:
             }
 
         # =====================================================
-        # 4. APLICAR AMORTIZACIÓN EXCLUSIVAMENTE AL CAPITAL
+        # 4. APLICAR AMORTIZACIÓN
+        # =====================================================
+        #
+        # La cuota primero cancela la multa anterior.
+        # El excedente reduce capital.
+        #
+        # Prestamo.saldo_actual continúa siendo SOLO CAPITAL.
+        # La multa permanece separada.
         # =====================================================
 
         pendiente = amortizacion
+
+        amortizacion_aplicada = Decimal("0.00")
+        multa_aplicada = Decimal("0.00")
         amortizacion_capital = Decimal("0.00")
 
         prestamos_actualizados = 0
         prestamos_cancelados = 0
+
+
+        # =====================================================
+        # 4.1 PAGAR MULTA ANTERIOR
+        # =====================================================
+
+        if multa_periodo_anterior > Decimal("0.00"):
+
+            pago_multa = min(
+                pendiente,
+                multa_periodo_anterior
+            ).quantize(CENTAVOS)
+
+            multa_periodo_anterior = (
+                multa_periodo_anterior
+                - pago_multa
+            ).quantize(CENTAVOS)
+
+            pendiente = (
+                pendiente
+                - pago_multa
+            ).quantize(CENTAVOS)
+
+            multa_aplicada = pago_multa
+
+            amortizacion_aplicada += pago_multa
+
+            print(
+                f"  AMORTIZACIÓN MULTA -> "
+                f"-{pago_multa} "
+                f"| multa pendiente={multa_periodo_anterior}"
+            )
+
+
+        # =====================================================
+        # 4.2 APLICAR RESTO AL CAPITAL
+        # =====================================================
 
         for prestamo in prestamos:
 
@@ -898,8 +941,10 @@ class PrestamoService:
             ).quantize(CENTAVOS)
 
             if saldo_actual <= Decimal("0.00"):
+
                 prestamo.saldo_actual = Decimal("0.00")
                 prestamo.estado = "CANCELADO"
+
                 continue
 
             aplicar = min(
@@ -908,7 +953,8 @@ class PrestamoService:
             ).quantize(CENTAVOS)
 
             nuevo_saldo = (
-                saldo_actual - aplicar
+                saldo_actual
+                - aplicar
             ).quantize(CENTAVOS)
 
             if nuevo_saldo < Decimal("0.00"):
@@ -926,13 +972,12 @@ class PrestamoService:
                 prestamo.estado = "ACTIVO"
 
             pendiente = (
-                pendiente - aplicar
+                pendiente
+                - aplicar
             ).quantize(CENTAVOS)
 
             amortizacion_capital += aplicar
-            amortizacion_capital = (
-                amortizacion_capital
-            ).quantize(CENTAVOS)
+            amortizacion_aplicada += aplicar
 
             prestamos_actualizados += 1
 
@@ -943,8 +988,9 @@ class PrestamoService:
                 f"| nuevo capital={prestamo.saldo_actual}"
             )
 
+
         # =====================================================
-        # 5. VALIDAR AMORTIZACIÓN
+        # 4.3 VALIDAR AMORTIZACIÓN
         # =====================================================
 
         pendiente = max(
@@ -955,18 +1001,12 @@ class PrestamoService:
         if pendiente > Decimal("0.01"):
             raise Exception(
                 "No fue posible aplicar toda la amortización "
-                "al capital de la acción. "
+                "a la deuda de la acción. "
                 f"Pendiente: S/ {pendiente}"
             )
 
         # =====================================================
-        # 6. FLUSH
-        # =====================================================
-
-        db.flush()
-
-        # =====================================================
-        # 7. OBTENER CAPITAL FINAL
+        # 4.4 SALDO DEUDA
         # =====================================================
 
         saldo_total_prestamos = (
@@ -992,113 +1032,30 @@ class PrestamoService:
             )
         ).quantize(CENTAVOS)
 
-        # =====================================================
-        # 8. DETERMINAR MULTA PENDIENTE
-        #
-        # IMPORTANTE:
-        # NO se descuenta la multa de la amortización.
-        # =====================================================
-
-        if saldo_multa_restaurado is not None:
-
-            saldo_deuda_multa = Decimal(
-                str(
-                    saldo_multa_restaurado or 0
-                )
-            ).quantize(CENTAVOS)
-
-        else:
-
-            saldo_deuda_multa = multa_periodo_anterior
-
-        if saldo_deuda_multa < Decimal("0.00"):
-            saldo_deuda_multa = Decimal("0.00")
-
-        # =====================================================
-        # 9. DEUDA TOTAL
-        # =====================================================
+        saldo_deuda_multa = multa_periodo_anterior.quantize(
+            CENTAVOS
+        )
 
         saldo_deuda_total = (
             saldo_total_prestamos
             + saldo_deuda_multa
         ).quantize(CENTAVOS)
 
-        # =====================================================
-        # 10. DEBUG
-        # =====================================================
-
-        print("\n==============================================")
-        print("RECONSTRUIR SALDOS ACCIÓN")
-        print("==============================================")
-        print(
-            f"Acción                  : {accion_id}"
-        )
-        print(
-            f"Período                 : {periodo_id}"
-        )
-        print(
-            f"Amortización            : {amortizacion}"
-        )
-        print(
-            f"Amortización capital    : "
-            f"{amortizacion_capital}"
-        )
-        print(
-            f"Multa pendiente         : "
-            f"{saldo_deuda_multa}"
-        )
-        print(
-            f"Capital final           : "
-            f"{saldo_total_prestamos}"
-        )
-        print(
-            f"Deuda total final       : "
-            f"{saldo_deuda_total}"
-        )
-
-        for prestamo in prestamos:
-
-            print(
-                f"  Préstamo {prestamo.id} "
-                f"| período={prestamo.periodo_id} "
-                f"| capital={prestamo.saldo_actual} "
-                f"| estado={prestamo.estado}"
-            )
-
-        print("==============================================\n")
+        db.flush()
 
         return {
             "accion_id": accion_id,
             "periodo_id": periodo_id,
-
-            "amortizacion_aplicada":
-                amortizacion_capital,
-
-            "amortizacion_pendiente":
-                pendiente,
-
-            "amortizacion_capital":
-                amortizacion_capital,
-
-            "multa_aplicada":
-                Decimal("0.00"),
-
-            "saldo_total_prestamos":
-                saldo_total_prestamos,
-
-            "saldo_deuda_multa":
-                saldo_deuda_multa,
-
-            "saldo_deuda_total":
-                saldo_deuda_total,
-
-            "prestamos_actualizados":
-                prestamos_actualizados,
-
-            "prestamos_cancelados":
-                prestamos_cancelados
-        }
-
+            "amortizacion_aplicada": amortizacion_aplicada,
+            "amortizacion_pendiente": pendiente,
+            "amortizacion_capital": amortizacion_capital,
+            "multa_aplicada": multa_aplicada,
+            "saldo_total_prestamos": saldo_total_prestamos,
+            "saldo_deuda_multa": saldo_deuda_multa,
+            "saldo_deuda_total": saldo_deuda_total,
+            "prestamos_actualizados": prestamos_actualizados,
+            "prestamos_cancelados": prestamos_cancelados
+}
     # -----------------------------------------------------
     # CUOTA MÍNIMA 
     # -----------------------------------------------------

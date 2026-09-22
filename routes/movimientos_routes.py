@@ -1123,7 +1123,7 @@ def editar_movimiento(id):
                 accion_id=movimiento.accion_id,
                 periodo_id=movimiento.periodo_id,
                 amortizacion=resultado["amortizacion"],
-                multa_periodo_anterior=Decimal("0.00"),
+                multa_periodo_anterior=multa_periodo_anterior,
 
                 # =================================================
                 # SOLO PARA EL CASO:
