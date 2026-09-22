@@ -971,6 +971,27 @@ class PrestamoService:
         }
 
     # -----------------------------------------------------
+    # CUOTA MÍNIMA 
+    # -----------------------------------------------------
+    @staticmethod
+    def calcular_cuota_minima(monto_total):
+
+        monto_total = Decimal(str(monto_total))
+
+        if monto_total <= 3000:return Decimal("417")
+        elif monto_total <= 7500:return Decimal("504")
+        elif monto_total <= 12500:return Decimal("566")
+        elif monto_total <= 15000:return Decimal("590")
+        elif monto_total <= 17500:return Decimal("611")
+        elif monto_total <= 20000:return Decimal("677")
+        elif monto_total <= 22500:return Decimal("743")
+        elif monto_total <= 25000:return Decimal("809")
+        elif monto_total <= 27500:return Decimal("875")
+        elif monto_total <= 30000:return Decimal("941")
+
+        return Decimal("941")
+
+    # -----------------------------------------------------
     # CALCULAR SCRORE PARA ASIGNACION DE PRIORIDAD DE SOLICITUDES DE PRESTAMOS 
     # -- duplicado por que esta en utilidades_services.py tambien
     # -----------------------------------------------------
