@@ -495,12 +495,12 @@ select * from periodos
 select * from fondo_utilidades
 select * from caja_chica
 select * from movimientos_caja_chica
-select * from prestamos where socio_id=28
+select * from prestamos where socio_id=4
 select * from solicitudes_prestamo order by id asc;
 select * from acciones where socio_id=15 order by id asc
 SELECT * FROM socios
 SELECT * FROM movimientos m
-where m.socio_id=19 order by m.socio_id, m.periodo_id;
+where m.socio_id=4 order by m.socio_id, m.periodo_id;
 where m.id=489 --and m.periodo_id=14 
 
 select * from solicitudes_prestamo
