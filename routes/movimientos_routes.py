@@ -938,6 +938,7 @@ def editar_movimiento(id):
                     periodo_id=movimiento.periodo_id
                 )
             )
+            
 
             saldo_restaurado = Decimal(
                 str(
@@ -1049,16 +1050,16 @@ def editar_movimiento(id):
         # VALIDAR CUOTA TOTAL
         # cuota = aporte + interés + amortización + sobre
         # =========================================================
-        cuota_esperada = (
-            aporte
-            + interes_calculado
-            + amortizacion_calculada
+        #cuota_esperada = (
+        #    aporte
+        #    + interes_calculado
+        #    + amortizacion_calculada
             # Agregué
-            + sobre
-            + multa_periodo_anterior
-        ).quantize(
-            Decimal("0.01")
-        )
+        #    + sobre
+        #    + multa_periodo_anterior
+        #).quantize(
+        #    Decimal("0.01")
+        #)
 
         #if cuota_pagada != cuota_esperada:
 
