@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from io import BytesIO
 from decimal import Decimal
@@ -2262,7 +2262,6 @@ def exportar_estado_operaciones_excel(periodo_id):
         )
 
         if not periodo_actual:
-
             return (
                 "Período no encontrado",
                 404
@@ -2273,6 +2272,7 @@ def exportar_estado_operaciones_excel(periodo_id):
         # ====================================================
         # SOCIOS
         # ====================================================
+
         socios = (
             db.query(Socio)
             .options(
@@ -2289,12 +2289,8 @@ def exportar_estado_operaciones_excel(periodo_id):
             .all()
         )
 
-
         # ====================================================
         # PERÍODOS DEL AÑO
-        #
-        # Se cargan los 12 meses para que también aparezcan
-        # los meses futuros aunque todavía no tengan movimientos.
         # ====================================================
 
         periodos = (
@@ -2308,29 +2304,61 @@ def exportar_estado_operaciones_excel(periodo_id):
             .all()
         )
 
-
         periodos_por_mes = {
             p.mes: p
             for p in periodos
         }
 
+        periodo_ids = [
+            p.id
+            for p in periodos
+        ]
 
         # ====================================================
-        # MOVIMIENTOS
-        #
-        # IMPORTANTE:
-        # Se cargan todos los movimientos del año pero después
-        # se agrupan por ACCION.
-        #
-        # Esto evita mezclar los movimientos de Acción 1,
-        # Acción 2, etc. del mismo socio.
+        # UTILIDAD DECIMAL
+        # ====================================================
+
+        def to_decimal(valor):
+
+            if valor is None:
+                return Decimal("0.00")
+
+            return Decimal(
+                str(valor)
+            ).quantize(
+                Decimal("0.01")
+            )
+
+        def suma_movimientos(
+            lista,
+            campo
+        ):
+
+            total = Decimal("0.00")
+
+            for movimiento in lista:
+
+                total += to_decimal(
+                    getattr(
+                        movimiento,
+                        campo,
+                        0
+                    )
+                )
+
+            return total.quantize(
+                Decimal("0.01")
+            )
+
+        # ====================================================
+        # MOVIMIENTOS DEL AÑO
         # ====================================================
 
         movimientos = (
             db.query(Movimiento)
             .filter(
                 Movimiento.periodo_id.in_(
-                    [p.id for p in periodos]
+                    periodo_ids
                 )
             )
             .all()
@@ -2345,16 +2373,13 @@ def exportar_estado_operaciones_excel(periodo_id):
             if movimiento.accion_id is None:
                 continue
 
-            periodo_mov = (
-                next(
-                    (
-                        p
-                        for p in periodos
-                        if p.id ==
-                        movimiento.periodo_id
-                    ),
-                    None
-                )
+            periodo_mov = next(
+                (
+                    p
+                    for p in periodos
+                    if p.id == movimiento.periodo_id
+                ),
+                None
             )
 
             if not periodo_mov:
@@ -2369,151 +2394,109 @@ def exportar_estado_operaciones_excel(periodo_id):
             )
 
         # ====================================================
-        # PRÉSTAMOS
-        # MUY IMPORTANTE:
-        # Se usa Prestamo.monto.
-        # porque este reporte representa el estado real
-        # de operaciones.
+        # MOVIMIENTOS ANTERIORES AL AÑO
+        #
+        # Se utilizan para obtener el saldo inicial de cada
+        # acción al comenzar el año.
         # ====================================================
+
+        fecha_inicio_anio = date(
+            anio,
+            1,
+            1
+        )
+
+        movimientos_anteriores = (
+            db.query(Movimiento)
+            .filter(
+                Movimiento.fecha_registro < fecha_inicio_anio
+            )
+            .order_by(
+                Movimiento.fecha_registro.asc(),
+                Movimiento.id.asc()
+            )
+            .all()
+        )
+
+        ultimo_movimiento_anterior = {}
+
+        for movimiento in movimientos_anteriores:
+
+            if movimiento.accion_id is None:
+                continue
+
+            ultimo_movimiento_anterior[
+                movimiento.accion_id
+            ] = movimiento
+
+        # ====================================================
+        # PRÉSTAMOS DEL AÑO
+        #
+        # MUY IMPORTANTE:
+        # El préstamo se contabiliza en el período donde
+        # fue aprobado/registrado.
+        # ====================================================
+
         prestamos = (
             db.query(Prestamo)
             .filter(
                 Prestamo.periodo_id.in_(
-                    [p.id for p in periodos]
+                    periodo_ids
                 )
             )
             .all()
         )
 
-        prestamos_por_accion = defaultdict(list)
+        prestamos_por_accion_mes = defaultdict(
+            lambda: defaultdict(list)
+        )
 
         for prestamo in prestamos:
 
             if prestamo.accion_id is None:
                 continue
 
-            prestamos_por_accion[
-                prestamo.accion_id
-            ].append(
-                prestamo
-            )
+            # No considerar préstamos anulados
+            if (
+                prestamo.estado
+                and str(prestamo.estado).upper()
+                == "ANULADO"
+            ):
+                continue
 
-        prestamos_por_mes = {
-            mes: Decimal("0.00")
-            for mes in range(1, 13)
-        }
-
-        cuota_fija_por_mes = {
-            mes: Decimal("0.00")
-            for mes in range(1, 13)
-        }     
-
-        for prestamo in prestamos:
-
-            periodo_prestamo = periodos_por_mes.get(
-                next(
-                    (
-                        p.mes
-                        for p in periodos
-                        if p.id == prestamo.periodo_id
-                    ),
-                    None
+            periodo_prestamo = (
+                periodos_por_mes.get(
+                    next(
+                        (
+                            p.mes
+                            for p in periodos
+                            if p.id == prestamo.periodo_id
+                        ),
+                        None
+                    )
                 )
             )
 
             if not periodo_prestamo:
                 continue
 
-            mes_prestamo = periodo_prestamo.mes
-
-            prestamos_por_mes[mes_prestamo] += Decimal(
-                prestamo.monto
-            )    
-
-        for mes in range(1, 13):
-
-            periodo_mes = periodos_por_mes.get(mes)
-
-            if not periodo_mes:
-                continue
-
-            for prestamo in prestamos:
-
-                if prestamo.periodo_id > periodo_mes.id:
-                    continue
-
-                if prestamo.estado == "ANULADO":
-                    continue
-
-                cuota_fija_por_mes[mes] += Decimal(
-                    prestamo.cuota_minima
-                )
-
-
-        saldo_por_mes = {
-            mes: Decimal("0.00")
-            for mes in range(1, 13)
-        }
-
-        for accion_id, movimientos_meses in movimientos_por_accion_mes.items():
-
-            saldo_accion = Decimal("0.00")
-
-            for mes in range(1, 13):
-
-                lista_mes = movimientos_meses.get(
-                    mes,
-                    []
-                )
-
-                if lista_mes:
-
-                    ultimo_mov = max(
-                        lista_mes,
-                        key=lambda x: (
-                            x.fecha_registro
-                            or 0
-                        )
-                    )
-
-                    saldo_accion = Decimal(
-                        ultimo_mov.saldo_prestamo
-                    )
-
-                saldo_por_mes[mes] += saldo_accion
-
-        # ====================================================
-        # UTILIDADES DECIMALES
-        # ====================================================
-
-        def suma_movimientos(
-            lista,
-            campo
-        ):
-
-            total = Decimal("0.00")
-
-            for movimiento in lista:
-
-                total += Decimal(
-                    getattr(
-                        movimiento,
-                        campo,
-                        0
-                    )
-                )
-
-            return total
-
+            prestamos_por_accion_mes[
+                prestamo.accion_id
+            ][
+                periodo_prestamo.mes
+            ].append(
+                prestamo
+            )
 
         # ====================================================
         # CREAR EXCEL
         # ====================================================
 
         wb = Workbook()
-        ws = wb.active
-        ws.title = "Estado de Operaciones"
 
+        ws = wb.active
+
+        ws.title = "Estado de Operaciones"
 
         # ====================================================
         # COLORES
@@ -2522,67 +2505,108 @@ def exportar_estado_operaciones_excel(periodo_id):
         azul_oscuro = "17365D"
         azul = "5B9BD5"
         azul_claro = "D9EAF7"
-        verde = "92D050"
-        verde_claro = "E2F0D9"
         celeste = "00B0F0"
-        amarillo = "FFF2CC"
         gris = "D9E1F2"
         blanco = "FFFFFF"
         negro = "000000"
-        rojo = "FF0000"
-        thin_black = Side(style="thin",color="000000")
-        border = Border(left=thin_black,right=thin_black,top=thin_black,bottom=thin_black)
+
+        thin_black = Side(
+            style="thin",
+            color="000000"
+        )
+
+        border = Border(
+            left=thin_black,
+            right=thin_black,
+            top=thin_black,
+            bottom=thin_black
+        )
 
         # ====================================================
-        # TÍTULO GENERAL
+        # TÍTULO
         # ====================================================
-        ws.merge_cells(start_row=1,start_column=1,end_row=1,end_column=11)
 
-        titulo = ws.cell(row=1,column=1)
+        ws.merge_cells(
+            start_row=1,
+            start_column=1,
+            end_row=1,
+            end_column=11
+        )
 
-        titulo.value = (f"BANQUITO FAMILIAR " f"(ESTADO DE OPERACIONES {anio})")
+        titulo = ws.cell(
+            row=1,
+            column=1
+        )
 
-        titulo.font = Font(bold=True,color=blanco,size=14)
-        titulo.fill = PatternFill(fill_type="solid",fgColor=azul_oscuro)
-        titulo.alignment = Alignment(horizontal="center",vertical="center")
+        titulo.value = (
+            f"BANQUITO FAMILIAR "
+            f"(ESTADO DE OPERACIONES {anio})"
+        )
+
+        titulo.font = Font(
+            bold=True,
+            color=blanco,
+            size=14
+        )
+
+        titulo.fill = PatternFill(
+            fill_type="solid",
+            fgColor=azul_oscuro
+        )
+
+        titulo.alignment = Alignment(
+            horizontal="center",
+            vertical="center"
+        )
+
         ws.row_dimensions[1].height = 25
 
         fila = 3
 
         # ====================================================
-        # TOTALES GENERALES
+        # ACUMULADORES GENERALES
         # ====================================================
+
         gran_total_aportes = Decimal("0.00")
         gran_total_amortizacion = Decimal("0.00")
         gran_total_intereses = Decimal("0.00")
         gran_total = Decimal("0.00")
         gran_total_prestamos = Decimal("0.00")
         gran_total_multas = Decimal("0.00")
+        gran_total_sobres = Decimal("0.00")
+        gran_total_cuotas = Decimal("0.00")
 
         # ====================================================
         # RESUMEN MENSUAL GENERAL
         # ====================================================
-        resumen_mensual = {
-            mes: {
+
+        resumen_mensual = {}
+
+        for mes in range(1, 13):
+
+            resumen_mensual[mes] = {
                 "aportes": Decimal("0.00"),
                 "amortizacion": Decimal("0.00"),
                 "intereses": Decimal("0.00"),
                 "total": Decimal("0.00"),
-                "cuota_pagar": Decimal("0.00"),
-                "cuota_fija": Decimal("0.00"),
-                "prestamos": Decimal("0.00"),
-                "multa": Decimal("0.00"),
-                "sobre": Decimal("0.00"),
                 "saldo_prestamos": Decimal("0.00"),
+                "cuotas": Decimal("0.00"),
+                "prestamos": Decimal("0.00"),
+                "multas": Decimal("0.00"),
+                "sobres": Decimal("0.00")
             }
-            for mes in range(1, 13)
-        }
 
-        ultimo_saldo_accion_mes = defaultdict(
-            lambda: Decimal("0.00")
-        )
+        # ====================================================
+        # SALDO INICIAL GENERAL
+        # ====================================================
 
+        saldo_inicial_general = Decimal("0.00")
 
+        # ====================================================
+        # APORTE INICIAL GENERAL
+        # ====================================================
+
+        aporte_inicial_general = Decimal("0.00")
 
         # ====================================================
         # RECORRER SOCIOS
@@ -2600,124 +2624,131 @@ def exportar_estado_operaciones_excel(periodo_id):
                 )
             )
 
-            # ------------------------------------------------
-            # Si no tiene acciones, no se genera bloque.
-            # ------------------------------------------------
-
             if not acciones:
                 continue
 
-            # =================================================
-            # CABECERA DEL SOCIO
-            # =================================================
+            # ====================================================
+            # CABECERA SOCIO
+            # ====================================================
 
-            ws.merge_cells(start_row=fila,start_column=1,end_row=fila,end_column=11)
-            celda_socio = ws.cell(row=fila,column=1)
-            celda_socio.value = (f"Socio :    "f"{socio.nombres}")
-            celda_socio.font = Font(bold=True,size=12)
-            celda_socio.fill = PatternFill(fill_type="solid",fgColor=azul_claro)
-            celda_socio.alignment = Alignment(horizontal="left")
+            ws.merge_cells(
+                start_row=fila,
+                start_column=1,
+                end_row=fila,
+                end_column=11
+            )
+
+            celda_socio = ws.cell(
+                row=fila,
+                column=1
+            )
+
+            celda_socio.value = (
+                f"Socio :    {socio.nombres}"
+            )
+
+            celda_socio.font = Font(
+                bold=True,
+                size=12
+            )
+
+            celda_socio.fill = PatternFill(
+                fill_type="solid",
+                fgColor=azul_claro
+            )
+
+            celda_socio.alignment = Alignment(
+                horizontal="left"
+            )
+
             fila += 1
-            # =================================================
-            # CADA ACCIÓN DEL SOCIO
-            # =================================================
+
+            # ====================================================
+            # CADA ACCIÓN
+            # ====================================================
+
             for accion in acciones:
-                # ------------------------------------------------
-                # PRÉSTAMOS DE ESTA ACCIÓN
-                # ------------------------------------------------
-                prestamos_accion = (prestamos_por_accion.get(accion.id,[]))
-                monto_prestamos = sum(
-                    (
-                        Decimal(
-                            p.monto
-                        )
-                        for p in prestamos_accion
-                    ),
-                    Decimal("0.00")
-                )
 
-                # ------------------------------------------------
-                # CUOTA FIJA
-                #
-                # Si existen varios préstamos, se toma la suma
-                # de sus cuotas mínimas.
-                # ------------------------------------------------
-                cuota_fija = sum(
-                    (
-                        Decimal(
-                            p.cuota_minima
-                        )
-                        for p in prestamos_accion
-                    ),
-                    Decimal("0.00")
-                )
-
-                # ------------------------------------------------
-                # SALDO ACTUAL
-                #
-                # Se toma el saldo más reciente registrado
-                # para esta acción.
-                # ------------------------------------------------
-                saldo_actual = Decimal("0.00")
-                movimientos_accion = []
-
-                for mes in range(1, 13):
-
-                    movimientos_mes = (
-                        movimientos_por_accion_mes
-                        .get(
-                            accion.id,
-                            {}
-                        )
-                        .get(
-                            mes,
-                            []
-                        )
-                    )
-
-                    movimientos_accion.extend(
-                        movimientos_mes
-                    )
-
-
-                if movimientos_accion:
-
-                    movimientos_accion.sort(
-                        key=lambda x: (
-                            x.fecha_registro
-                            or 0
-                        )
-                    )
-
-                    ultimo_movimiento = (
-                        movimientos_accion[-1]
-                    )
-
-                    saldo_actual = Decimal(
-                        ultimo_movimiento.saldo_prestamo
-                    )
-
-
-                # =================================================
-                # IDENTIFICACIÓN DE ACCIÓN
-                # =================================================
-                ws.merge_cells(start_row=fila,start_column=1,end_row=fila,end_column=11)
-                celda_accion = ws.cell(row=fila,column=1)
                 numero_accion = (
                     accion.numero_accion
                     if accion.numero_accion
                     else accion.id
                 )
 
-                celda_accion.value = (f"Acción {numero_accion}:")
-                celda_accion.font = Font(bold=True)
-                celda_accion.fill = PatternFill(fill_type="solid",fgColor=gris)
+                # ====================================================
+                # APORTE INICIAL
+                # ====================================================
+
+                aporte_inicio = to_decimal(
+                    accion.valor
+                )
+
+                aporte_inicial_general += (
+                    aporte_inicio
+                )
+
+                # ====================================================
+                # SALDO INICIAL DE LA ACCIÓN
+                #
+                # Último saldo registrado antes de iniciar
+                # el año.
+                # ====================================================
+
+                saldo_inicial_accion = Decimal(
+                    "0.00"
+                )
+
+                movimiento_anterior = (
+                    ultimo_movimiento_anterior.get(
+                        accion.id
+                    )
+                )
+
+                if movimiento_anterior:
+
+                    saldo_inicial_accion = to_decimal(
+                        movimiento_anterior.saldo_prestamo
+                    )
+
+                saldo_inicial_general += (
+                    saldo_inicial_accion
+                )
+
+                # ====================================================
+                # CABECERA ACCIÓN
+                # ====================================================
+
+                ws.merge_cells(
+                    start_row=fila,
+                    start_column=1,
+                    end_row=fila,
+                    end_column=11
+                )
+
+                celda_accion = ws.cell(
+                    row=fila,
+                    column=1
+                )
+
+                celda_accion.value = (
+                    f"Acción {numero_accion}:"
+                )
+
+                celda_accion.font = Font(
+                    bold=True
+                )
+
+                celda_accion.fill = PatternFill(
+                    fill_type="solid",
+                    fgColor=gris
+                )
 
                 fila += 1
 
-                # =================================================
+                # ====================================================
                 # CABECERA
-                # =================================================
+                # ====================================================
+
                 encabezados = [
                     "Mes",
                     "Aportes",
@@ -2726,9 +2757,9 @@ def exportar_estado_operaciones_excel(periodo_id):
                     "TOTAL",
                     "Saldo de Préstamos",
                     "Cuota a pagar",
-                    "Cuota fija",
                     "Préstamos",
                     "Multa",
+                    "Sobre",
                     "Observación"
                 ]
 
@@ -2737,62 +2768,159 @@ def exportar_estado_operaciones_excel(periodo_id):
                     start=1
                 ):
 
-                    cell = ws.cell(row=fila,column=columna)
+                    cell = ws.cell(
+                        row=fila,
+                        column=columna
+                    )
+
                     cell.value = texto
-                    cell.font = Font(bold=True,color=negro)
-                    cell.fill = PatternFill(fill_type="solid",fgColor=azul)
-                    cell.alignment = Alignment(horizontal="center",vertical="center",wrap_text=True)
+
+                    cell.font = Font(
+                        bold=True,
+                        color=negro
+                    )
+
+                    cell.fill = PatternFill(
+                        fill_type="solid",
+                        fgColor=azul
+                    )
+
+                    cell.alignment = Alignment(
+                        horizontal="center",
+                        vertical="center",
+                        wrap_text=True
+                    )
+
                     cell.border = border
 
                 fila += 1
 
-                # =================================================
-                # INICIO 2026
-                # AQUÍ SE USA DIRECTAMENTE accion.valor
-                # =================================================
+                # ====================================================
+                # INICIO DEL AÑO
+                # ====================================================
 
-                aporte_inicio = Decimal(accion.valor)
+                ws.cell(
+                    row=fila,
+                    column=1
+                ).value = (
+                    f"Inicio {anio}"
+                )
 
-                ws.cell(row=fila,column=1).value = (f"Inicio {anio}")
-                ws.cell(row=fila,column=2).value = aporte_inicio
-                ws.cell(row=fila,column=3).value = "....."
-                ws.cell(row=fila,column=4).value = "....."
-                ws.cell(row=fila,column=5).value = "....."
-                ws.cell(row=fila,column=6).value = (
-                    saldo_actual
-                    if saldo_actual > 0
-                    else Decimal("0.00")
-                )
-                ws.cell(row=fila,column=7).value = "....."
-                ws.cell(row=fila,column=8).value = "....."
-                ws.cell(row=fila,column=9).value = (
-                    "Según balance"
-                )
-                ws.cell(row=fila,column=10).value = ""
-                ws.cell(row=fila,column=11).value = ""
+                ws.cell(
+                    row=fila,
+                    column=2
+                ).value = aporte_inicio
+
+                ws.cell(
+                    row=fila,
+                    column=3
+                ).value = "....."
+
+                ws.cell(
+                    row=fila,
+                    column=4
+                ).value = "....."
+
+                ws.cell(
+                    row=fila,
+                    column=5
+                ).value = "....."
+
+                ws.cell(
+                    row=fila,
+                    column=6
+                ).value = saldo_inicial_accion
+
+                ws.cell(
+                    row=fila,
+                    column=7
+                ).value = "....."
+
+                ws.cell(
+                    row=fila,
+                    column=8
+                ).value = "Según balance"
+
+                ws.cell(
+                    row=fila,
+                    column=9
+                ).value = ""
+
+                ws.cell(
+                    row=fila,
+                    column=10
+                ).value = ""
+
+                ws.cell(
+                    row=fila,
+                    column=11
+                ).value = ""
 
                 for col in range(1, 12):
 
-                    cell = ws.cell(row=fila,column=col)
-                    cell.border = border
-                    cell.alignment = Alignment(vertical="center")
+                    cell = ws.cell(
+                        row=fila,
+                        column=col
+                    )
 
-                ws.cell(row=fila,column=2).number_format = '#,##0.00'
-                ws.cell(row=fila,column=6).number_format = '#,##0.00'
+                    cell.border = border
+
+                    cell.alignment = Alignment(
+                        vertical="center"
+                    )
+
+                ws.cell(
+                    row=fila,
+                    column=2
+                ).number_format = "#,##0.00"
+
+                ws.cell(
+                    row=fila,
+                    column=6
+                ).number_format = "#,##0.00"
 
                 fila += 1
-                # =================================================
-                # ACUMULADORES DE LA ACCIÓN
-                # =================================================
-                total_aportes_accion = Decimal("0.00")
-                total_amortizacion_accion = Decimal("0.00")
-                total_intereses_accion = Decimal("0.00")
-                total_multas_accion = Decimal("0.00")
-                total_cuotas_accion = Decimal("0.00")
-                ultimo_saldo = Decimal("0.00")
-                # =================================================
+
+                # ====================================================
+                # ACUMULADORES ACCIÓN
+                # ====================================================
+
+                total_aportes_accion = Decimal(
+                    "0.00"
+                )
+
+                total_amortizacion_accion = Decimal(
+                    "0.00"
+                )
+
+                total_intereses_accion = Decimal(
+                    "0.00"
+                )
+
+                total_multas_accion = Decimal(
+                    "0.00"
+                )
+
+                total_sobres_accion = Decimal(
+                    "0.00"
+                )
+
+                total_cuotas_accion = Decimal(
+                    "0.00"
+                )
+
+                total_prestamos_accion = Decimal(
+                    "0.00"
+                )
+
+                ultimo_saldo = (
+                    saldo_inicial_accion
+                )
+
+                # ====================================================
                 # MESES
-                # =================================================
+                # ====================================================
+
                 nombres_meses = [
                     "",
                     "Enero",
@@ -2811,7 +2939,7 @@ def exportar_estado_operaciones_excel(periodo_id):
 
                 for mes in range(1, 13):
 
-                    lista = (
+                    lista_movimientos = (
                         movimientos_por_accion_mes
                         .get(
                             accion.id,
@@ -2823,175 +2951,416 @@ def exportar_estado_operaciones_excel(periodo_id):
                         )
                     )
 
-                    aportes = suma_movimientos(lista,"aporte")
-                    amortizacion = suma_movimientos(lista,"amortizacion")
-                    intereses = suma_movimientos(lista,"interes")
-                    cuotas = suma_movimientos(lista,"cuota_pagada")
-                    multas = suma_movimientos(lista,"multa")
-                    sobres = suma_movimientos(lista,"sobre")
+                    # ====================================================
+                    # MOVIMIENTOS
+                    # ====================================================
 
-                    # ---------------------------------------------
-                    # TOTAL
-                    # SOLO:
+                    aportes = suma_movimientos(
+                        lista_movimientos,
+                        "aporte"
+                    )
+
+                    amortizacion = suma_movimientos(
+                        lista_movimientos,
+                        "amortizacion"
+                    )
+
+                    intereses = suma_movimientos(
+                        lista_movimientos,
+                        "interes"
+                    )
+
+                    cuotas = suma_movimientos(
+                        lista_movimientos,
+                        "cuota_pagada"
+                    )
+
+                    multas = suma_movimientos(
+                        lista_movimientos,
+                        "multa"
+                    )
+
+                    sobres = suma_movimientos(
+                        lista_movimientos,
+                        "sobre"
+                    )
+
+                    # ====================================================
+                    # TOTAL OPERACIONES
+                    #
+                    # NO incluye préstamos.
+                    # NO incluye multas.
+                    # NO incluye sobre.
+                    #
                     # Aportes + Amortización + Intereses
-                    # ---------------------------------------------
+                    # ====================================================
 
-                    total_mes = (aportes + amortizacion + intereses)
+                    total_mes = (
+                        aportes
+                        + amortizacion
+                        + intereses
+                    ).quantize(
+                        Decimal("0.01")
+                    )
 
-                    # ---------------------------------------------
+                    # ====================================================
                     # SALDO
-                    # ---------------------------------------------
+                    #
+                    # Si existen movimientos en el mes, se toma
+                    # el último saldo registrado.
+                    #
+                    # Si no existen movimientos, se conserva el
+                    # saldo del mes anterior.
+                    # ====================================================
+
                     saldo_mes = ultimo_saldo
 
-                    if lista:
+                    if lista_movimientos:
 
-                        ultimo_mov = sorted(
-                            lista,
+                        movimiento_ultimo = sorted(
+                            lista_movimientos,
                             key=lambda x: (
                                 x.fecha_registro
-                                or 0
+                                if x.fecha_registro
+                                else datetime.min,
+                                x.id
                             )
                         )[-1]
 
-                        saldo_mes = Decimal(
-                            ultimo_mov.saldo_prestamo
+                        saldo_mes = to_decimal(
+                            movimiento_ultimo.saldo_prestamo
                         )
 
                         ultimo_saldo = saldo_mes
 
-                    # =================================================
-                    # ACUMULAR RESUMEN MENSUAL
-                    # =================================================
+                    # ====================================================
+                    # PRÉSTAMOS DEL MES
+                    #
+                    # Se toman exclusivamente los préstamos cuyo
+                    # periodo_id corresponde a este mes.
+                    # ====================================================
 
-                    resumen_mensual[mes]["aportes"] += aportes
-                    resumen_mensual[mes]["amortizacion"] += amortizacion
-                    resumen_mensual[mes]["intereses"] += intereses
-                    resumen_mensual[mes]["cuota_pagar"] += cuotas
-                    resumen_mensual[mes]["multa"] += multas
-                    resumen_mensual[mes]["sobre"] += sobres
-
-                    resumen_mensual[mes]["total"] += (
-                        aportes +
-                        amortizacion +
-                        intereses
+                    prestamos_mes_lista = (
+                        prestamos_por_accion_mes
+                        .get(
+                            accion.id,
+                            {}
+                        )
+                        .get(
+                            mes,
+                            []
+                        )
                     )
 
-                    # ---------------------------------------------
-                    # OBSERVACIÓN
-                    # ---------------------------------------------
+                    prestamos_mes = Decimal(
+                        "0.00"
+                    )
+
+                    for prestamo in prestamos_mes_lista:
+
+                        prestamos_mes += to_decimal(
+                            prestamo.monto
+                        )
+
+                    prestamos_mes = prestamos_mes.quantize(
+                        Decimal("0.01")
+                    )
+
+                    # ====================================================
+                    # OBSERVACIONES
+                    # ====================================================
+
                     observaciones = []
 
-                    for mov in lista:
+                    for movimiento in lista_movimientos:
 
-                        if mov.observacion:
+                        if movimiento.observacion:
 
                             observaciones.append(
                                 str(
-                                    mov.observacion
+                                    movimiento.observacion
                                 )
                             )
-
 
                     observacion = "; ".join(
                         observaciones
                     )
 
-                    # ---------------------------------------------
+                    # ====================================================
                     # ESCRIBIR FILA
-                    # ---------------------------------------------
-                    ws.cell(row=fila,column=1).value = nombres_meses[mes]
-                    ws.cell(row=fila,column=2).value = aportes
-                    ws.cell(row=fila,column=3).value = amortizacion
-                    ws.cell(row=fila,column=4).value = intereses
-                    ws.cell(row=fila,column=5).value = total_mes
-                    ws.cell(row=fila,column=6).value = saldo_mes
-                    ws.cell(row=fila,column=7).value = cuotas
-                    ws.cell(row=fila,column=8).value = (
-                        cuota_fija
-                        if cuota_fija > 0
-                        else 0
-                    )
+                    # ====================================================
 
-                    # ---------------------------------------------
-                    # PRÉSTAMO
-                    # Se muestra el monto real del Prestamo.
-                    # No se suma al TOTAL.
-                    # ---------------------------------------------
+                    ws.cell(
+                        row=fila,
+                        column=1
+                    ).value = nombres_meses[mes]
 
-                    ws.cell(row=fila,column=9).value = (
-                        monto_prestamos
-                        if mes == 1
-                        else 0
-                    )
-                    ws.cell(row=fila,column=10).value = multas
-                    ws.cell(row=fila,column=11).value = observacion
+                    ws.cell(
+                        row=fila,
+                        column=2
+                    ).value = aportes
 
-                    # ---------------------------------------------
-                    # BORDES
-                    # ---------------------------------------------
+                    ws.cell(
+                        row=fila,
+                        column=3
+                    ).value = amortizacion
+
+                    ws.cell(
+                        row=fila,
+                        column=4
+                    ).value = intereses
+
+                    ws.cell(
+                        row=fila,
+                        column=5
+                    ).value = total_mes
+
+                    ws.cell(
+                        row=fila,
+                        column=6
+                    ).value = saldo_mes
+
+                    ws.cell(
+                        row=fila,
+                        column=7
+                    ).value = cuotas
+
+                    ws.cell(
+                        row=fila,
+                        column=8
+                    ).value = prestamos_mes
+
+                    ws.cell(
+                        row=fila,
+                        column=9
+                    ).value = multas
+
+                    ws.cell(
+                        row=fila,
+                        column=10
+                    ).value = sobres
+
+                    ws.cell(
+                        row=fila,
+                        column=11
+                    ).value = observacion
+
+                    # ====================================================
+                    # FORMATO
+                    # ====================================================
+
                     for col in range(1, 12):
 
-                        cell = ws.cell(row=fila,column=col)
-                        cell.border = border
-                        cell.alignment = Alignment(vertical="center")
+                        cell = ws.cell(
+                            row=fila,
+                            column=col
+                        )
 
-                    # ---------------------------------------------
-                    # FORMATO NUMÉRICO
-                    # ---------------------------------------------
+                        cell.border = border
+
+                        cell.alignment = Alignment(
+                            vertical="center"
+                        )
+
                     for col in range(2, 11):
 
-                        ws.cell(row=fila,column=col).number_format = '#,##0.00'
+                        ws.cell(
+                            row=fila,
+                            column=col
+                        ).number_format = "#,##0.00"
 
-                    # ---------------------------------------------
-                    # ACUMULADORES
-                    # ---------------------------------------------
+                    # ====================================================
+                    # ACUMULADORES ACCIÓN
+                    # ====================================================
+
                     total_aportes_accion += aportes
-                    total_amortizacion_accion += amortizacion
-                    total_intereses_accion += intereses
-                    total_multas_accion += multas
-                    total_cuotas_accion += cuotas
+
+                    total_amortizacion_accion += (
+                        amortizacion
+                    )
+
+                    total_intereses_accion += (
+                        intereses
+                    )
+
+                    total_multas_accion += (
+                        multas
+                    )
+
+                    total_sobres_accion += (
+                        sobres
+                    )
+
+                    total_cuotas_accion += (
+                        cuotas
+                    )
+
+                    total_prestamos_accion += (
+                        prestamos_mes
+                    )
+
+                    # ====================================================
+                    # ACUMULADORES RESUMEN GENERAL
+                    # ====================================================
+
+                    resumen_mensual[mes][
+                        "aportes"
+                    ] += aportes
+
+                    resumen_mensual[mes][
+                        "amortizacion"
+                    ] += amortizacion
+
+                    resumen_mensual[mes][
+                        "intereses"
+                    ] += intereses
+
+                    resumen_mensual[mes][
+                        "total"
+                    ] += total_mes
+
+                    resumen_mensual[mes][
+                        "saldo_prestamos"
+                    ] += saldo_mes
+
+                    resumen_mensual[mes][
+                        "cuotas"
+                    ] += cuotas
+
+                    resumen_mensual[mes][
+                        "prestamos"
+                    ] += prestamos_mes
+
+                    resumen_mensual[mes][
+                        "multas"
+                    ] += multas
+
+                    resumen_mensual[mes][
+                        "sobres"
+                    ] += sobres
 
                     fila += 1
 
-                # =================================================
+                # ====================================================
                 # CIERRE DEL AÑO POR ACCIÓN
-                # =================================================
+                # ====================================================
+
                 total_accion = (
-                    total_aportes_accion +
-                    total_amortizacion_accion +
+                    total_aportes_accion
+                    + total_amortizacion_accion
+                    + total_intereses_accion
+                ).quantize(
+                    Decimal("0.01")
+                )
+
+                ws.cell(
+                    row=fila,
+                    column=1
+                ).value = (
+                    f"Cierre {anio}"
+                )
+
+                ws.cell(
+                    row=fila,
+                    column=2
+                ).value = (
+                    aporte_inicio
+                    + total_aportes_accion
+                )
+
+                ws.cell(
+                    row=fila,
+                    column=3
+                ).value = (
+                    total_amortizacion_accion
+                )
+
+                ws.cell(
+                    row=fila,
+                    column=4
+                ).value = (
                     total_intereses_accion
                 )
 
-                ws.cell(row=fila,column=1).value = (f"Cierre {anio}")
-                ws.cell(row=fila,column=2).value = (aporte_inicio + total_aportes_accion)
-                ws.cell(row=fila,column=3).value = total_amortizacion_accion
-                ws.cell(row=fila,column=4).value = total_intereses_accion
-                ws.cell(row=fila,column=5).value = total_accion
-                ws.cell(row=fila,column=6).value = ultimo_saldo
-                ws.cell(row=fila,column=7).value = total_cuotas_accion
-                ws.cell(row=fila,column=8).value = cuota_fija
-                ws.cell(row=fila,column=9).value = monto_prestamos
-                ws.cell(row=fila,column=10).value = total_multas_accion
-                ws.cell(row=fila,column=11).value = ""
+                ws.cell(
+                    row=fila,
+                    column=5
+                ).value = total_accion
+
+                ws.cell(
+                    row=fila,
+                    column=6
+                ).value = ultimo_saldo
+
+                ws.cell(
+                    row=fila,
+                    column=7
+                ).value = (
+                    total_cuotas_accion
+                )
+
+                ws.cell(
+                    row=fila,
+                    column=8
+                ).value = (
+                    total_prestamos_accion
+                )
+
+                ws.cell(
+                    row=fila,
+                    column=9
+                ).value = (
+                    total_multas_accion
+                )
+
+                ws.cell(
+                    row=fila,
+                    column=10
+                ).value = (
+                    total_sobres_accion
+                )
+
+                ws.cell(
+                    row=fila,
+                    column=11
+                ).value = ""
 
                 for col in range(1, 12):
 
-                    cell = ws.cell(row=fila,column=col)
-                    cell.font = Font(bold=True)
-                    cell.fill = PatternFill(fill_type="solid",fgColor=celeste)
+                    cell = ws.cell(
+                        row=fila,
+                        column=col
+                    )
+
+                    cell.font = Font(
+                        bold=True
+                    )
+
+                    cell.fill = PatternFill(
+                        fill_type="solid",
+                        fgColor=celeste
+                    )
+
                     cell.border = border
-                    cell.alignment = Alignment(vertical="center")
+
+                    cell.alignment = Alignment(
+                        vertical="center"
+                    )
 
                 for col in range(2, 11):
 
-                    ws.cell(row=fila,column=col).number_format = '#,##0.00'
+                    ws.cell(
+                        row=fila,
+                        column=col
+                    ).number_format = "#,##0.00"
 
-                # =================================================
-                # ACUMULAR TOTALES GENERALES
-                # =================================================
+                # ====================================================
+                # TOTALES GENERALES
+                # ====================================================
+
                 gran_total_aportes += (
-                    aporte_inicio +
-                    total_aportes_accion
+                    aporte_inicio
+                    + total_aportes_accion
                 )
 
                 gran_total_amortizacion += (
@@ -3007,20 +3376,26 @@ def exportar_estado_operaciones_excel(periodo_id):
                 )
 
                 gran_total_prestamos += (
-                    monto_prestamos
+                    total_prestamos_accion
                 )
 
                 gran_total_multas += (
                     total_multas_accion
                 )
 
+                gran_total_sobres += (
+                    total_sobres_accion
+                )
+
+                gran_total_cuotas += (
+                    total_cuotas_accion
+                )
+
                 fila += 2
 
         # ====================================================
-        # RESUMEN GENERAL MENSUAL
+        # RESUMEN GENERAL
         # ====================================================
-
-        fila += 1
 
         ws.merge_cells(
             start_row=fila,
@@ -3064,7 +3439,7 @@ def exportar_estado_operaciones_excel(periodo_id):
         fila += 1
 
         # ====================================================
-        # CABECERA
+        # CABECERA RESUMEN GENERAL
         # ====================================================
 
         resumen_headers = [
@@ -3075,10 +3450,10 @@ def exportar_estado_operaciones_excel(periodo_id):
             "TOTAL",
             "Saldo de Préstamos",
             "Cuota a pagar",
-            "Cuota fija",
             "Préstamos",
             "Multa",
-            "Sobre"
+            "Sobre",
+            "Observación"
         ]
 
         for col, texto in enumerate(
@@ -3092,6 +3467,7 @@ def exportar_estado_operaciones_excel(periodo_id):
             )
 
             cell.value = texto
+
             cell.font = Font(
                 bold=True,
                 color=negro
@@ -3113,8 +3489,426 @@ def exportar_estado_operaciones_excel(periodo_id):
         fila += 1
 
         # ====================================================
+        # INICIO GENERAL
+        # ====================================================
+
+        ws.cell(
+            row=fila,
+            column=1
+        ).value = (
+            f"Inicio {anio}"
+        )
+
+        ws.cell(
+            row=fila,
+            column=2
+        ).value = (
+            aporte_inicial_general
+        )
+
+        ws.cell(
+            row=fila,
+            column=3
+        ).value = "....."
+
+        ws.cell(
+            row=fila,
+            column=4
+        ).value = "....."
+
+        ws.cell(
+            row=fila,
+            column=5
+        ).value = "....."
+
+        ws.cell(
+            row=fila,
+            column=6
+        ).value = (
+            saldo_inicial_general
+        )
+
+        ws.cell(
+            row=fila,
+            column=7
+        ).value = "....."
+
+        ws.cell(
+            row=fila,
+            column=8
+        ).value = "....."
+
+        ws.cell(
+            row=fila,
+            column=9
+        ).value = ""
+
+        ws.cell(
+            row=fila,
+            column=10
+        ).value = ""
+
+        ws.cell(
+            row=fila,
+            column=11
+        ).value = ""
+
+        for col in range(1, 12):
+
+            cell = ws.cell(
+                row=fila,
+                column=col
+            )
+
+            cell.border = border
+
+            cell.alignment = Alignment(
+                vertical="center"
+            )
+
+        ws.cell(
+            row=fila,
+            column=2
+        ).number_format = "#,##0.00"
+
+        ws.cell(
+            row=fila,
+            column=6
+        ).number_format = "#,##0.00"
+
+        fila += 1
+
+        # ====================================================
+        # NOMBRES MESES
+        # ====================================================
+
+        nombres_meses = {
+            1: "Enero",
+            2: "Febrero",
+            3: "Marzo",
+            4: "Abril",
+            5: "Mayo",
+            6: "Junio",
+            7: "Julio",
+            8: "Agosto",
+            9: "Setiembre",
+            10: "Octubre",
+            11: "Noviembre",
+            12: "Diciembre"
+        }
+
+        # ====================================================
+        # FILAS MENSUALES GENERALES
+        # ====================================================
+
+        saldo_general_acumulado = (
+            saldo_inicial_general
+        )
+
+        for mes in range(1, 13):
+
+            datos = resumen_mensual[mes]
+
+            # ====================================================
+            # SALDO GENERAL
+            #
+            # Ya fue acumulado como el último saldo de cada
+            # acción en cada mes.
+            # ====================================================
+
+            saldo_general_mes = (
+                datos["saldo_prestamos"]
+            )
+
+            # Si todavía no hay movimientos en ninguna acción
+            # se conserva el saldo inicial.
+            if (
+                saldo_general_mes == 0
+                and saldo_general_acumulado > 0
+            ):
+
+                saldo_general_mes = (
+                    saldo_general_acumulado
+                )
+
+            else:
+
+                saldo_general_acumulado = (
+                    saldo_general_mes
+                )
+
+            ws.cell(
+                row=fila,
+                column=1
+            ).value = nombres_meses[mes]
+
+            ws.cell(
+                row=fila,
+                column=2
+            ).value = datos["aportes"]
+
+            ws.cell(
+                row=fila,
+                column=3
+            ).value = datos["amortizacion"]
+
+            ws.cell(
+                row=fila,
+                column=4
+            ).value = datos["intereses"]
+
+            ws.cell(
+                row=fila,
+                column=5
+            ).value = datos["total"]
+
+            ws.cell(
+                row=fila,
+                column=6
+            ).value = saldo_general_mes
+
+            ws.cell(
+                row=fila,
+                column=7
+            ).value = datos["cuotas"]
+
+            ws.cell(
+                row=fila,
+                column=8
+            ).value = datos["prestamos"]
+
+            ws.cell(
+                row=fila,
+                column=9
+            ).value = datos["multas"]
+
+            ws.cell(
+                row=fila,
+                column=10
+            ).value = datos["sobres"]
+
+            ws.cell(
+                row=fila,
+                column=11
+            ).value = ""
+
+            for col in range(1, 12):
+
+                cell = ws.cell(
+                    row=fila,
+                    column=col
+                )
+
+                cell.border = border
+
+                cell.alignment = Alignment(
+                    vertical="center"
+                )
+
+            for col in range(2, 11):
+
+                ws.cell(
+                    row=fila,
+                    column=col
+                ).number_format = "#,##0.00"
+
+            fila += 1
+
+        # ====================================================
+        # CIERRE GENERAL
+        # ====================================================
+
+        # El cierre debe tomar el último saldo del año.
+        # Si diciembre todavía no tiene movimientos, conserva
+        # el último saldo disponible.
+
+        saldo_cierre_general = Decimal(
+            "0.00"
+        )
+
+        for mes in range(12, 0, -1):
+
+            saldo_tmp = resumen_mensual[
+                mes
+            ][
+                "saldo_prestamos"
+            ]
+
+            if saldo_tmp != 0:
+
+                saldo_cierre_general = (
+                    saldo_tmp
+                )
+
+                break
+
+        if saldo_cierre_general == 0:
+
+            saldo_cierre_general = (
+                saldo_general_acumulado
+            )
+
+        # ====================================================
+        # CIERRE
+        # ====================================================
+
+        ws.cell(
+            row=fila,
+            column=1
+        ).value = (
+            f"Cierre {anio}"
+        )
+
+        ws.cell(
+            row=fila,
+            column=2
+        ).value = (
+            aporte_inicial_general
+            + sum(
+                (
+                    resumen_mensual[m]["aportes"]
+                    for m in range(1, 13)
+                ),
+                Decimal("0.00")
+            )
+        )
+
+        ws.cell(
+            row=fila,
+            column=3
+        ).value = (
+            sum(
+                (
+                    resumen_mensual[m]["amortizacion"]
+                    for m in range(1, 13)
+                ),
+                Decimal("0.00")
+            )
+        )
+
+        ws.cell(
+            row=fila,
+            column=4
+        ).value = (
+            sum(
+                (
+                    resumen_mensual[m]["intereses"]
+                    for m in range(1, 13)
+                ),
+                Decimal("0.00")
+            )
+        )
+
+        ws.cell(
+            row=fila,
+            column=5
+        ).value = (
+            sum(
+                (
+                    resumen_mensual[m]["total"]
+                    for m in range(1, 13)
+                ),
+                Decimal("0.00")
+            )
+        )
+
+        ws.cell(
+            row=fila,
+            column=6
+        ).value = saldo_cierre_general
+
+        ws.cell(
+            row=fila,
+            column=7
+        ).value = (
+            sum(
+                (
+                    resumen_mensual[m]["cuotas"]
+                    for m in range(1, 13)
+                ),
+                Decimal("0.00")
+            )
+        )
+
+        ws.cell(
+            row=fila,
+            column=8
+        ).value = (
+            sum(
+                (
+                    resumen_mensual[m]["prestamos"]
+                    for m in range(1, 13)
+                ),
+                Decimal("0.00")
+            )
+        )
+
+        ws.cell(
+            row=fila,
+            column=9
+        ).value = (
+            sum(
+                (
+                    resumen_mensual[m]["multas"]
+                    for m in range(1, 13)
+                ),
+                Decimal("0.00")
+            )
+        )
+
+        ws.cell(
+            row=fila,
+            column=10
+        ).value = (
+            sum(
+                (
+                    resumen_mensual[m]["sobres"]
+                    for m in range(1, 13)
+                ),
+                Decimal("0.00")
+            )
+        )
+
+        ws.cell(
+            row=fila,
+            column=11
+        ).value = ""
+
+        for col in range(1, 12):
+
+            cell = ws.cell(
+                row=fila,
+                column=col
+            )
+
+            cell.font = Font(
+                bold=True
+            )
+
+            cell.fill = PatternFill(
+                fill_type="solid",
+                fgColor=celeste
+            )
+
+            cell.border = border
+
+            cell.alignment = Alignment(
+                vertical="center"
+            )
+
+        for col in range(2, 11):
+
+            ws.cell(
+                row=fila,
+                column=col
+            ).number_format = "#,##0.00"
+
+        fila += 2
+
+        # ====================================================
         # ANCHOS
         # ====================================================
+
         anchos = {
             "A": 22,
             "B": 16,
@@ -3136,8 +3930,9 @@ def exportar_estado_operaciones_excel(periodo_id):
             ].width = ancho
 
         # ====================================================
-        # ALINEACIONES
+        # ALINEACIÓN NUMÉRICA
         # ====================================================
+
         for row in ws.iter_rows():
 
             for cell in row:
@@ -3146,28 +3941,32 @@ def exportar_estado_operaciones_excel(periodo_id):
 
                     if isinstance(
                         cell.value,
-                        (int, float, Decimal)
+                        (
+                            int,
+                            float,
+                            Decimal
+                        )
                     ):
 
-                        cell.alignment = Alignment(horizontal="right",vertical="center")
+                        cell.alignment = Alignment(
+                            horizontal="right",
+                            vertical="center"
+                        )
 
         # ====================================================
         # CONGELAR
         # ====================================================
-        ws.freeze_panes = "A3"
 
-        # ====================================================
-        # FILTRO
-        # ====================================================
-        # No se aplica AutoFilter porque el reporte contiene
-        # bloques independientes por socio/acción.
+        ws.freeze_panes = "A3"
 
         # ====================================================
         # PÁGINA
         # ====================================================
+
         ws.sheet_properties.pageSetUpPr.fitToPage = True
 
         ws.page_setup.fitToWidth = 1
+
         ws.page_setup.fitToHeight = 0
 
         ws.page_setup.orientation = "landscape"
@@ -3180,6 +3979,7 @@ def exportar_estado_operaciones_excel(periodo_id):
         # ====================================================
         # GENERAR ARCHIVO
         # ====================================================
+
         output = BytesIO()
 
         wb.save(output)
@@ -3192,7 +3992,6 @@ def exportar_estado_operaciones_excel(periodo_id):
         )
 
         return send_file(
-
             output,
             as_attachment=True,
             download_name=nombre_archivo,
@@ -3200,12 +3999,12 @@ def exportar_estado_operaciones_excel(periodo_id):
                 "application/vnd.openxmlformats-"
                 "officedocument.spreadsheetml.sheet"
             )
-
         )
 
     except Exception as e:
 
         db.rollback()
+
         raise e
 
     finally:
