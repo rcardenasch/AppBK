@@ -974,6 +974,25 @@ def editar_movimiento(id):
         # =========================================================
         # 3. CALCULAR NUEVO MOVIMIENTO
         # =========================================================
+        # ========================================================
+        # MULTA ANTERIOR
+        # =========================================================
+        #
+        # Si la restauración corresponde SOLO a una multa,
+        # esa multa ya fue incorporada en saldo_restaurado.
+        #
+        # Por tanto NO debemos volver a agregarla.
+        #
+        # Si existen préstamos, saldo_restaurado contiene solamente
+        # saldo de préstamos y la multa anterior debe obtenerse
+        # normalmente.
+        # =========================================================
+
+        multa_override_edicion = None
+
+        if restauracion.get("solo_multa"):
+            multa_override_edicion = Decimal("0.00")
+
 
         resultado = (
             MovimientoService
@@ -983,9 +1002,15 @@ def editar_movimiento(id):
                 periodo_id=movimiento.periodo_id,
                 aporte=aporte,
                 cuota_pagada=cuota_pagada,
+
                 # IMPORTANTE:
-                # NO pasar multa_periodo_anterior_override
-                # para que el motor consulte la multa anterior.
+                # En el caso SOLO MULTA, saldo_restaurado ya contiene
+                # la multa anterior, por eso el motor recibe 0 como
+                # multa adicional.
+                multa_periodo_anterior_override=(
+                    multa_override_edicion
+                ),
+
                 saldo_apertura_override=saldo_restaurado
             )
         )

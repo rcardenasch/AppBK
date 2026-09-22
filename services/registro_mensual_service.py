@@ -310,7 +310,7 @@ class RegistroMensualService:
                             ).quantize(
                                 Decimal("0.01")
                             ),
-                            #multa_periodo_anterior_override=multa_anterior,
+                            multa_periodo_anterior_override=multa_anterior,
                             saldo_apertura_override=saldo_apertura #Decimal("0.00")
                         )
                     )
@@ -387,7 +387,7 @@ class RegistroMensualService:
                         cuota_pagada=cuota_pagada,
                         # La cuota ya fue calculada considerando
                         # multa_anterior.
-                        # multa_periodo_anterior_override=multa_anterior,
+                        multa_periodo_anterior_override=multa_anterior,
                         # Saldo SOLO de préstamos.
                         saldo_apertura_override=saldo_apertura
                     )
