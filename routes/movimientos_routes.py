@@ -917,25 +917,39 @@ def editar_movimiento(id):
 
         if restauracion.get("solo_multa"):
 
-            # -----------------------------------------------------
-            # CASO ESPECIAL:
-            # La acción no tiene préstamos.
-            # La deuda anterior corresponde únicamente a una multa.
+            # =========================================================
+            # EDICIÓN DE ACCIÓN CON MULTA Y SIN PRÉSTAMO
+            # =========================================================
             #
-            # Esa multa restaurada se considera como saldo de
-            # apertura y NO debe volver a sumarse como multa.
-            # -----------------------------------------------------
+            # NO utilizar la amortización anterior del movimiento.
+            #
+            # La deuda que existía antes de este movimiento es la
+            # multa generada en el período cronológicamente anterior.
+            #
+            # Esto permite editar directamente la nueva cuota sin
+            # tener que hacer primero una edición con cuota = aporte.
+            # =========================================================
+
+            multa_anterior_edicion = (
+                MovimientoService
+                .obtener_multa_periodo_anterior_accion(
+                    db=db,
+                    accion_id=movimiento.accion_id,
+                    periodo_id=movimiento.periodo_id
+                )
+            )
 
             saldo_restaurado = Decimal(
                 str(
-                    restauracion.get(
-                        "saldo_multa_restaurado",
-                        0
-                    )
+                    multa_anterior_edicion or 0
                 )
             ).quantize(
                 Decimal("0.01")
             )
+
+            # La multa ya está representada dentro de
+            # saldo_restaurado.
+            multa_override_edicion = Decimal("0.00")
 
         else:
 
