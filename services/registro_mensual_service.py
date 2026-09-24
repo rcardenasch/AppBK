@@ -456,10 +456,10 @@ class RegistroMensualService:
 
                     observacion=(
                         "Registro mensual automático. "
-                        f"Saldo préstamo: S/ {saldo_apertura:.2f}. "
-                        f"Multa anterior: S/ {multa_anterior:.2f}. "
-                        f"Base cuota: S/ {monto_base_cuota:.2f}. "
-                        f"Cuota aplicada: S/ {cuota_pagada:.2f}."
+                        #f"Saldo préstamo: S/ {saldo_apertura:.2f}. "
+                        #f"Multa anterior: S/ {multa_anterior:.2f}. "
+                        #f"Base cuota: S/ {monto_base_cuota:.2f}. "
+                        #f"Cuota aplicada: S/ {cuota_pagada:.2f}."
                     )
                 )
 

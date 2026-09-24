@@ -372,6 +372,16 @@ def mi_estado_cuenta(periodo_Id):
             for m in movimientos_periodo
         )
 
+        # 1. Ordenamos los movimientos por el ID de la acción de menor a mayor
+        movimientos_ordenados = sorted(
+            movimientos_periodo, 
+            key=lambda m: m.accion.id if m.accion else 0
+        )
+        observacion = [m.observacion for m in movimientos_periodo]
+        # Unimos todas las observaciones separándolas por un espacio o una coma
+        # Juntamos el número de acción y la observación de cada movimiento, y luego los unimos con un punto y coma
+        observacion = "; ".join(f"Acción {m.accion.numero_accion}: {m.observacion}" for m in movimientos_ordenados if m.observacion)
+
         total_sobre = sum(
             float(m.sobre or 0)
             for m in movimientos_periodo
@@ -461,7 +471,8 @@ def mi_estado_cuenta(periodo_Id):
             "monto_aprobado": monto_aprobado,
             "total_transferido": total_transferido,
             "total_recibido": total_recibido,
-            "saldo_transferencias": total_recibido - total_transferido
+            "saldo_transferencias": total_recibido - total_transferido,
+            "observacion":observacion
         }
 
         return render_template(

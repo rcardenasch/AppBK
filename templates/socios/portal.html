@@ -369,7 +369,7 @@
                 </div>
 
             </div>
-            
+
             <div class="card-body px-4 pb-4">
 
                 {% if prestamos %}
@@ -709,33 +709,25 @@
             </table>
         </div>
     </div>
-<!-- =====================================================
+    <!-- =====================================================
          SOLICITUDES
          ===================================================== -->
     <div class="card section-card shadow-sm mb-4">
         <div class="section-header">
-            <h5 class="section-title">
-                <i class="bi bi-file-earmark-text
-                          text-primary me-2"></i>
-                Solicitudes de préstamo
-            </h5>
-            <div class="section-subtitle">
-                Solicitudes registradas en el período
-            </div>
-        </div>
-        <div class="card-header bg-white">
-            <div class="d-flex justify-content-between">
-                <h4>
-                    <i class="bi bi-cash-stack"></i>
-                    Solicitudes de préstamo
-                </h4>
+            <!-- Se envuelven el título y el botón en un contenedor flex -->
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <h5 class="section-title mb-0">
+                    <i class="bi bi-cash-stack"></i> Solicitudes de préstamo
+                </h5>
+
                 <a href="{{ url_for('solicitudes.nuevo') }}"
                     class="btn btn-outline-primary border-primary-subtle bg-primary-subtle bg-opacity-10 d-inline-flex align-items-center gap-2 fw-semibold px-2 py-1 shadow-sm rounded-3">
                     <i class="bi bi-cash-coin fs-5"></i>
                     <span>Nueva Solicitud</span>
                 </a>
-
             </div>
+
+            <div class="section-subtitle text-muted"> Solicitudes registradas hasta el período </div>
         </div>
 
         <div class="table-responsive">
@@ -1004,6 +996,16 @@
                             ) }}
                         </div>
                     </div>
+                </div>
+            </div>
+            </br>
+            <div class="financial-box">
+                <div class="financial-label">
+                    Observación del periodo
+                </div>
+
+                <div class="text-success badge badge-soft-success px-5 size-9px">
+                    {{ resumen.observacion}}
                 </div>
             </div>
         </div>

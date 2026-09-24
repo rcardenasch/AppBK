@@ -2228,7 +2228,7 @@ def reporte_estado_operaciones(periodo_id):
         )
 
         return render_template(
-            "distribucion/estado_operaciones.html",
+            "reportes/estado_operaciones.html",
 
             periodo=periodo,
             config=config
