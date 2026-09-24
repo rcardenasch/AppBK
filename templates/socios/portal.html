@@ -620,386 +620,381 @@
 
     </div>
 
-    <!--Grupo de Movimietnos y Solicitudes prestamo-->
-    <div class="row g-4 mb-4">
-        <!-- REALIZADAS -->
-        <div class="col-lg-8">
-            <!-- =====================================================
+    <!-- =====================================================
          MOVIMIENTOS
          ===================================================== -->
-            <div class="card section-card shadow-sm mb-4">
-                <div class="section-header">
-                    <h5 class="section-title">
-                        <i class="bi bi-arrow-left-right
+    <div class="card section-card shadow-sm mb-4">
+        <div class="section-header">
+            <h5 class="section-title">
+                <i class="bi bi-arrow-left-right
                           text-primary me-2"></i>
-                        Movimientos del período
-                    </h5>
-                    <div class="section-subtitle">
-                        Aportes, cuotas, intereses, amortizaciones y multas
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table class="table portal-table table-hover datatable">
-                        <thead>
-                            <tr>
-                                <th>Periodo</th>
-                                <th>Acción</th>
-                                <th>Aporte</th>
-                                <th>Cuota</th>
-                                <th>Interés</th>
-                                <th>Amortización</th>
-                                <th>Multa</th>
-                                <th>Saldo préstamo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for movimiento in movimientos %}
-                            <tr>
-                                <td>
-                                    {%if periodo.id==movimiento.periodo.id%}
-                                    <span class="badge bg-primary">
-                                        {{movimiento.periodo.anio}}-{{"%02d"|format(movimiento.periodo.mes)}}
-                                    </span>
-                                    {% else %}
-                                    <span class="badge bg-secondary">
-                                        {{movimiento.periodo.anio}}-{{"%02d"|format(movimiento.periodo.mes)}}
-                                    </span>
-                                    {% endif %}
-                                </td>
-
-                                <td class="fw-semibold">
-                                    {% if movimiento.accion %}
-                                    <span class="badge bg-primary-subtle text-primary">
-                                        {{ movimiento.accion.numero_accion }}
-                                    </span>
-                                    {% else %}
-                                    —
-                                    {% endif %}
-                                </td>
-                                <td class="text-success fw-semibold text-nowrap">
-                                    S/ {{ "{:,.2f}".format(movimiento.aporte or 0) }}
-                                </td>
-                                <td class="text-nowrap">
-                                    S/ {{ "{:,.2f}".format(movimiento.cuota_pagada or 0) }}
-                                </td>
-                                <td class="text-warning text-nowrap">
-                                    S/ {{ "{:,.2f}".format(movimiento.interes or 0) }}
-                                </td>
-                                <td class="text-primary text-nowrap">
-                                    S/ {{ "{:,.2f}".format(movimiento.amortizacion or 0) }}
-                                </td>
-                                <td class="text-nowrap">
-                                    {% if movimiento.multa and movimiento.multa > 0 %}
-                                    <span class="badge badge-soft-danger">
-                                        S/ {{ "{:,.2f}".format(movimiento.multa) }}
-                                    </span>
-                                    {% else %}
-                                    <span class="text-muted">—</span>
-                                    {% endif %}
-                                </td>
-                                <td class="fw-bold text-nowrap">
-                                    S/ {{ "{:,.2f}".format(movimiento.saldo_prestamo or 0) }}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                Movimientos del período
+            </h5>
+            <div class="section-subtitle">
+                Aportes, cuotas, intereses, amortizaciones y multas
             </div>
         </div>
-        <div class="col-lg-4">
-            <!-- =====================================================
-         SOLICITUDES
-         ===================================================== -->
-            <div class="card section-card shadow-sm mb-4">
-                <div class="section-header">
-                    <!-- Se envuelven el título y el botón en un contenedor flex -->
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <h5 class="section-title mb-0">
-                            <i class="bi bi-cash-stack"></i> Solicitudes de préstamo
-                        </h5>
+        <div class="table-responsive">
+            <table class="table portal-table table-hover datatable">
+                <thead>
+                    <tr>
+                        <th>Periodo</th>
+                        <th>Acción</th>
+                        <th>Aporte</th>
+                        <th>Cuota</th>
+                        <th>Interés</th>
+                        <th>Amortización</th>
+                        <th>Multa</th>
+                        <th>Saldo préstamo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movimiento in movimientos %}
+                    <tr>
+                        <td>
+                            {%if periodo.id==movimiento.periodo.id%}
+                            <span class="badge bg-primary">
+                                {{movimiento.periodo.anio}}-{{"%02d"|format(movimiento.periodo.mes)}}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                {{movimiento.periodo.anio}}-{{"%02d"|format(movimiento.periodo.mes)}}
+                            </span>
+                            {% endif %}
+                        </td>
 
-                        <a href="{{ url_for('solicitudes.nuevo') }}"
-                            class="btn btn-outline-primary border-primary-subtle bg-primary-subtle bg-opacity-10 d-inline-flex align-items-center gap-2 fw-semibold px-2 py-1 shadow-sm rounded-3">
-                            <i class="bi bi-cash-coin fs-5"></i>
-                            <span>Nueva Solicitud</span>
-                        </a>
-                    </div>
-
-                    <div class="section-subtitle text-muted"> Solicitudes registradas hasta el período </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table portal-table table-hover datatable">
-                        <thead>
-                            <tr>
-                                <th>Periodo</th>
-                                <th>Acción</th>
-                                <th>Solicitado</th>
-                                <th>Aprobado</th>
-                                <th>Prioridad</th>
-                                <th>Score</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for solicitud in solicitudes %}
-                            <tr>
-                                <td>
-                                    {%if periodo.id==solicitud.periodo.id%}
-                                    <span class="badge bg-primary">
-                                        {{solicitud.periodo.anio}}-{{"%02d"|format(solicitud.periodo.mes)}}
-                                    </span>
-                                    {% else %}
-                                    <span class="badge bg-secondary">
-                                        {{solicitud.periodo.anio}}-{{"%02d"|format(solicitud.periodo.mes)}}
-                                    </span>
-                                    {% endif %}
-                                </td>
-                                <td style="font-size: 0.75rem;">
-                                    {% if solicitud.accion %}
-
-                                    {{ solicitud.accion.numero_accion }}
-                                    {% else %}
-                                    —
-                                    {% endif %}
-                                </td>
-                                <td class="fw-semibold">
-                                    S/
-                                    {{ "{:,.2f}".format(
-                                    solicitud.monto_solicitado or 0
-                                    ) }}
-                                </td>
-                                <td>
-                                    S/
-                                    {{ "{:,.2f}".format(
-                                    solicitud.monto_aprobado or 0
-                                    ) }}
-                                </td>
-                                <td>
-                                    {{ solicitud.prioridad }}
-                                </td>
-                                <td>
-                                    {{ "{:,.2f}".format(
-                                    solicitud.score or 0
-                                    ) }}
-                                </td>
-                                <td>
-                                    {% if solicitud.estado == "ATENDIDA" %}
-                                    <span class="badge badge-soft-success" style="font-size: 0.55rem;">
-                                        ATENDIDO
-                                    </span>
-                                    {% elif solicitud.estado == "PENDIENTE" %}
-                                    <span class="badge badge-soft-warning" style="font-size: 0.55rem;">
-                                        PENDIENTE
-                                    </span>
-                                    {% elif solicitud.estado == "RECHAZADO" %}
-                                    <span class="badge badge-soft-danger" style="font-size: 0.55rem;">
-                                        RECHAZADO
-                                    </span>
-                                    {% else %}
-                                    <span class="badge badge-soft-secondary" style="font-size: 0.55rem;">
-                                        {{ solicitud.estado }}
-                                    </span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                        <td class="fw-semibold">
+                            {% if movimiento.accion %}
+                            <span class="badge bg-primary-subtle text-primary">
+                                {{ movimiento.accion.numero_accion }}
+                            </span>
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                        <td class="text-success fw-semibold text-nowrap">
+                            S/ {{ "{:,.2f}".format(movimiento.aporte or 0) }}
+                        </td>
+                        <td class="text-nowrap">
+                            S/ {{ "{:,.2f}".format(movimiento.cuota_pagada or 0) }}
+                        </td>
+                        <td class="text-warning text-nowrap">
+                            S/ {{ "{:,.2f}".format(movimiento.interes or 0) }}
+                        </td>
+                        <td class="text-primary text-nowrap">
+                            S/ {{ "{:,.2f}".format(movimiento.amortizacion or 0) }}
+                        </td>
+                        <td class="text-nowrap">
+                            {% if movimiento.multa and movimiento.multa > 0 %}
+                            <span class="badge badge-soft-danger">
+                                S/ {{ "{:,.2f}".format(movimiento.multa) }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold text-nowrap">
+                            S/ {{ "{:,.2f}".format(movimiento.saldo_prestamo or 0) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-
-        <!-- ====================================================
-         TRANSFERENCIAS
-         ===================================================== -->
-        <div class="row g-4 mb-4">
-            <!-- REALIZADAS -->
-            <div class="col-lg-6">
-                <div class="card section-card shadow-sm h-100">
-                    <div class="section-header">
-                        <h5 class="section-title">
-                            <i class="bi bi-send text-danger me-2"></i>
-                            Transferencias a realizar - periodo {{periodo.anio}}-{{"%02d"|format(periodo.mes)}}
-                        </h5>
-
-                        <div class="section-subtitle">
-                            Realizar las Transferencias hasta la fecha límite.
-                        </div>
-
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table portal-table table-hover datatable">
-                            <thead>
-                                <tr>
-                                    <th>Destino</th>
-                                    <th>Monto</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for transferencia in transferencias %}
-                                <tr>
-                                    <td class="fw-semibold">
-                                        {{ transferencia.socio_destino.nombres }}
-                                    </td>
-                                    <td class="text-danger fw-bold">
-                                        S/
-                                        {{ "{:,.2f}".format(
-                                        transferencia.monto
-                                        ) }}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RECIBIDAS -->
-
-            <div class="col-lg-6">
-                <div class="card section-card shadow-sm h-100">
-                    <div class="section-header">
-                        <h5 class="section-title">
-                            <i class="bi bi-download text-success me-2"></i>
-                            Transferencias a recibir - periodo {{periodo.anio}}-{{"%02d"|format(periodo.mes)}}
-                        </h5>
-                        <div class="section-subtitle">
-                            Confirmar las Transferencias recibidas hasta la fecha límite.
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table portal-table table-hover datatable">
-                            <thead>
-                                <tr>
-                                    <th>Origen</th>
-                                    <th>Monto</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for transferencia in transferencias_recibidas %}
-                                <tr>
-                                    <td class="fw-semibold">
-                                        {{ transferencia.socio_origen.nombres }}
-                                    </td>
-                                    <td class="text-success fw-bold">
-                                        S/
-                                        {{ "{:,.2f}".format(
-                                        transferencia.monto
-                                        ) }}
-                                    </td>
-
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- =====================================================
-         RESUMEN FINAL
-         ===================================================== -->
-        <div class="card section-card shadow-sm mb-4">
-            <div class="section-header">
-                <h5 class="section-title">
-                    <i class="bi bi-bar-chart-line text-primary me-2"></i>
-                    Resumen financiero del período
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-6 col-md-3">
-                        <div class="financial-box">
-                            <div class="financial-label">
-                                Aportes
-                            </div>
-                            <div class="financial-value text-success">
-                                S/
-                                {{ "{:,.2f}".format(
-                                resumen.total_aportes
-                                ) }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-6 col-md-3">
-                        <div class="financial-box">
-                            <div class="financial-label">
-                                Multas
-                            </div>
-                            <div class="financial-value text-danger">
-                                S/
-                                {{ "{:,.2f}".format(
-                                resumen.total_multas
-                                ) }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-6 col-md-3">
-                        <div class="financial-box">
-                            <div class="financial-label">
-                                Transferido
-                            </div>
-                            <div class="financial-value text-danger">
-                                S/
-                                {{ "{:,.2f}".format(
-                                resumen.total_transferido
-                                ) }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-6 col-md-3">
-                        <div class="financial-box">
-                            <div class="financial-label">
-                                Recibido
-                            </div>
-                            <div class="financial-value text-success">
-                                S/
-                                {{ "{:,.2f}".format(
-                                resumen.total_recibido
-                                ) }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                </br>
-                <div class="financial-box">
-                    <div class="financial-label">
-                        Observación del periodo
-                    </div>
-
-                    <!-- Se cambió a 'text-wrap' y se eliminó 'badge' para un comportamiento óptimo de texto largo -->
-                    <div class="text-wrap text-secondary bg-secondary-subtle rounded px-2 py-1"
-                        style="word-break: break-word;font-size: 0.75rem;">
-                        {{ resumen.observacion }}
-                    </div>
-                </div>
-
-            </div>
-        </div>
-        {% endif %}
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
+    <!-- =====================================================
+         SOLICITUDES
+         ===================================================== -->
+    <div class="card section-card shadow-sm mb-4">
+        <div class="section-header">
+            <!-- Se envuelven el título y el botón en un contenedor flex -->
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <h5 class="section-title mb-0">
+                    <i class="bi bi-cash-stack"></i> Solicitudes de préstamo
+                </h5>
 
-            window.irADetallePortal = function (periodo_Id) {
-                // console.log para depurar en la consola del navegador
-                // Si el usuario selecciona la opción por defecto vacía, no hace nada
-                if (!periodo_Id) return;
+                <a href="{{ url_for('solicitudes.nuevo') }}"
+                    class="btn btn-outline-primary border-primary-subtle bg-primary-subtle bg-opacity-10 d-inline-flex align-items-center gap-2 fw-semibold px-2 py-1 shadow-sm rounded-3">
+                    <i class="bi bi-cash-coin fs-5"></i>
+                    <span>Nueva Solicitud</span>
+                </a>
+            </div>
 
-                // Redirige a la URL combinando la ruta con el ID del socio
-                window.location.href = "/socio_portal/mi_estado_cuenta/" + periodo_Id;
-            };
+            <div class="section-subtitle text-muted"> Solicitudes registradas hasta el período </div>
+        </div>
 
-        });
-    </script>
+        <div class="table-responsive">
+            <table class="table portal-table table-hover datatable">
+                <thead>
+                    <tr>
+                        <th>Periodo</th>
+                        <th>Acción</th>
+                        <th>Solicitado</th>
+                        <th>Aprobado</th>
+                        <th>Prioridad</th>
+                        <th>Score</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for solicitud in solicitudes %}
+                    <tr>
+                        <td>
+                            {%if periodo.id==solicitud.periodo.id%}
+                            <span class="badge bg-primary">
+                                {{solicitud.periodo.anio}}-{{"%02d"|format(solicitud.periodo.mes)}}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                {{solicitud.periodo.anio}}-{{"%02d"|format(solicitud.periodo.mes)}}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.75rem;">
+                            {% if solicitud.accion %}
 
-    {% endblock %}
+                            {{ solicitud.accion.numero_accion }}
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                        <td class="fw-semibold">
+                            S/
+                            {{ "{:,.2f}".format(
+                            solicitud.monto_solicitado or 0
+                            ) }}
+                        </td>
+                        <td>
+                            S/
+                            {{ "{:,.2f}".format(
+                            solicitud.monto_aprobado or 0
+                            ) }}
+                        </td>
+                        <td>
+                            {{ solicitud.prioridad }}
+                        </td>
+                        <td>
+                            {{ "{:,.2f}".format(
+                            solicitud.score or 0
+                            ) }}
+                        </td>
+                        <td>
+                            {% if solicitud.estado == "ATENDIDA" %}
+                            <span class="badge badge-soft-success" style="font-size: 0.55rem;">
+                                ATENDIDO
+                            </span>
+                            {% elif solicitud.estado == "PENDIENTE" %}
+                            <span class="badge badge-soft-warning" style="font-size: 0.55rem;">
+                                PENDIENTE
+                            </span>
+                            {% elif solicitud.estado == "RECHAZADO" %}
+                            <span class="badge badge-soft-danger" style="font-size: 0.55rem;">
+                                RECHAZADO
+                            </span>
+                            {% else %}
+                            <span class="badge badge-soft-secondary" style="font-size: 0.55rem;">
+                                {{ solicitud.estado }}
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- ====================================================
+         TRANSFERENCIAS
+         ===================================================== -->
+    <div class="row g-4 mb-4">
+        <!-- REALIZADAS -->
+        <div class="col-lg-6">
+            <div class="card section-card shadow-sm h-100">
+                <div class="section-header">
+                    <h5 class="section-title">
+                        <i class="bi bi-send text-danger me-2"></i>
+                        Transferencias a realizar - periodo {{periodo.anio}}-{{"%02d"|format(periodo.mes)}}
+                    </h5>
+
+                    <div class="section-subtitle">
+                        Realizar las Transferencias hasta la fecha límite.
+                    </div>
+
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table portal-table table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>Destino</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transferencia in transferencias %}
+                            <tr>
+                                <td class="fw-semibold">
+                                    {{ transferencia.socio_destino.nombres }}
+                                </td>
+                                <td class="text-danger fw-bold">
+                                    S/
+                                    {{ "{:,.2f}".format(
+                                    transferencia.monto
+                                    ) }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- RECIBIDAS -->
+
+        <div class="col-lg-6">
+            <div class="card section-card shadow-sm h-100">
+                <div class="section-header">
+                    <h5 class="section-title">
+                        <i class="bi bi-download text-success me-2"></i>
+                        Transferencias a recibir - periodo {{periodo.anio}}-{{"%02d"|format(periodo.mes)}}
+                    </h5>
+                    <div class="section-subtitle">
+                        Confirmar las Transferencias recibidas hasta la fecha límite.
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table portal-table table-hover datatable">
+                        <thead>
+                            <tr>
+                                <th>Origen</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transferencia in transferencias_recibidas %}
+                            <tr>
+                                <td class="fw-semibold">
+                                    {{ transferencia.socio_origen.nombres }}
+                                </td>
+                                <td class="text-success fw-bold">
+                                    S/
+                                    {{ "{:,.2f}".format(
+                                    transferencia.monto
+                                    ) }}
+                                </td>
+
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         RESUMEN FINAL
+         ===================================================== -->
+    <div class="card section-card shadow-sm mb-4">
+        <div class="section-header">
+            <h5 class="section-title">
+                <i class="bi bi-bar-chart-line text-primary me-2"></i>
+                Resumen financiero del período
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <div class="financial-box">
+                        <div class="financial-label">
+                            Aportes
+                        </div>
+                        <div class="financial-value text-success">
+                            S/
+                            {{ "{:,.2f}".format(
+                            resumen.total_aportes
+                            ) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="financial-box">
+                        <div class="financial-label">
+                            Multas
+                        </div>
+                        <div class="financial-value text-danger">
+                            S/
+                            {{ "{:,.2f}".format(
+                            resumen.total_multas
+                            ) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="financial-box">
+                        <div class="financial-label">
+                            Transferido
+                        </div>
+                        <div class="financial-value text-danger">
+                            S/
+                            {{ "{:,.2f}".format(
+                            resumen.total_transferido
+                            ) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="financial-box">
+                        <div class="financial-label">
+                            Recibido
+                        </div>
+                        <div class="financial-value text-success">
+                            S/
+                            {{ "{:,.2f}".format(
+                            resumen.total_recibido
+                            ) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </br>
+            <div class="financial-box">
+                <div class="financial-label">
+                    Observación del periodo
+                </div>
+
+                <!-- Se cambió a 'text-wrap' y se eliminó 'badge' para un comportamiento óptimo de texto largo -->
+                <div class="text-wrap text-secondary bg-secondary-subtle rounded px-2 py-1"
+                    style="word-break: break-word;font-size: 0.75rem;">
+                    {{ resumen.observacion }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        window.irADetallePortal = function (periodo_Id) {
+            // console.log para depurar en la consola del navegador
+            // Si el usuario selecciona la opción por defecto vacía, no hace nada
+            if (!periodo_Id) return;
+
+            // Redirige a la URL combinando la ruta con el ID del socio
+            window.location.href = "/socio_portal/mi_estado_cuenta/" + periodo_Id;
+        };
+
+    });
+</script>
+
+{% endblock %}

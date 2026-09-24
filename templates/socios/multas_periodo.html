@@ -409,92 +409,60 @@ Registro de multas
     </div>
 </div>
 <script>
-    document.addEventListener(
-        "DOMContentLoaded",
-        function () {
+document.addEventListener("DOMContentLoaded", function () {
 
-            const modal = document.getElementById("modalMulta");
-            const form = document.getElementById("formMulta");
-            const inputMulta = document.getElementById("inputMulta");
-            const inputObservacion = document.getElementById("inputObservacion");
-            const modalSocio = document.getElementById("modalSocio");
-            const modalAccion = document.getElementById("modalAccion");
+    const modal = document.getElementById("modalMulta");
+    const form = document.getElementById("formMulta");
+    const inputMulta = document.getElementById("inputMulta");
+    const inputObservacion = document.getElementById("inputObservacion");
+    const modalSocio = document.getElementById("modalSocio");
+    const modalAccion = document.getElementById("modalAccion");
 
-            modal.addEventListener(
-                "show.bs.modal",
-                function (event) {
+    if (!modal || !form) {
+        return;
+    }
 
-                    const button = event.relatedTarget;
-                    const id = button.dataset.id;
-                    const multa = button.dataset.multa;
-                    const observacion = button.dataset.observacion;
-                    const socio = button.dataset.socio;
-                    const accion = button.dataset.accion;
+    modal.addEventListener("show.bs.modal", function (event) {
 
-                    form.action =
-                        "{{ url_for(
-                    'socios.actualizar_multa_movimiento',
-                        movimiento_id = 0
-                    )
-        }}".replace(
-                        "/0/multa",
-        "/" + id + "/multa"
-    );
+        const button = event.relatedTarget;
 
-    modalSocio.textContent = socio;
-    modalAccion.textContent =
-        accion
-            ? "Acción " + accion
-            : "Sin acción";
+        if (!button) {
+            return;
+        }
 
-    inputMulta.value =
-        Number(multa) > 0
-            ? Number(multa).toFixed(2)
-            : "00.00";
+        const id = button.dataset.id;
+        const multa = button.dataset.multa;
+        const observacion = button.dataset.observacion;
+        const socio = button.dataset.socio;
+        const accion = button.dataset.accion;
 
-    inputObservacion.value = observacion || "";
-
-            }
-        );
-
-
-    // =====================================================
-    // BUSCADOR
-    // =====================================================
-
-    const buscador = document.getElementById("buscarMovimiento");
-    const filas = document.querySelectorAll("#tablaMultas tbody tr");
-
-    buscador.addEventListener(
-        "input",
-        function () {
-
-            const texto =
-                this.value
-                    .toLowerCase()
-                    .trim();
-
-
-            filas.forEach(
-                function (fila) {
-
-                    const contenido =
-                        fila.textContent
-                            .toLowerCase();
-
-                    fila.style.display =
-                        contenido.includes(texto)
-                            ? ""
-                            : "none";
-
-                }
+        form.action =
+            "{{ url_for(
+                'socios.actualizar_multa_movimiento',
+                movimiento_id=0
+            ) }}".replace(
+                "/0/multa",
+                "/" + id + "/multa"
             );
 
-        }
-    );
+        modalSocio.textContent = socio;
 
-    }
-);
+        modalAccion.textContent =
+            accion
+                ? "Acción " + accion
+                : "Sin acción";
+
+        inputMulta.value =
+            Number(multa) > 0
+                ? Number(multa).toFixed(2)
+                : "0.00";
+
+        inputObservacion.value =
+            observacion || "";
+
+    });
+
+});
 
 </script>
 
