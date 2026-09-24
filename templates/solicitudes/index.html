@@ -32,9 +32,10 @@
                     <tr>
                         <th>Fecha</th>
                         <th>Periodo</th>
-                        <th>Socio</th>
                         <th>Acción</th>
+                        <th>Socio</th>
                         <th>Monto S/</th>
+                        <th>Priodidad</th>
                         <th>Estado</th>
                         <th width="220">
                             Acciones
@@ -49,6 +50,9 @@
                         </td>
                         <td>
                             {{s.periodo.anio}}-{{"%02d"|format(s.periodo.mes)}}
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">{{s.accion.numero_accion}}</span>
                         </td>
                         <td class="ps-3 fw-bold text-dark d-flex align-items-center gap-2">
                             <!-- Definimos la lista de palabras del nombre completo -->
@@ -70,12 +74,25 @@
                                 {{ s.socio.nombres }} {{ s.socio.apellidos if s.socio.apellidos else '' }}
                             </span>
                         </td>
-                        <td>
-                            <span class="badge bg-primary">{{s.accion.numero_accion}}</span>
-                        </td>
+
                         <td>
                             {{"{:,.2f}".format(s.monto_solicitado|float)}}
                         </td>
+                        <td>
+                            <span class="badge 
+                                {% if s.prioridad == 4 or s.prioridad == '4' %} bg-danger
+                                {% elif s.prioridad == 3 or s.prioridad == '3' %} bg-warning text-dark
+                                {% elif s.prioridad == 2 or s.prioridad == '2' %} bg-info
+                                {% else %} bg-secondary {% endif %}">
+
+                                {% if s.prioridad == 4 or s.prioridad == '4' %} Salud ({{ s.prioridad }})
+                                {% elif s.prioridad == 3 or s.prioridad == '3' %} Muy urgente ({{ s.prioridad }})
+                                {% elif s.prioridad == 2 or s.prioridad == '2' %} Urgente ({{ s.prioridad }})
+                                {% else %} Normal ({{ s.prioridad }}) {% endif %}
+                            </span>
+                        </td>
+
+
                         <td>
 
                             <span

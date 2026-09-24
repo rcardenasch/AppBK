@@ -1,6 +1,7 @@
 from decimal import Decimal
 from flask import (Blueprint,render_template,request,redirect, session,url_for,flash,jsonify
 )
+from models.configuracion import Configuracion
 from services.adquisicion_accion_service import AdquisicionAccionService
 from services.multa_service import MultaService
 
@@ -531,6 +532,19 @@ def multas_periodo():
                 )
             )
 
+        config = (db.query(Configuracion)
+            .filter(Configuracion.estado==True)
+            .first()
+        )
+        if not config:
+            flash("Se debe configurar parametros","warning")
+
+            return redirect(
+                url_for(
+                    "configuracion.index"
+                )
+            )
+
         movimientos = (
             db.query(Movimiento)
             .join(
@@ -550,7 +564,8 @@ def multas_periodo():
         return render_template(
             "socios/multas_periodo.html",
             periodo=periodo,
-            movimientos=movimientos
+            movimientos=movimientos,
+            configuracion=config
         )
 
     except Exception as e:

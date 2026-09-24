@@ -87,6 +87,7 @@ def nuevo():
         if request.method=="POST":
             socio_id = int(request.form["socio_id"])
             accion_id = int(request.form["accion_id"])
+            prioridad = int(request.form.get("prioridad", 1))
             monto_solicitado = float(request.form["monto"])
 
             socio = db.query(Socio).get(socio_id)
@@ -106,7 +107,7 @@ def nuevo():
                 socio_id=socio_id,
                 accion_id=accion_id,
                 monto_solicitado=monto_solicitado,
-                prioridad=1,
+                prioridad=prioridad,
                 score=score,
                 estado="PENDIENTE",
                 fecha_solicitud=date.today()
@@ -265,6 +266,7 @@ def editar(id):
             solicitud.periodo_id = request.form["periodo_id"]
             solicitud.socio_id = request.form["socio_id"]
             solicitud.accion_id = request.form["accion_id"]
+            solicitud.prioridad=request.form["prioridad"]
             solicitud.monto_solicitado = request.form["monto"]
 
             db.commit()

@@ -18,4 +18,5 @@ class Configuracion(Base):
     metodo_distribucion = Column(String(20),nullable=False)
     multa_tardanza = Column( NUMERIC(12, 2),nullable=False)
     multa_falta = Column(NUMERIC(12, 2),nullable=False)
+    multa_no_transferir = Column(NUMERIC(12, 2),nullable=False)
     estado=Column(Boolean,default=True)

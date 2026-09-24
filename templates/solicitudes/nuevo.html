@@ -4,7 +4,7 @@
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-12 col-lg-8">
-            
+
             <div class="card shadow-sm border-0 rounded-4">
                 <!-- Header con estilo moderno e iconos -->
                 <div class="card-header bg-success text-white py-3 border-bottom-0 rounded-top-4">
@@ -16,16 +16,19 @@
 
                 <div class="card-body p-4">
                     <form method="post" autocomplete="off">
-                        
+
                         <div class="row g-3">
                             <!-- Periodo -->
                             <div class="col-md-6">
-                                <label for="periodo_id" class="form-label small text-muted fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                <label for="periodo_id" class="form-label small text-muted fw-semibold text-uppercase"
+                                    style="font-size: 0.75rem; letter-spacing: 0.5px;">
                                     Periodo
                                 </label>
                                 <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-secondary-subtle text-secondary"><i class="bi bi-calendar3"></i></span>
-                                    <select id="periodo_id" name="periodo_id" class="form-select border-secondary-subtle fw-medium" required>
+                                    <span class="input-group-text bg-light border-secondary-subtle text-secondary"><i
+                                            class="bi bi-calendar3"></i></span>
+                                    <select id="periodo_id" name="periodo_id"
+                                        class="form-select border-secondary-subtle fw-medium" required>
                                         {% for p in periodos %}
                                         <option value="{{p.id}}">
                                             {{p.anio}} - {{"%02d"|format(p.mes)}}
@@ -35,25 +38,17 @@
                                 </div>
                             </div>
 
-                            <!-- Monto Solicitado -->
-                            <div class="col-md-6">
-                                <label for="monto" class="form-label small text-muted fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                                    Monto Solicitado
-                                </label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-secondary-subtle fw-bold text-success">S/</span>
-                                    <input type="number" step="0.01" min="0.01" id="monto" name="monto" class="form-control border-secondary-subtle fw-bold text-dark text-end" placeholder="0.00" required>
-                                </div>
-                            </div>
-
                             <!-- Socio -->
                             <div class="col-md-6">
-                                <label for="socio" class="form-label small text-muted fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                <label for="socio" class="form-label small text-muted fw-semibold text-uppercase"
+                                    style="font-size: 0.75rem; letter-spacing: 0.5px;">
                                     Socio Solicitante
                                 </label>
                                 <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-secondary-subtle text-secondary"><i class="bi bi-person-fill"></i></span>
-                                    <select id="socio" name="socio_id" class="form-select border-secondary-subtle" required>
+                                    <span class="input-group-text bg-light border-secondary-subtle text-secondary"><i
+                                            class="bi bi-person-fill"></i></span>
+                                    <select id="socio" name="socio_id" class="form-select border-secondary-subtle"
+                                        required>
                                         <option value="" selected disabled>Seleccione un socio...</option>
                                         {% for s in socios %}
                                         <option value="{{s.id}}">{{s.nombres}}</option>
@@ -64,21 +59,63 @@
 
                             <!-- Acción asociada -->
                             <div class="col-md-6">
-                                <label for="accion" class="form-label small text-muted fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                <label for="accion" class="form-label small text-muted fw-semibold text-uppercase"
+                                    style="font-size: 0.75rem; letter-spacing: 0.5px;">
                                     Acción Vinculada
                                 </label>
                                 <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light border-secondary-subtle text-secondary"><i class="bi bi-gem"></i></span>
-                                    <select id="accion" name="accion_id" class="form-select border-secondary-subtle" required disabled>
+                                    <span class="input-group-text bg-light border-secondary-subtle text-secondary"><i
+                                            class="bi bi-gem"></i></span>
+                                    <select id="accion" name="accion_id" class="form-select border-secondary-subtle"
+                                        required disabled>
                                         <option value="">Seleccione primero un socio...</option>
                                     </select>
                                 </div>
                             </div>
+
+                            <!-- Monto Solicitado -->
+                            <div class="col-md-6">
+                                <label for="monto" class="form-label small text-muted fw-semibold text-uppercase"
+                                    style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                    Monto Solicitado
+                                </label>
+                                <div class="input-group input-group-sm">
+                                    <span
+                                        class="input-group-text bg-light border-secondary-subtle fw-bold text-success">S/</span>
+                                    <input type="number" step="0.01" min="0.01" id="monto" name="monto"
+                                        class="form-control border-secondary-subtle fw-bold text-dark text-end"
+                                        placeholder="0.00" required>
+                                </div>
+                            </div>
+
+                            <!-- Prioridad -->
+                            <div class="col-md-6">
+                                <label for="prioridad" class="form-label small text-muted fw-semibold text-uppercase"
+                                    style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                    Prioridad
+                                </label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light border-info-subtle text-info">
+                                        <i class="bi bi-gem"></i>
+                                    </span>
+                                    <!-- Se corrigió el id a "prioridad" -->
+                                    <select id="prioridad" name="prioridad"
+                                        class="form-select border-secondary-subtle" required>
+                                        <option value="" selected>Seleccione una prioridad...</option>
+                                        <option value="1">Normal</option>
+                                        <option value="2">Urgente</option>
+                                        <option value="3">Muy urgente</option>
+                                        <option value="4">Salud</option>
+                                    </select>
+                                </div>
+                            </div>
+
                         </div>
 
                         <!-- Botones de Acción -->
                         <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-light-subtle">
-                            <a href="{{ url_for('solicitudes.index') }}" class="btn btn-light border-secondary-subtle btn-sm px-3 fw-medium">
+                            <a href="{{ url_for('solicitudes.index') }}"
+                                class="btn btn-light border-secondary-subtle btn-sm px-3 fw-medium">
                                 Cancelar
                             </a>
                             <button type="submit" class="btn btn-success btn-sm px-4 fw-bold">
@@ -95,44 +132,44 @@
 </div>
 
 <script>
-document.getElementById("socio").addEventListener("change", function () {
-    const socioId = this.value;
-    const comboAccion = document.getElementById("accion");
+    document.getElementById("socio").addEventListener("change", function () {
+        const socioId = this.value;
+        const comboAccion = document.getElementById("accion");
 
-    if (!socioId) {
-        comboAccion.innerHTML = '<option value="">Seleccione primero un socio...</option>';
+        if (!socioId) {
+            comboAccion.innerHTML = '<option value="">Seleccione primero un socio...</option>';
+            comboAccion.disabled = true;
+            return;
+        }
+
+        // Estado visual de carga temporal
+        comboAccion.innerHTML = '<option value="">Cargando acciones...</option>';
         comboAccion.disabled = true;
-        return;
-    }
 
-    // Estado visual de carga temporal
-    comboAccion.innerHTML = '<option value="">Cargando acciones...</option>';
-    comboAccion.disabled = true;
+        fetch("/solicitudes/acciones/" + socioId)
+            .then(r => {
+                if (!r.ok) throw new Error("Error en la respuesta del servidor");
+                return r.json();
+            })
+            .then(data => {
+                comboAccion.innerHTML = "";
 
-    fetch("/solicitudes/acciones/" + socioId)
-        .then(r => {
-            if (!r.ok) throw new Error("Error en la respuesta del servidor");
-            return r.json();
-        })
-        .then(data => {
-            comboAccion.innerHTML = "";
-            
-            if (data.acciones && data.acciones.length > 0) {
-                data.acciones.forEach(a => {
-                    const opt = document.createElement("option");
-                    opt.value = a.id;
-                    opt.textContent = `Acción N° ${a.numero} (S/ ${parseFloat(a.valor).toFixed(2)})`;
-                    comboAccion.appendChild(opt);
-                });
-                comboAccion.disabled = false;
-            } else {
-                comboAccion.innerHTML = '<option value="">El socio no cuenta con acciones disponibles</option>';
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            comboAccion.innerHTML = '<option value="">Error al cargar acciones</option>';
-        });
-});
+                if (data.acciones && data.acciones.length > 0) {
+                    data.acciones.forEach(a => {
+                        const opt = document.createElement("option");
+                        opt.value = a.id;
+                        opt.textContent = `Acción N° ${a.numero} (S/ ${parseFloat(a.valor).toFixed(2)})`;
+                        comboAccion.appendChild(opt);
+                    });
+                    comboAccion.disabled = false;
+                } else {
+                    comboAccion.innerHTML = '<option value="">El socio no cuenta con acciones disponibles</option>';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                comboAccion.innerHTML = '<option value="">Error al cargar acciones</option>';
+            });
+    });
 </script>
 {% endblock %}

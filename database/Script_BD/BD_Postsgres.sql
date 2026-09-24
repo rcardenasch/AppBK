@@ -487,6 +487,9 @@ VALUES
 ('periodo', 'generar movimientos masivos','Generar movimientos masivos de todos los socios para el periodo'),
 ('periodo', 'cierre', 'Crear cierre del periodo');
 
+--
+alter table configuracion
+add column multa_no_transferir NUMERIC(12,2);
 
 -- luego dar en roles_permisos al administrador a todos estos permisos
 select * from configuracion

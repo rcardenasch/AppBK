@@ -160,7 +160,19 @@
                             </td>
                             <td><span class="badge bg-primary">{{ s.accion.numero_accion }}</span></td>
                             <td>{{ s.score }}</td>
-                            <td>{{ s.prioridad }}</td>
+                            <td>
+                                <span class="badge 
+                                {% if s.prioridad == 4 or s.prioridad == '4' %} bg-danger
+                                {% elif s.prioridad == 3 or s.prioridad == '3' %} bg-warning text-dark
+                                {% elif s.prioridad == 2 or s.prioridad == '2' %} bg-info
+                                {% else %} bg-secondary {% endif %}">
+
+                                {% if s.prioridad == 4 or s.prioridad == '4' %} Salud ({{ s.prioridad }})
+                                {% elif s.prioridad == 3 or s.prioridad == '3' %} Muy urgente ({{ s.prioridad }})
+                                {% elif s.prioridad == 2 or s.prioridad == '2' %} Urgente ({{ s.prioridad }})
+                                {% else %} Normal ({{ s.prioridad }}) {% endif %}
+                                </span>
+                            </td>
                             <td class="solicitado" data-solicitado="{{ s.monto_solicitado }}">
                                 {{ "{:,.2f}".format(s.monto_solicitado) }}
                             </td>
