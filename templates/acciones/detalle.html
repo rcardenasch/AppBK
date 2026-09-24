@@ -11,96 +11,94 @@
     </div>
     <!-- RESUMEN -->
     <div class="row g-4">
-        <div class="col-md-12">
-            <div class="row g-3">
 
-                <!-- TARJETA PRINCIPAL: DETALLE DE ACCIÓN -->
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body d-flex flex-column justify-content-between">
+        <!-- TARJETA PRINCIPAL: DETALLE DE ACCIÓN -->
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div>
-                                        <h4 class="fw-bold mb-1 text-primary">
-                                            <i class="bi bi-bank2 me-2"></i>Acción {{ accion.numero_accion }}
-                                        </h4>
-                                        <div class="small text-muted">
-                                            <i class="bi bi-person-fill me-1"></i>Socio: <strong>{{ accion.socio.nombres
-                                                }}</strong>
-                                            <br>
-                                            <i class="bi bi-card-text me-1"></i>Doc: {{ accion.socio.documento }}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        {% if accion.estado=="ACTIVO" %}
-                                        <span
-                                            class="badge bg-success-subtle text-success fs-6 border border-success">ACTIVO</span>
-                                        {% else %}
-                                        <span
-                                            class="badge bg-danger-subtle text-danger fs-6 border border-danger">INACTIVO</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <hr class="text-muted opacity-25My">
-                            </div>
-
-                            <div class="bg-light p-2 rounded border border-light-subtle">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <small class="text-muted d-block text-uppercase fw-semibold"
-                                            style="font-size: 0.75rem;">Valor acción</small>
-                                        <h4 class="mb-0 fw-bold text-dark">S/ {{ "{:,.2f}".format(accion.valor) }}</h4>
-                                    </div>
-                                    <div class="bg-primary bg-opacity-10 p-2 rounded">
-                                        <i class="bi bi-cash-coin text-primary fs-4"></i>
-                                    </div>
+                                <h4 class="fw-bold mb-1 text-primary">
+                                    <i class="bi bi-bank2 me-2"></i>Acción {{ accion.numero_accion }}
+                                </h4>
+                                <div class="small text-muted">
+                                    <i class="bi bi-person-fill me-1"></i>Socio: <strong>{{ accion.socio.nombres
+                                        }}</strong>
+                                    <br>
+                                    <i class="bi bi-card-text me-1"></i>Doc: {{ accion.socio.documento }}
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TARJETA: PRÉSTAMOS ACTIVOS -->
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100 text-center">
-                        <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                            <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-circle mb-3">
-                                <i class="bi bi-file-earmark-text fs-3"></i>
+                            <div>
+                                {% if accion.estado=="ACTIVO" %}
+                                <span class="badge bg-success-subtle text-success fs-10 "
+                                    style="font-size: 0.65rem;">ACTIVO</span>
+                                {% else %}
+                                <span class="badge bg-danger-subtle text-danger fs-10 "
+                                    style="font-size: 0.65rem;">INACTIVO</span>
+                                {% endif %}
                             </div>
-                            <h6 class="text-muted fw-normal mb-1">Préstamos activos</h6>
-                            <h2 class="fw-bold mb-0">{{ prestamos_activos|length }}</h2>
                         </div>
+                        <hr class="text-muted opacity-25My">
                     </div>
-                </div>
 
-                <!-- TARJETA: SALDO PENDIENTE -->
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100 text-center">
-                        <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                            <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-circle mb-3">
-                                <i class="bi bi-exclamation-triangle fs-3"></i>
+                    <div class="bg-light p-2 rounded border border-light-subtle">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <small class="text-muted d-block text-uppercase fw-semibold"
+                                    style="font-size: 0.75rem;">Valor acción</small>
+                                <h4 class="mb-0 fw-bold text-dark" style="font-size: 0.75rem;">S/ {{
+                                    "{:,.2f}".format(accion.valor) }}</h4>
                             </div>
-                            <h6 class="text-muted fw-normal mb-1">Saldo pendiente</h6>
-                            <h2 class="fw-bold text-danger mb-0">S/ {{ "{:,.2f}".format(saldo_prestamos|float) }}</h2>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TARJETA: MOVIMIENTOS -->
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100 text-center">
-                        <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                            <div class="p-3 bg-info bg-opacity-10 text-info rounded-circle mb-3">
-                                <i class="bi bi-arrow-left-right fs-3"></i>
+                            <div class="bg-primary bg-opacity-10 p-2 rounded">
+                                <i class="bi bi-cash-coin text-primary fs-4"></i>
                             </div>
-                            <h6 class="text-muted fw-normal mb-1">Movimientos</h6>
-                            <h2 class="fw-bold mb-0">{{ movimientos|length }}</h2>
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
+
+        <!-- TARJETA: PRÉSTAMOS ACTIVOS -->
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100 text-center">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-circle mb-3">
+                        <i class="bi bi-file-earmark-text fs-3"></i>
+                    </div>
+                    <h6 class="text-muted fw-normal mb-1" style="font-size: 1.0rem;">Préstamos activos</h6>
+                    <h2 class="fw-bold mb-0" style="font-size: 1.2rem;">{{ prestamos_activos|length }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- TARJETA: SALDO PENDIENTE -->
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100 text-center">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-circle mb-3">
+                        <i class="bi bi-exclamation-triangle fs-3"></i>
+                    </div>
+                    <h6 class="text-muted fw-normal mb-1" style="font-size: 1.0rem;">Saldo pendiente</h6>
+                    <h2 class="fw-bold text-danger mb-0" style="font-size: 1.2rem;">S/ {{
+                        "{:,.2f}".format(saldo_prestamos|float) }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- TARJETA: MOVIMIENTOS -->
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100 text-center">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <div class="p-3 bg-info bg-opacity-10 text-info rounded-circle mb-3">
+                        <i class="bi bi-arrow-left-right fs-3"></i>
+                    </div>
+                    <h6 class="text-muted fw-normal mb-1" style="font-size: 1.0rem;">Movimientos</h6>
+                    <h2 class="fw-bold mb-0" style="font-size: 1.2rem;">{{ movimientos|length }}</h2>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <br>
@@ -143,7 +141,7 @@
                     <thead class="table-light">
 
                         <tr>
-                            <th>Fecha</th>
+                            <th>Periodo</th>
                             <th>Monto</th>
                             <th>Saldo</th>
                             <th>Tasa</th>
@@ -152,11 +150,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for p in accion.prestamos %}
-                        <tr>
+
+                        {% for p in accion.prestamos |sort(reverse=True, attribute='periodo.id') %}
+                        <tr>                           
                             <td>
-                                {{ p.fecha_prestamo }}
+                                <span class="badge bg-warning">
+                                  {{p.periodo.anio}}-{{"%02d"|format(p.periodo.mes)}}
+                                </span>
                             </td>
+              
                             <td class="celda-monto">
                                 {{ p.monto }}
                             </td>
@@ -178,11 +180,11 @@
                             </td>
                             <td>
                                 {% if p.estado=="ACTIVO" %}
-                                <span class="badge bg-success">
+                                <span class="badge bg-success-subtle text-success" style="font-size: 0.55rem;">
                                     ACTIVO
                                 </span>
                                 {% else %}
-                                <span class="badge bg-secondary">
+                                <span class="badge bg-secondary-subtle text-secondary" style="font-size: 0.65rem;">
                                     {{ p.estado }}
                                 </span>
                                 {% endif %}
@@ -191,13 +193,13 @@
                             <td>
 
                                 <div class="btn-group btn-group-sm">
-                                      <button type="button" class="btn btn-outline-danger btn-eliminar-prestamo"
+                                    <button type="button" class="btn btn-outline-danger btn-eliminar-prestamo"
                                         data-id="{{ p.id }}" title="Eliminar prestamo" disabled>
                                         <i class="bi bi-trash"></i>
                                     </button>
 
                                 </div>
-                          
+
                             </td>
 
                         </tr>
@@ -221,7 +223,7 @@
                 <table class="table table-hover table-striped datatable">
                     <thead class="table-light">
                         <tr>
-                            <th>Periodo</th> 
+                            <th>Periodo</th>
                             <th>Aporte S/</th>
                             <th>Cuota S/</th>
                             <th>Amortización S/</th>
@@ -262,7 +264,6 @@
                             <td class="celda-saldo">
                                 {% if m.saldo_prestamo >0 %}
                                 <span class="text-danger fw-bold">
-                                    S/
                                     {{"{:,.2f}".format(m.saldo_prestamo )}}
                                 </span>
                                 {% else %}
@@ -300,9 +301,7 @@
     </div>
 </div>
 
-<dialog id="modalEditarMovimiento"
-        class="rounded-4 border-0 shadow-lg"
-        style="width: 700px; max-width: 95%;">
+<dialog id="modalEditarMovimiento" class="rounded-4 border-0 shadow-lg" style="width: 700px; max-width: 95%;">
 
     <div class="card border-0">
 
@@ -316,8 +315,7 @@
                     Editar movimiento
                 </h5>
 
-                <span id="editEstadoDeuda"
-                      class="badge bg-light text-dark">
+                <span id="editEstadoDeuda" class="badge bg-light text-dark">
                     Calculando...
                 </span>
 
@@ -343,11 +341,7 @@
                         Aporte
                     </label>
 
-                    <input type="number"
-                           step="0.01"
-                           min="0"
-                           id="editAporte"
-                           class="form-control">
+                    <input type="number" step="0.01" min="0" id="editAporte" class="form-control">
 
                 </div>
 
@@ -358,11 +352,7 @@
                         Cuota pagada
                     </label>
 
-                    <input type="number"
-                           step="0.01"
-                           min="0"
-                           id="editCuota"
-                           class="form-control">
+                    <input type="number" step="0.01" min="0" id="editCuota" class="form-control">
 
                 </div>
 
@@ -373,11 +363,7 @@
                         Multa actual
                     </label>
 
-                    <input type="number"
-                           step="0.01"
-                           min="0"
-                           id="editMulta"
-                           class="form-control">
+                    <input type="number" step="0.01" min="0" id="editMulta" class="form-control">
 
                     <small class="text-muted">
                         Esta multa se aplicará al siguiente período.
@@ -392,11 +378,7 @@
                         Sobre
                     </label>
 
-                    <input type="number"
-                           step="0.01"
-                           min="0"
-                           id="editSobre"
-                           class="form-control">
+                    <input type="number" step="0.01" min="0" id="editSobre" class="form-control">
 
                 </div>
 
@@ -427,9 +409,7 @@
                 </div>
 
 
-                <button type="button"
-                        class="btn btn-success"
-                        id="btnPagarTodaDeuda">
+                <button type="button" class="btn btn-success" id="btnPagarTodaDeuda">
 
                     <i class="bi bi-check2-circle"></i>
 
@@ -456,8 +436,7 @@
                                 Saldo préstamo
                             </div>
 
-                            <div class="fs-5 fw-bold"
-                                 id="editSaldoApertura">
+                            <div class="fs-5 fw-bold" id="editSaldoApertura">
                                 S/ 0.00
                             </div>
 
@@ -470,8 +449,7 @@
                                 Multa anterior
                             </div>
 
-                            <div class="fs-5 fw-bold text-warning"
-                                 id="editMultaAnterior">
+                            <div class="fs-5 fw-bold text-warning" id="editMultaAnterior">
                                 S/ 0.00
                             </div>
 
@@ -484,8 +462,7 @@
                                 Deuda total
                             </div>
 
-                            <div class="fs-5 fw-bold text-danger"
-                                 id="editDeudaTotal">
+                            <div class="fs-5 fw-bold text-danger" id="editDeudaTotal">
                                 S/ 0.00
                             </div>
 
@@ -498,8 +475,7 @@
                                 Interés
                             </div>
 
-                            <div class="fs-5 fw-bold"
-                                 id="editInteres">
+                            <div class="fs-5 fw-bold" id="editInteres">
                                 S/ 0.00
                             </div>
 
@@ -512,8 +488,7 @@
                                 Amortización
                             </div>
 
-                            <div class="fs-5 fw-bold text-primary"
-                                 id="editAmortizacion">
+                            <div class="fs-5 fw-bold text-primary" id="editAmortizacion">
                                 S/ 0.00
                             </div>
 
@@ -526,8 +501,7 @@
                                 Nuevo saldo
                             </div>
 
-                            <div class="fs-5 fw-bold text-success"
-                                 id="editSaldoNuevo">
+                            <div class="fs-5 fw-bold text-success" id="editSaldoNuevo">
                                 S/ 0.00
                             </div>
 
@@ -550,9 +524,7 @@
                     Observación
                 </label>
 
-                <textarea id="editObservacion"
-                          class="form-control"
-                          rows="3"></textarea>
+                <textarea id="editObservacion" class="form-control" rows="3"></textarea>
 
             </div>
 
@@ -563,18 +535,14 @@
 
         <div class="card-footer d-flex justify-content-end gap-2">
 
-            <button type="button"
-                    class="btn btn-secondary"
-                    id="btnCancelarEditarMovimiento">
+            <button type="button" class="btn btn-secondary" id="btnCancelarEditarMovimiento">
 
                 Cancelar
 
             </button>
 
 
-            <button type="button"
-                    class="btn btn-primary"
-                    id="btnGuardarEdicionMovimiento">
+            <button type="button" class="btn btn-primary" id="btnGuardarEdicionMovimiento">
 
                 <i class="bi bi-save"></i>
 
@@ -756,8 +724,8 @@
             });
         }
 
-            // boton págar toda deuda
-            $("#btnPagarTodaDeuda").on("click", function () {
+        // boton págar toda deuda
+        $("#btnPagarTodaDeuda").on("click", function () {
 
             const id = $("#editMovimientoId").val();
 
@@ -855,22 +823,22 @@
 
                 }
             )
-            .fail(function () {
+                .fail(function () {
 
-                alert(
-                    "No se pudo calcular la cuota para cancelar la deuda."
-                );
+                    alert(
+                        "No se pudo calcular la cuota para cancelar la deuda."
+                    );
 
-            })
-            .always(function () {
+                })
+                .always(function () {
 
-                boton.prop("disabled", false);
+                    boton.prop("disabled", false);
 
-                boton.html(
-                    '<i class="bi bi-check2-circle"></i> Pagar toda la deuda'
-                );
+                    boton.html(
+                        '<i class="bi bi-check2-circle"></i> Pagar toda la deuda'
+                    );
 
-            });
+                });
 
         });
 
@@ -900,7 +868,7 @@
         }
 
         //Agregamos debounce para no disparar una consulta por cada tec
-        
+
         let timerCalculoEdicion = null;
 
         function programarCalculoEdicion() {
@@ -919,7 +887,7 @@
 
                 programarCalculoEdicion();
 
-        });
+            });
 
         // =====================================================
         // 3. GUARDAR EDICION DE MOVIMIENTO (AJAX POST)
@@ -1039,38 +1007,38 @@
         if (movimiento.saldo_prestamo !== undefined) $fila.find(".celda-saldo").text(Number(movimiento.saldo_prestamo).toFixed(2));
     }
 
-// Prestamo
-// =====================================================
-        // =====================================================
-        // 4. ELIMINAR PRESTAMO
-        // =====================================================
-        $(document).on("click", ".btn-eliminar-prestamo", function () {
-            
-            const id = $(this).data("id");
+    // Prestamo
+    // =====================================================
+    // =====================================================
+    // 4. ELIMINAR PRESTAMO
+    // =====================================================
+    $(document).on("click", ".btn-eliminar-prestamo", function () {
 
-            if (!confirm("¿Está seguro de eliminar este préstamo?")) {
-                return;
-            }
-            console.log("ingrese a eliminar prestamo");
+        const id = $(this).data("id");
 
-            $.ajax({
-                url: `/movimientos/eliminar_prestamo/${id}`,
-                method: "DELETE",
-                
-                success: function (resp) {
-                    console.log("ingrese a success, resp: ",resp);
+        if (!confirm("¿Está seguro de eliminar este préstamo?")) {
+            return;
+        }
+        console.log("ingrese a eliminar prestamo");
 
-                    if (resp.ok) {
-                        location.reload(); // Recarga para actualizar saldos globales
-                    } else {
-                        alert(resp.mensaje);
-                    }
-                    console.log("xx");
+        $.ajax({
+            url: `/movimientos/eliminar_prestamo/${id}`,
+            method: "DELETE",
+
+            success: function (resp) {
+                console.log("ingrese a success, resp: ", resp);
+
+                if (resp.ok) {
+                    location.reload(); // Recarga para actualizar saldos globales
+                } else {
+                    alert(resp.mensaje);
                 }
-                
-            });
+                console.log("xx");
+            }
+
         });
-    
+    });
+
     // =====================================================
     // FUNCION GLOBAL: ACTUALIZAR FILA DINÁMICAMENTE
     // =====================================================

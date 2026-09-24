@@ -29,7 +29,7 @@
                             MI ESTADO DE CUENTA
                         </div>
 
-                        <h3 class="fw-bold mb-1">
+                        <h3 class="fw-bold mb-0">
                             {{ socio.nombres }}
                         </h3>
 
@@ -533,24 +533,17 @@
 
                 <!-- SIN PRÉSTAMOS -->
 
-                <div class="text-center py-5">
-
-                    <div class="mb-3">
-
-                        <i class="bi bi-bank2 text-muted" style="font-size: 3rem;"></i>
-
+                <div class="text-center py-0">
+                    <div class="mb-1">
+                        <i class="bi bi-bank2 text-muted" style="font-size: 2rem;"></i>
                     </div>
-
                     <h6 class="fw-bold">
                         No tienes préstamos activos
                     </h6>
-
-                    <p class="text-muted small mb-0">
+                    <p class="text-muted small mb-0" style="font-size: 0.75rem;">
                         Actualmente no existen préstamos activos registrados.
                     </p>
-
                 </div>
-
                 {% endif %}
 
             </div>
@@ -748,16 +741,16 @@
                     <tr>
                         <td>
                             {%if periodo.id==solicitud.periodo.id%}
-                            <span class="badge bg-primary">
+                            <span class="badge bg-primary" style="font-size: 0.75rem;">
                                 {{solicitud.periodo.anio}}-{{"%02d"|format(solicitud.periodo.mes)}}
                             </span>
                             {% else %}
-                            <span class="badge bg-secondary">
+                            <span class="badge bg-secondary" style="font-size: 0.75rem;">
                                 {{solicitud.periodo.anio}}-{{"%02d"|format(solicitud.periodo.mes)}}
                             </span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td style="font-size: 0.75rem;" style="font-size: 0.75rem;">
                             {% if solicitud.accion %}
 
                             {{ solicitud.accion.numero_accion }}
@@ -765,41 +758,41 @@
                             —
                             {% endif %}
                         </td>
-                        <td class="fw-semibold">
+                        <td class="fw-semibold" style="font-size: 0.75rem;">
                             S/
                             {{ "{:,.2f}".format(
                             solicitud.monto_solicitado or 0
                             ) }}
                         </td>
-                        <td>
+                        <td style="font-size: 0.75rem;">
                             S/
                             {{ "{:,.2f}".format(
                             solicitud.monto_aprobado or 0
                             ) }}
                         </td>
-                        <td>
+                        <td style="font-size: 0.75rem;">
                             {{ solicitud.prioridad }}
                         </td>
-                        <td>
+                        <td style="font-size: 0.75rem;">
                             {{ "{:,.2f}".format(
                             solicitud.score or 0
                             ) }}
                         </td>
                         <td>
                             {% if solicitud.estado == "ATENDIDA" %}
-                            <span class="badge badge-soft-success">
+                            <span class="badge badge-soft-success" style="font-size: 0.55rem;">
                                 ATENDIDO
                             </span>
                             {% elif solicitud.estado == "PENDIENTE" %}
-                            <span class="badge badge-soft-warning">
+                            <span class="badge badge-soft-warning" style="font-size: 0.55rem;">
                                 PENDIENTE
                             </span>
                             {% elif solicitud.estado == "RECHAZADO" %}
-                            <span class="badge badge-soft-danger">
+                            <span class="badge badge-soft-danger" style="font-size: 0.55rem;">
                                 RECHAZADO
                             </span>
                             {% else %}
-                            <span class="badge badge-soft-secondary">
+                            <span class="badge badge-soft-secondary" style="font-size: 0.75rem;">
                                 {{ solicitud.estado }}
                             </span>
                             {% endif %}
@@ -832,38 +825,24 @@
                 </div>
 
                 <div class="table-responsive">
-
-                    <table class="table portal-table table-hover datatable">
+                    <table class="table portal-table table-hover datatable" >
                         <thead>
                             <tr>
                                 <th>Destino</th>
                                 <th>Monto</th>
-                                <th>Estado</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for transferencia in transferencias %}
                             <tr>
-                                <td class="fw-semibold">
+                                <td class="fw-semibold" style="font-size: 0.75rem;">
                                     {{ transferencia.socio_destino.nombres }}
                                 </td>
-                                <td class="text-danger fw-bold">
+                                <td class="text-danger fw-bold" style="font-size: 0.75rem;">
                                     S/
                                     {{ "{:,.2f}".format(
                                     transferencia.monto
                                     ) }}
-                                </td>
-                                <td>
-                                    {% if transferencia.estado
-                                    == "CONFIRMADA" %}
-                                    <span class="badge badge-soft-success">
-                                        Confirmada
-                                    </span>
-                                    {% else %}
-                                    <span class="badge badge-soft-secondary">
-                                        {{ transferencia.estado }}
-                                    </span>
-                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -892,35 +871,22 @@
                             <tr>
                                 <th>Origen</th>
                                 <th>Monto</th>
-                                <th>Estado</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for transferencia
                             in transferencias_recibidas %}
                             <tr>
-                                <td class="fw-semibold">
+                                <td class="fw-semibold" style="font-size: 0.75rem;">
                                     {{ transferencia.socio_origen.nombres }}
                                 </td>
-                                <td class="text-success fw-bold">
+                                <td class="text-success fw-bold" style="font-size: 0.75rem;">
                                     S/
                                     {{ "{:,.2f}".format(
                                     transferencia.monto
                                     ) }}
                                 </td>
-                                <td>
-                                    {% if transferencia.estado
-                                    == "CONFIRMADA" %}
-                                    <span class="badge badge-soft-success">
-                                        CONFIRMADA
-                                    </span>
-                                    {% else %}
 
-                                    <span class="badge badge-soft-secondary">
-                                        {{ transferencia.estado }}
-                                    </span>
-                                    {% endif %}
-                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -1004,10 +970,13 @@
                     Observación del periodo
                 </div>
 
-                <div class="text-success badge badge-soft-success px-5 size-9px">
-                    {{ resumen.observacion}}
+                <!-- Se cambió a 'text-wrap' y se eliminó 'badge' para un comportamiento óptimo de texto largo -->
+                <div class="text-wrap text-secondary bg-secondary-subtle rounded px-2 py-1"
+                    style="word-break: break-word;font-size: 0.75rem;">
+                    {{ resumen.observacion }}
                 </div>
             </div>
+
         </div>
     </div>
     {% endif %}
