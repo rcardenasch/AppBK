@@ -491,11 +491,13 @@ VALUES
 -- luego dar en roles_permisos al administrador a todos estos permisos
 select * from configuracion
 select * from usuarios
+select * from roles
+select * from roles_permisos
 select * from periodos
 select * from fondo_utilidades
 select * from caja_chica
 select * from movimientos_caja_chica
-select * from prestamos where socio_id=4
+select * from prestamos where socio_id=5
 select * from solicitudes_prestamo order by id asc;
 select * from acciones where socio_id=15 order by id asc
 SELECT * FROM socios

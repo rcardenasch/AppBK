@@ -1,75 +1,76 @@
 import models
 
-# MODELOS
-from models.socio import Socio
-from models.accion import Accion
-from models.prestamo import Prestamo
-from models.movimiento import Movimiento
-from models.periodo import Periodo
-from models.fondo_utilidades import FondoUtilidades
-from models.distribucion_utilidades import DistribucionUtilidades
-from models.solicitud_prestamo import SolicitudPrestamo
-from models.configuracion import Configuracion
-
-# Seguridad
 from models.usuario import Usuario
 from models.rol import Rol
-from models.permiso import Permiso
-from models.rol_permiso import RolPermiso
 
 from services.auth_service import AuthService
 from database.connection import SessionLocal
 
-db = SessionLocal()
 
-try:
+def inicializar_datos_sistema():
 
-    rol = db.query(Rol).filter(
-        Rol.nombre == "Administrador"
-    ).first()
+    db = SessionLocal()
 
-    if not rol:
+    try:
 
-        rol = Rol(
+        # =====================================================
+        # 1. CREAR ROL ADMINISTRADOR
+        # =====================================================
 
-            nombre="Administrador",
+        rol = db.query(Rol).filter(
+            Rol.nombre == "Administrador"
+        ).first()
 
-            descripcion="Administrador General"
+        if not rol:
 
-        )
+            rol = Rol(
+                nombre="Administrador",
+                descripcion="Administrador General",
+                estado=True
+            )
 
-        db.add(rol)
+            db.add(rol)
+            db.flush()
+
+            print("✓ Rol Administrador creado.")
+
+        # =====================================================
+        # 2. CREAR USUARIO ADMIN
+        # =====================================================
+
+        admin = db.query(Usuario).filter(
+            Usuario.usuario == "admin"
+        ).first()
+
+        if not admin:
+
+            admin = Usuario(
+                nombres="Administrador",
+                usuario="admin",
+                correo="admin@bkfam.pe",
+                password_hash=AuthService.hash_password("43737510"),
+                rol_id=rol.id,
+                estado=True,
+                debe_cambiar_password=True
+            )
+
+            db.add(admin)
+
+            print("✓ Usuario administrador creado.")
+
+        else:
+
+            print("✓ Usuario administrador ya existe.")
 
         db.commit()
 
-        db.refresh(rol)
+        print("✓ Inicialización de seguridad completada.")
 
-    existe = db.query(Usuario).filter(
+    except Exception:
 
-        Usuario.usuario == "admin"
+        db.rollback()
+        raise
 
-    ).first()
+    finally:
 
-    if not existe:
-
-        admin = Usuario(
-
-            nombres="Administrador",
-            usuario="admin",
-            correo="admin@bkfam.pe",
-            password_hash=AuthService.hash_password("43737510"),
-            rol_id=rol.id
-
-        )
-
-        db.add(admin)
-        db.commit()
-        print("Administrador creado.")
-
-    else:
-
-        print("Ya existe.")
-
-finally:
-
-    db.close()
+        db.close()

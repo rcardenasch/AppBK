@@ -1,0 +1,451 @@
+
+class RegistroMensualService:
+
+    @staticmethod
+    def generar_periodo(db, periodo_id):
+
+        # =========================================================
+        # CONFIGURACIÓN
+        # =========================================================
+
+        configuracion = (
+            db.query(Configuracion)
+            .filter(
+                Configuracion.estado == True
+            )
+            .first()
+        )
+
+        if not configuracion:
+            raise Exception(
+                "No existe configuración del sistema"
+            )
+
+        # =========================================================
+        # PERÍODO
+        # =========================================================
+
+        periodo = (
+            db.query(Periodo)
+            .filter(
+                Periodo.id == periodo_id
+            )
+            .first()
+        )
+
+        if not periodo:
+            raise Exception(
+                "Periodo no encontrado"
+            )
+
+        if periodo.cerrado:
+            raise Exception(
+                "No se pueden generar movimientos "
+                "en un periodo cerrado"
+            )
+
+        # =========================================================
+        # SOCIOS ACTIVOS
+        # =========================================================
+
+        socios = (
+            db.query(Socio)
+            .filter(
+                Socio.estado == True
+            )
+            .all()
+        )
+
+        movimientos_creados = 0
+        prestamos_actualizados = 0
+
+        # =========================================================
+        # RECORRER SOCIOS
+        # =========================================================
+
+        for socio in socios:
+
+            # =====================================================
+            # RECORRER ACCIONES
+            # =====================================================
+
+            for accion in socio.acciones:
+
+                # =================================================
+                # VERIFICAR MOVIMIENTO EXISTENTE
+                # =================================================
+
+                movimiento_existente = (
+                    db.query(Movimiento)
+                    .filter(
+                        Movimiento.socio_id == socio.id,
+                        Movimiento.accion_id == accion.id,
+                        Movimiento.periodo_id == periodo_id
+                    )
+                    .first()
+                )
+
+                if movimiento_existente:
+                    continue
+
+                # =================================================
+                # APORTE
+                # =================================================
+
+                aporte = Decimal(
+                    str(
+                        configuracion.aporte_minimo or 0
+                    )
+                ).quantize(
+                    Decimal("0.01")
+                )
+
+                # =================================================
+                # SOBRE
+                # =================================================
+
+                sobre = (
+                    Decimal("1.00")
+                    *
+                    Decimal(
+                        str(
+                            configuracion.sobre_por_accion or 0
+                        )
+                    )
+                ).quantize(
+                    Decimal("0.01")
+                )
+
+                # =================================================
+                # SALDO APERTURA
+                # =================================================
+
+                saldo_apertura = (
+                    PrestamoService
+                    .obtener_saldo_apertura_accion(
+                        db=db,
+                        accion_id=accion.id,
+                        periodo_id=periodo_id
+                    )
+                )
+
+                saldo_apertura = Decimal(
+                    str(
+                        saldo_apertura or 0
+                    )
+                ).quantize(
+                    Decimal("0.01")
+                )
+
+                # =================================================
+                # MULTA ANTERIOR
+                # =================================================
+
+                multa_anterior = (
+                    MovimientoService
+                    .obtener_multa_periodo_anterior_accion(
+                        db=db,
+                        accion_id=accion.id,
+                        periodo_id=periodo_id
+                    )
+                )
+
+                multa_anterior = Decimal(
+                    str(
+                        multa_anterior or 0
+                    )
+                ).quantize(
+                    Decimal("0.01")
+                )
+
+               # =================================================
+                # DETERMINAR CUOTA MÍNIMA POR SOCIO + ACCIÓN
+                # =================================================
+                #
+                # REGLAS:
+                #
+                # 1. Si existe SALDO DE PRÉSTAMO > 0:
+                #       Buscar únicamente préstamos con saldo_actual > 0
+                #       de esta misma acción.
+                #
+                #       La cuota mínima se calcula sobre el préstamo
+                #       de mayor monto.
+                #
+                # 2. Si NO existe saldo de préstamo pero existe
+                #    MULTA DEL PERÍODO ANTERIOR:
+                #
+                #       cuota = aporte + multa_anterior + interes
+                #
+                #       No se considera ningún préstamo histórico
+                #       que ya esté cancelado.
+                #
+                # 3. Si no existe préstamo pendiente ni multa anterior:
+                #
+                #       cuota = aporte
+                #
+                # =================================================
+
+                monto_base_cuota = Decimal("0.00")
+
+                # =================================================
+                # CASO 1:
+                # LA ACCIÓN TIENE DEUDA DE PRÉSTAMO
+                # =================================================
+
+                if saldo_apertura > Decimal("0.00"):
+
+                    # Buscar SOLO préstamos que todavía tengan saldo.
+                    #
+                    # Esto evita que un préstamo CANCELADO histórico
+                    # vuelva a determinar la cuota mínima.
+
+                    prestamo_mayor = (
+                        db.query(Prestamo)
+                        .filter(
+                            Prestamo.socio_id == socio.id,
+                            Prestamo.accion_id == accion.id,
+                            Prestamo.saldo_actual > 0,
+                            Prestamo.monto > 0
+                        )
+                        .order_by(
+                            Prestamo.monto.desc(),
+                            Prestamo.id.asc()
+                        )
+                        .first()
+                    )
+
+                    if prestamo_mayor:
+
+                        monto_base_cuota = Decimal(
+                            str(
+                                prestamo_mayor.monto or 0
+                            )
+                        ).quantize(
+                            Decimal("0.01")
+                        )
+
+                        cuota_pagada = (
+                            PrestamoService
+                            .calcular_cuota_minima(
+                                monto_base_cuota
+                            )
+                        )
+
+                        cuota_pagada = Decimal(
+                            str(
+                                cuota_pagada or 0
+                            )
+                        ).quantize(
+                            Decimal("0.01")
+                        )
+
+                    else:
+
+                        # Protección:
+                        # existe saldo_apertura pero no encontramos
+                        # préstamo pendiente.
+
+                        cuota_pagada = aporte
+
+
+                # =================================================
+                # CASO 2:
+                # NO HAY PRÉSTAMO PENDIENTE,
+                # PERO EXISTE MULTA DEL PERÍODO ANTERIOR
+                # =================================================
+
+                elif multa_anterior > Decimal("0.00"):
+
+                    # -------------------------------------------------
+                    # Primero calculamos el interés sobre la deuda
+                    # correspondiente a la multa anterior.
+                    #
+                    # La cuota provisional contiene:
+                    #
+                    # aporte + multa
+                    #
+                    # El interés es calculado por MovimientoService.
+                    # -------------------------------------------------
+
+                    cuota_provisional = (
+                        aporte + multa_anterior
+                    ).quantize(
+                        Decimal("0.01")
+                    )
+
+                    resultado_multa = (
+                        MovimientoService
+                        .calcular_movimiento_accion(
+                            db=db,
+                            accion_id=accion.id,
+                            periodo_id=periodo_id,
+                            aporte=aporte,
+                            cuota_pagada=cuota_provisional,
+                            multa_periodo_anterior_override=multa_anterior,
+                            saldo_apertura_override=Decimal("0.00")
+                        )
+                    )
+
+                    interes_multa = Decimal(
+                        str(
+                            resultado_multa["interes"] or 0
+                        )
+                    ).quantize(
+                        Decimal("0.01")
+                    )
+
+                    # -------------------------------------------------
+                    # CUOTA EXACTA PARA CUBRIR:
+                    #
+                    # aporte
+                    # + multa anterior
+                    # + interés
+                    # -------------------------------------------------
+
+                    cuota_pagada = (
+                        aporte
+                        + multa_anterior
+                        + interes_multa
+                    ).quantize(
+                        Decimal("0.01")
+                    )
+
+
+                # =================================================
+                # CASO 3:
+                # SIN PRÉSTAMO PENDIENTE Y SIN MULTA
+                # =================================================
+
+                else:
+
+                    cuota_pagada = aporte
+
+                # =================================================
+                # CÁLCULO FINANCIERO CENTRALIZADO
+                # =================================================
+
+                resultado = (
+                    MovimientoService
+                    .calcular_movimiento_accion(
+                        db=db,
+                        accion_id=accion.id,
+                        periodo_id=periodo_id,
+                        aporte=aporte,
+                        cuota_pagada=cuota_pagada,
+                        multa_periodo_anterior_override=multa_anterior,
+                        saldo_apertura_override=saldo_apertura
+                    )
+                )
+
+                # =================================================
+                # VALIDACIÓN
+                # =================================================
+
+                if resultado["cuota_pagada"] != cuota_pagada:
+
+                    raise Exception(
+                        f"Inconsistencia en cuota calculada "
+                        f"para acción {accion.id}."
+                    )
+
+                # =================================================
+                # PRÉSTAMO REFERENCIA
+                # =================================================
+
+                prestamos = (
+                    db.query(Prestamo)
+                    .filter(
+                        Prestamo.accion_id == accion.id
+                    )
+                    .order_by(
+                        Prestamo.fecha_prestamo.asc(),
+                        Prestamo.id.asc()
+                    )
+                    .all()
+                )
+
+                prestamos_con_saldo = [
+                    p
+                    for p in prestamos
+                    if Decimal(
+                        str(p.saldo_actual or 0)
+                    ) > 0
+                ]
+
+                prestamo_referencia = None
+
+                if prestamos_con_saldo:
+
+                    prestamo_referencia = (
+                        prestamos_con_saldo[0]
+                    )
+
+                # =================================================
+                # CREAR MOVIMIENTO
+                # =================================================
+
+                movimiento = Movimiento(
+                    socio_id=socio.id,
+                    accion_id=accion.id,
+                    periodo_id=periodo_id,
+
+                    prestamo_id=(
+                        prestamo_referencia.id
+                        if prestamo_referencia
+                        else None
+                    ),
+
+                    aporte=resultado["aporte"],
+                    cuota_pagada=resultado["cuota_pagada"],
+                    interes=resultado["interes"],
+                    amortizacion=resultado["amortizacion"],
+                    saldo_prestamo=resultado["saldo_prestamo"],
+
+                    multa=Decimal("0.00"),
+                    sobre=sobre,
+
+                    observacion=(
+                        "Registro mensual automático. "
+                        f"Saldo préstamo: S/ {saldo_apertura:.2f}. "
+                        f"Multa anterior: S/ {multa_anterior:.2f}. "
+                        f"Base cuota: S/ {monto_base_cuota:.2f}. "
+                        f"Cuota aplicada: S/ {cuota_pagada:.2f}."
+                    )
+                )
+
+                db.add(movimiento)
+
+                # =================================================
+                # RECONSTRUIR SALDOS
+                # =================================================
+
+                resultado_saldos = (
+                    PrestamoService
+                    .reconstruir_saldos_accion_periodo(
+                        db=db,
+                        accion_id=accion.id,
+                        periodo_id=periodo_id,
+                        amortizacion=resultado["amortizacion"],
+                        multa_periodo_anterior=multa_anterior
+                    )
+                )
+
+                prestamos_actualizados += (
+                    resultado_saldos[
+                        "prestamos_actualizados"
+                    ]
+                )
+
+                movimientos_creados += 1
+
+        # =========================================================
+        # COMMIT
+        # =========================================================
+
+        db.commit()
+
+        return {
+            "socios_procesados": len(socios),
+            "movimientos_creados": movimientos_creados,
+            "prestamos_actualizados": prestamos_actualizados
+        }

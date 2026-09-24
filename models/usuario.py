@@ -67,7 +67,7 @@ class Usuario(UserMixin,Base):
             self.rol.nombre
             and
             self.rol.nombre.strip().lower()
-            == "administrador"
+            == "Administrador"
         ):
             return True
         # -----------------------------------------------------

@@ -15,6 +15,7 @@ from models.usuario import Usuario
 from models.rol import Rol
 from models.permiso import Permiso
 from models.rol_permiso import RolPermiso
+from seed_admin import inicializar_datos_sistema
 from models.periodo import Periodo
 from models.asistencia import Asistencia
 
@@ -44,6 +45,15 @@ from flask_login import LoginManager
 
 app = Flask(__name__)
 
+# =========================================================
+# INICIALIZACIÓN DEL SISTEMA
+# =========================================================
+
+inicializar_datos_sistema()
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "auth.login"
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "auth.login"
