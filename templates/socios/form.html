@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow rounded-4 border-0">
+    <div class="card-body p-4">
+        <!-- Título del Formulario -->
+        <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+            <i class="bi bi-person-vcard text-primary fs-3 me-2"></i>
+            <h4 class="mb-0 fw-bold text-dark">Datos del Socio</h4>
+        </div>
+
+        <form method="post">
+            <div class="row g-3">
+                <!-- Nombres -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted">Nombres completos</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+                        <input type="text" class="form-control" name="nombres" required
+                            value="{{ socio.nombres if socio else '' }}" placeholder="Ej: Juan Pérez">
+                    </div>
+                </div>
+
+                <!-- Documento -->
+                <div class="col-md-3 col-sm-6">
+                    <label class="form-label fw-semibold text-muted">Documento (DNI/CE)</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted"><i class="bi bi-card-text"></i></span>
+                        <input type="text" class="form-control" name="documento"
+                            value="{{ socio.documento if socio else '' }}" placeholder="Número de doc.">
+                    </div>
+                </div>
+
+                <!-- Teléfono -->
+                <div class="col-md-3 col-sm-6">
+                    <label class="form-label fw-semibold text-muted">Teléfono / Celular</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted"><i class="bi bi-telephone"></i></span>
+                        <input type="tel" class="form-control" name="telefono"
+                            value="{{ socio.telefono if socio else '' }}" placeholder="Ej: 987654321">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                    <i class="bi bi-check-circle me-1"></i> Guardar
+                </button>
+                <a href="{{ url_for('socios.index') }}" class="btn btn-outline-secondary px-4">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+{% endblock %}

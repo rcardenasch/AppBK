@@ -1,0 +1,752 @@
+{% extends "base.html" %}
+
+{% block title %}
+Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <!-- ========================================================= -->
+    <!-- CABECERA -->
+    <!-- ========================================================= -->
+
+    <div class="d-flex flex-wrap
+                justify-content-between
+                align-items-center mb-4">
+
+        <div>
+
+            <div class="d-flex align-items-center gap-2">
+
+                <h3 class="fw-bold mb-0">
+                    <i class="bi bi-clipboard2-check text-primary"></i>
+                    Precierre de consistencia
+                </h3>
+
+                {% if periodo.cerrado %}
+
+                    <span class="badge bg-secondary">
+                        CERRADO
+                    </span>
+
+                {% else %}
+
+                    <span class="badge bg-success">
+                        ABIERTO
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+            <p class="text-muted mb-0 mt-1">
+
+                Período
+                <strong>
+                    {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
+                </strong>
+
+            </p>
+
+        </div>
+
+        <div class="d-flex gap-2">
+
+            <a href="{{ url_for('periodos.index') }}"
+               class="btn btn-outline-secondary">
+
+                <i class="bi bi-arrow-left"></i>
+
+                Volver
+
+            </a>
+
+            {% if puede_cerrar %}
+
+            <form method="POST"
+                  action="{{ url_for(
+                      'periodos.cerrar',
+                      periodo_id=periodo.id
+                  ) }}"
+                  onsubmit="return confirmarCierre();">
+
+                <button type="submit"
+                        class="btn btn-success">
+
+                    <i class="bi bi-lock-fill"></i>
+
+                    Cerrar período
+
+                </button>
+
+            </form>
+
+            {% else %}
+
+            <button type="button"
+                    class="btn btn-secondary"
+                    disabled>
+
+                <i class="bi bi-lock"></i>
+
+                Cierre bloqueado
+
+            </button>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- RESUMEN DE VALIDACIONES -->
+    <!-- ========================================================= -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="text-muted small">
+                        VALIDACIONES CORRECTAS
+                    </div>
+
+                    <div class="fs-2 fw-bold text-success">
+                        {{ correctos }}
+                    </div>
+
+                    <div class="small text-muted">
+                        Sin inconsistencias
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="text-muted small">
+                        ADVERTENCIAS
+                    </div>
+
+                    <div class="fs-2 fw-bold text-warning">
+                        {{ advertencias }}
+                    </div>
+
+                    <div class="small text-muted">
+                        Requieren revisión
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4">
+
+            <div class="card border-0 shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="text-muted small">
+                        ERRORES BLOQUEANTES
+                    </div>
+
+                    <div class="fs-2 fw-bold text-danger">
+                        {{ errores }}
+                    </div>
+
+                    <div class="small text-muted">
+                        Impiden el cierre
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- ESTADO DEL CIERRE -->
+    <!-- ========================================================= -->
+
+    {% if errores == 0 %}
+
+        <div class="alert alert-success
+                    border-0 shadow-sm">
+
+            <div class="d-flex align-items-center">
+
+                <i class="bi bi-check-circle-fill fs-3 me-3"></i>
+
+                <div>
+
+                    <strong>
+                        El período supera las validaciones bloqueantes.
+                    </strong>
+
+                    <div class="small">
+                        Puedes revisar las advertencias antes de confirmar
+                        el cierre.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    {% else %}
+
+        <div class="alert alert-danger
+                    border-0 shadow-sm">
+
+            <div class="d-flex align-items-center">
+
+                <i class="bi bi-exclamation-triangle-fill
+                          fs-3 me-3"></i>
+
+                <div>
+
+                    <strong>
+                        El cierre está bloqueado.
+                    </strong>
+
+                    <div class="small">
+                        Debes corregir las inconsistencias
+                        marcadas como ERROR.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+
+    <!-- ========================================================= -->
+    <!-- RESUMEN FINANCIERO -->
+    <!-- ========================================================= -->
+
+    <div class="card border-0 shadow-sm mb-4">
+
+        <div class="card-header bg-white">
+
+            <h5 class="fw-bold mb-0">
+
+                <i class="bi bi-cash-stack text-primary me-2"></i>
+
+                Resumen financiero del período
+
+            </h5>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row g-3">
+
+                {% macro tarjeta(titulo, valor, color="primary") %}
+
+                <div class="col-6 col-md-3">
+
+                    <div class="border rounded-3 p-3 h-100">
+
+                        <div class="small text-muted">
+                            {{ titulo }}
+                        </div>
+
+                        <div class="fs-5 fw-bold text-{{ color }}">
+
+                            S/
+                            {{ "{:,.2f}".format(
+                                valor|float
+                            ) }}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% endmacro %}
+
+
+                {{ tarjeta(
+                    "Aportes",
+                    resumen.total_aportes,
+                    "success"
+                ) }}
+
+                {{ tarjeta(
+                    "Cuotas",
+                    resumen.total_cuotas,
+                    "primary"
+                ) }}
+
+                {{ tarjeta(
+                    "Intereses",
+                    resumen.total_intereses,
+                    "warning"
+                ) }}
+
+                {{ tarjeta(
+                    "Amortización",
+                    resumen.total_amortizacion,
+                    "info"
+                ) }}
+
+                {{ tarjeta(
+                    "Multas",
+                    resumen.total_multas,
+                    "danger"
+                ) }}
+
+                {{ tarjeta(
+                    "Sobre",
+                    resumen.total_sobre,
+                    "secondary"
+                ) }}
+
+                {{ tarjeta(
+                    "Saldo préstamos",
+                    resumen.saldo_prestamos,
+                    "danger"
+                ) }}
+
+                {{ tarjeta(
+                    "Transferencias",
+                    resumen.total_transferencias,
+                    "dark"
+                ) }}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- OPERACIÓN DEL PERÍODO -->
+    <!-- ========================================================= -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body">
+
+                    <div class="small text-muted">
+                        MOVIMIENTOS
+                    </div>
+
+                    <h4 class="fw-bold">
+                        {{ resumen.movimientos }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body">
+
+                    <div class="small text-muted">
+                        ASISTENCIAS
+                    </div>
+
+                    <h4 class="fw-bold">
+                        {{ resumen.asistencias }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body">
+
+                    <div class="small text-muted">
+                        PRÉSTAMOS DEL PERÍODO
+                    </div>
+
+                    <h4 class="fw-bold">
+                        {{ resumen.prestamos_periodo }}
+                    </h4>
+
+                    <small class="text-muted">
+
+                        S/
+                        {{ "{:,.2f}".format(
+                            resumen.monto_prestamos_periodo|float
+                        ) }}
+
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body">
+
+                    <div class="small text-muted">
+                        SOLICITUDES APROBADAS
+                    </div>
+
+                    <h4 class="fw-bold">
+                        {{ resumen.solicitudes_aprobadas }}
+                    </h4>
+
+                    <small class="text-muted">
+
+                        S/
+                        {{ "{:,.2f}".format(
+                            resumen.monto_aprobado|float
+                        ) }}
+
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================================= -->
+    <!-- VALIDACIONES -->
+    <!-- ========================================================= -->
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-white">
+
+            <div class="d-flex
+                        justify-content-between
+                        align-items-center">
+
+                <div>
+
+                    <h5 class="fw-bold mb-0">
+
+                        <i class="bi bi-shield-check
+                                  text-primary me-2"></i>
+
+                        Validaciones de consistencia
+
+                    </h5>
+
+                    <small class="text-muted">
+
+                        Revisión previa al cierre
+
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover
+                              align-middle mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th style="width: 70px;">
+                                Estado
+                            </th>
+
+                            <th>
+                                Validación
+                            </th>
+
+                            <th>
+                                Descripción
+                            </th>
+
+                            <th class="text-center">
+                                Registros
+                            </th>
+
+                            <th class="text-center">
+                                Detalle
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                    {% for v in validaciones %}
+
+                        <tr>
+
+                            <td class="text-center">
+
+                                {% if v.estado == "OK" %}
+
+                                    <span class="badge
+                                                 rounded-pill
+                                                 bg-success">
+
+                                        <i class="bi bi-check-lg"></i>
+
+                                        OK
+
+                                    </span>
+
+                                {% elif v.estado == "WARNING" %}
+
+                                    <span class="badge
+                                                 rounded-pill
+                                                 bg-warning text-dark">
+
+                                        <i class="bi bi-exclamation"></i>
+
+                                        REVISAR
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge
+                                                 rounded-pill
+                                                 bg-danger">
+
+                                        <i class="bi bi-x-lg"></i>
+
+                                        ERROR
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td>
+
+                                <strong>
+                                    {{ v.titulo }}
+                                </strong>
+
+                            </td>
+
+
+                            <td class="text-muted">
+
+                                {{ v.descripcion }}
+
+                            </td>
+
+
+                            <td class="text-center">
+
+                                {% if v.cantidad %}
+
+                                    <span class="badge
+                                                 bg-light
+                                                 text-dark
+                                                 border">
+
+                                        {{ v.cantidad }}
+
+                                    </span>
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td class="text-center">
+
+                                {% if v.detalle %}
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm
+                                               btn-outline-primary"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#detalle{{ loop.index }}">
+
+                                        <i class="bi bi-eye"></i>
+
+                                    </button>
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        —
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+
+                        {% if v.detalle %}
+
+                        <tr>
+
+                            <td colspan="5"
+                                class="p-0">
+
+                                <div
+                                    id="detalle{{ loop.index }}"
+                                    class="collapse">
+
+                                    <div class="p-3 bg-light">
+
+                                        <div class="table-responsive">
+
+                                            <table class="table
+                                                          table-sm
+                                                          table-bordered
+                                                          mb-0">
+
+                                                <thead>
+
+                                                    <tr>
+
+                                                        {% for clave
+                                                              in v.detalle[0].keys() %}
+
+                                                            <th>
+                                                                {{ clave }}
+                                                            </th>
+
+                                                        {% endfor %}
+
+                                                    </tr>
+
+                                                </thead>
+
+                                                <tbody>
+
+                                                    {% for registro
+                                                          in v.detalle %}
+
+                                                        <tr>
+
+                                                            {% for clave
+                                                                  in registro.keys() %}
+
+                                                                <td>
+
+                                                                    {{ registro[clave] }}
+
+                                                                </td>
+
+                                                            {% endfor %}
+
+                                                        </tr>
+
+                                                    {% endfor %}
+
+                                                </tbody>
+
+                                            </table>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+function confirmarCierre() {
+
+    return confirm(
+        "¿Está seguro de cerrar el período?\n\n" +
+        "Una vez cerrado no se podrán modificar " +
+        "los movimientos del período."
+    );
+
+}
+
+</script>
+
+{% endblock %}

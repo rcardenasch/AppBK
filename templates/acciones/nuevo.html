@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5>
+            <i class="bi bi-box"></i>
+            Registrar acción
+        </h5>
+    </div>
+
+    <div class="card-body">
+        <form method="post" action="{{ url_for('acciones.nuevo') }}">
+
+            <div class="mb-3">
+                <label class="form-label">Socio</label>
+                <!-- Agregamos id="selectSocio" para el script de JavaScript -->
+                <select name="socio_id" id="selectSocio" class="form-select" required>
+                    <option value="">Seleccione socio</option>
+                    {% for socio in socios %}
+                        <!-- Corregido: 'selected' solo se aplica si coincide con el 'socio_id' enviado de la URL -->
+                        <option value="{{ socio.id }}" {% if socio.id == socio_id %}selected{% endif %}>
+                            {{ socio.nombres }} {{ socio.apellidos }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Número de acción</label>
+                <!-- Agregamos id="inputNumeroAccion" para controlarlo con JavaScript -->
+                <input type="text" name="numero_accion" id="inputNumeroAccion" value="{{ codigo_sugerido }}" class="form-control" placeholder="Ej: R001" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Valor acción</label>
+                <input type="number" step="0.01" class="form-control" name="valor" required>
+            </div>
+
+            <button type="submit" class="btn btn-success">
+                Guardar
+            </button>
+
+            <button type="button" class="btn btn-secondary" onclick="window.history.back();"> Cancelar </button>
+
+
+
+        </form>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- JAVASCRIPT: RECARGA LA RUTA AL CAMBIAR DE SOCIO           -->
+<!-- ========================================================= -->
+<script>
+document.getElementById('selectSocio').addEventListener('change', function() {
+    const socioId = this.value;
+    if (socioId) {
+        // Redirecciona automáticamente a la ruta con el ID del socio para calcular su código correlativo
+        window.location.href = "{{ url_for('acciones.nuevo') }}/" + socioId;
+    } else {
+        // Si limpia la selección, regresa a la pantalla vacía
+        window.location.href = "{{ url_for('acciones.nuevo') }}";
+    }
+});
+</script>
+{% endblock %}

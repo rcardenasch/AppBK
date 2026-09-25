@@ -1,0 +1,1064 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <a href="{{ url_for('socios.detalle', id=accion.socio.id) }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Volver al socio
+        </a>
+
+    </div>
+    <!-- RESUMEN -->
+    <div class="row g-4">
+
+        <!-- TARJETA PRINCIPAL: DETALLE DE ACCIÓN -->
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h4 class="fw-bold mb-1 text-primary">
+                                    <i class="bi bi-bank2 me-2"></i>Acción {{ accion.numero_accion }}
+                                </h4>
+                                <div class="small text-muted">
+                                    <i class="bi bi-person-fill me-1"></i>Socio: <strong>{{ accion.socio.nombres
+                                        }}</strong>
+                                    <br>
+                                    <i class="bi bi-card-text me-1"></i>Doc: {{ accion.socio.documento }}
+                                </div>
+                            </div>
+                            <div>
+                                {% if accion.estado=="ACTIVO" %}
+                                <span class="badge bg-success-subtle text-success fs-10 "
+                                    style="font-size: 0.65rem;">ACTIVO</span>
+                                {% else %}
+                                <span class="badge bg-danger-subtle text-danger fs-10 "
+                                    style="font-size: 0.65rem;">INACTIVO</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <hr class="text-muted opacity-25My">
+                    </div>
+
+                    <div class="bg-light p-2 rounded border border-light-subtle">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <small class="text-muted d-block text-uppercase fw-semibold"
+                                    style="font-size: 0.75rem;">Valor acción</small>
+                                <h4 class="mb-0 fw-bold text-dark" style="font-size: 0.75rem;">S/ {{
+                                    "{:,.2f}".format(accion.valor) }}</h4>
+                            </div>
+                            <div class="bg-primary bg-opacity-10 p-2 rounded">
+                                <i class="bi bi-cash-coin text-primary fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TARJETA: PRÉSTAMOS ACTIVOS -->
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100 text-center">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <div class="p-3 bg-warning bg-opacity-10 text-warning rounded-circle mb-3">
+                        <i class="bi bi-file-earmark-text fs-3"></i>
+                    </div>
+                    <h6 class="text-muted fw-normal mb-1" style="font-size: 1.0rem;">Préstamos activos</h6>
+                    <h2 class="fw-bold mb-0" style="font-size: 1.2rem;">{{ prestamos_activos|length }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- TARJETA: SALDO PENDIENTE -->
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100 text-center">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-circle mb-3">
+                        <i class="bi bi-exclamation-triangle fs-3"></i>
+                    </div>
+                    <h6 class="text-muted fw-normal mb-1" style="font-size: 1.0rem;">Saldo pendiente</h6>
+                    <h2 class="fw-bold text-danger mb-0" style="font-size: 1.2rem;">S/ {{
+                        "{:,.2f}".format(saldo_prestamos|float) }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- TARJETA: MOVIMIENTOS -->
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100 text-center">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                    <div class="p-3 bg-info bg-opacity-10 text-info rounded-circle mb-3">
+                        <i class="bi bi-arrow-left-right fs-3"></i>
+                    </div>
+                    <h6 class="text-muted fw-normal mb-1" style="font-size: 1.0rem;">Movimientos</h6>
+                    <h2 class="fw-bold mb-0" style="font-size: 1.2rem;">{{ movimientos|length }}</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <br>
+
+    <!-- BOTONES -->
+
+    <div class="mb-3">
+
+        <a class="btn btn-warning" href="{{ url_for('prestamos.nuevo',socio_id=accion.socio.id,
+                            accion_id=accion.id) }}">
+
+            <i class="bi bi-cash-stack"></i>
+
+            Nuevo préstamo
+
+        </a>
+
+        <a class="btn btn-success" href="{{ url_for('movimientos.nuevo',
+                            socio_id=accion.socio.id,
+                            accion_id=accion.id) }}">
+
+            <i class="bi bi-wallet2"></i>
+
+            Registrar movimiento
+
+        </a>
+    </div>
+
+    <!-- PRESTAMOS -->
+    <div class="card shadow rounded-4 mb-4">
+        <div class="card-header bg-warning">
+            <h5>
+                Préstamos
+            </h5>
+
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped datatable">
+                    <thead class="table-light">
+
+                        <tr>
+                            <th>Periodo</th>
+                            <th>Monto</th>
+                            <th>Saldo</th>
+                            <th>Tasa</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        {% for p in accion.prestamos |sort(reverse=True, attribute='periodo.id') %}
+                        <tr>                           
+                            <td>
+                                <span class="badge bg-warning">
+                                  {{p.periodo.anio}}-{{"%02d"|format(p.periodo.mes)}}
+                                </span>
+                            </td>
+              
+                            <td class="celda-monto">
+                                {{ p.monto }}
+                            </td>
+
+                            <td>
+                                {% if p.saldo_actual>0 %}
+                                <span class="text-danger fw-bold">
+                                    S/
+                                    {{"{:,.2f}".format(p.saldo_actual)}}
+                                </span>
+                                {% else %}
+                                <span class="text-success fw-bold">
+                                    Cancelado
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ p.tasa_interes }} %
+                            </td>
+                            <td>
+                                {% if p.estado=="ACTIVO" %}
+                                <span class="badge bg-success-subtle text-success" style="font-size: 0.55rem;">
+                                    ACTIVO
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary" style="font-size: 0.65rem;">
+                                    {{ p.estado }}
+                                </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-danger btn-eliminar-prestamo"
+                                        data-id="{{ p.id }}" title="Eliminar prestamo" disabled>
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOVIMIENTOS -->
+    <div class="card shadow rounded-4">
+        <div class="card-header bg-success text-white">
+            <h5>
+                Historial de movimientos
+            </h5>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped datatable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Periodo</th>
+                            <th>Aporte S/</th>
+                            <th>Cuota S/</th>
+                            <th>Amortización S/</th>
+                            <th>Interes</th>
+                            <th>Multa S/</th>
+                            <th>Sobre S/</th>
+                            <th>Saldo S/</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for m in movimientos %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary">
+                                    {{m.periodo.anio}}-{{"%02d"|format(m.periodo.mes)}}
+                                </span>
+                            </td>
+                            <td class="celda-aporte">
+                                {{"{:,.2f}".format(m.aporte|float)}}
+                            </td>
+                            <td class="celda-cuota">
+                                {{ m.cuota_pagada }}
+                            </td>
+                            <td class="celda-amortizacion">
+                                {{ m.amortizacion }}
+                            </td>
+                            <td class="celda-interes">
+                                {{ m.interes }}
+                            </td>
+                            <td class="celda-multa">
+                                {{ m.multa }}
+                            </td>
+                            <td class="celda-sobre">
+                                {{ m.sobre }}
+                            </td>
+                            <td class="celda-saldo">
+                                {% if m.saldo_prestamo >0 %}
+                                <span class="text-danger fw-bold">
+                                    {{"{:,.2f}".format(m.saldo_prestamo )}}
+                                </span>
+                                {% else %}
+                                <span class="text-success fw-bold">
+                                    Cancelado
+                                </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <div class="btn-group btn-group-sm">
+
+                                    <button type="button" class="btn btn-outline-primary btn-editar-movimiento"
+                                        data-id="{{ m.id }}" title="Editar movimiento">
+
+                                        <i class="bi bi-pencil"></i>
+
+                                    </button>
+
+                                    <button type="button" class="btn btn-outline-danger btn-eliminar-movimiento"
+                                        data-id="{{ m.id }}" title="Eliminar movimiento" disabled>
+
+                                        <i class="bi bi-trash"></i>
+
+                                    </button>
+
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<dialog id="modalEditarMovimiento" class="rounded-4 border-0 shadow-lg" style="width: 700px; max-width: 95%;">
+
+    <div class="card border-0">
+
+        <!-- HEADER -->
+        <div class="card-header bg-primary text-white">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <h5 class="mb-0">
+                    <i class="bi bi-pencil-square"></i>
+                    Editar movimiento
+                </h5>
+
+                <span id="editEstadoDeuda" class="badge bg-light text-dark">
+                    Calculando...
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="card-body">
+
+            <input type="hidden" id="editMovimientoId">
+
+
+            <!-- =============================================== -->
+            <!-- DATOS A EDITAR -->
+            <!-- =============================================== -->
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+
+                    <label class="form-label">
+                        Aporte
+                    </label>
+
+                    <input type="number" step="0.01" min="0" id="editAporte" class="form-control">
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label">
+                        Cuota pagada
+                    </label>
+
+                    <input type="number" step="0.01" min="0" id="editCuota" class="form-control">
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label">
+                        Multa actual
+                    </label>
+
+                    <input type="number" step="0.01" min="0" id="editMulta" class="form-control">
+
+                    <small class="text-muted">
+                        Esta multa se aplicará al siguiente período.
+                    </small>
+
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label">
+                        Sobre
+                    </label>
+
+                    <input type="number" step="0.01" min="0" id="editSobre" class="form-control">
+
+                </div>
+
+            </div>
+
+
+            <hr class="my-4">
+
+
+            <!-- =============================================== -->
+            <!-- BOTÓN PAGAR TODO -->
+            <!-- =============================================== -->
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <div>
+
+                    <h6 class="mb-1">
+                        <i class="bi bi-cash-stack text-success"></i>
+                        Cancelación de deuda
+                    </h6>
+
+                    <small class="text-muted">
+                        Calcula automáticamente la cuota necesaria
+                        para dejar el saldo en cero.
+                    </small>
+
+                </div>
+
+
+                <button type="button" class="btn btn-success" id="btnPagarTodaDeuda">
+
+                    <i class="bi bi-check2-circle"></i>
+
+                    Pagar toda la deuda
+
+                </button>
+
+            </div>
+
+
+            <!-- =============================================== -->
+            <!-- RESUMEN DINÁMICO -->
+            <!-- =============================================== -->
+
+            <div class="card bg-light border-0">
+
+                <div class="card-body">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-4">
+
+                            <div class="small text-muted">
+                                Saldo préstamo
+                            </div>
+
+                            <div class="fs-5 fw-bold" id="editSaldoApertura">
+                                S/ 0.00
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-4">
+
+                            <div class="small text-muted">
+                                Multa anterior
+                            </div>
+
+                            <div class="fs-5 fw-bold text-warning" id="editMultaAnterior">
+                                S/ 0.00
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-4">
+
+                            <div class="small text-muted">
+                                Deuda total
+                            </div>
+
+                            <div class="fs-5 fw-bold text-danger" id="editDeudaTotal">
+                                S/ 0.00
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-4">
+
+                            <div class="small text-muted">
+                                Interés
+                            </div>
+
+                            <div class="fs-5 fw-bold" id="editInteres">
+                                S/ 0.00
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-4">
+
+                            <div class="small text-muted">
+                                Amortización
+                            </div>
+
+                            <div class="fs-5 fw-bold text-primary" id="editAmortizacion">
+                                S/ 0.00
+                            </div>
+
+                        </div>
+
+
+                        <div class="col-md-4">
+
+                            <div class="small text-muted">
+                                Nuevo saldo
+                            </div>
+
+                            <div class="fs-5 fw-bold text-success" id="editSaldoNuevo">
+                                S/ 0.00
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =============================================== -->
+            <!-- OBSERVACIÓN -->
+            <!-- =============================================== -->
+
+            <div class="mt-3">
+
+                <label class="form-label">
+                    Observación
+                </label>
+
+                <textarea id="editObservacion" class="form-control" rows="3"></textarea>
+
+            </div>
+
+        </div>
+
+
+        <!-- FOOTER -->
+
+        <div class="card-footer d-flex justify-content-end gap-2">
+
+            <button type="button" class="btn btn-secondary" id="btnCancelarEditarMovimiento">
+
+                Cancelar
+
+            </button>
+
+
+            <button type="button" class="btn btn-primary" id="btnGuardarEdicionMovimiento">
+
+                <i class="bi bi-save"></i>
+
+                Guardar cambios
+
+            </button>
+
+        </div>
+
+    </div>
+
+</dialog>
+
+<script>
+
+    $(document).ready(function () {
+
+        // Contenedor del Modal nativo (<dialog>)
+        const $modal = $("#modalEditarMovimiento");
+
+        $(document).on("click", ".btn-editar-movimiento", function () {
+
+            const id = $(this).data("id");
+
+            $.get(`/movimientos/editar_movimiento/${id}`, function (resp) {
+
+                if (!resp.ok) {
+                    alert(resp.mensaje);
+                    return;
+                }
+
+                const m = resp.movimiento;
+
+                $("#editMovimientoId").val(m.id);
+
+                $("#editAporte").val(
+                    Number(m.aporte).toFixed(2)
+                );
+
+                $("#editCuota").val(
+                    Number(m.cuota_pagada).toFixed(2)
+                );
+
+                $("#editMulta").val(
+                    Number(m.multa).toFixed(2)
+                );
+
+                $("#editSobre").val(
+                    Number(m.sobre).toFixed(2)
+                );
+
+                $("#editObservacion").val(
+                    m.observacion || ""
+                );
+
+                // ===============================
+                // INFORMACIÓN INICIAL
+                // ===============================
+
+                $("#editSaldoApertura").text(
+                    "S/ " + Number(m.saldo_apertura).toFixed(2)
+                );
+
+                $("#editMultaAnterior").text(
+                    "S/ " + Number(m.multa_anterior).toFixed(2)
+                );
+
+                $("#editDeudaTotal").text(
+                    "S/ " + Number(m.deuda_total).toFixed(2)
+                );
+
+                $("#editInteres").text(
+                    "S/ " + Number(m.interes).toFixed(2)
+                );
+
+                $("#editAmortizacion").text(
+                    "S/ " + Number(m.amortizacion).toFixed(2)
+                );
+
+                $("#editSaldoNuevo").text(
+                    "S/ " + Number(m.saldo_prestamo).toFixed(2)
+                );
+
+                actualizarEstadoDeuda(
+                    Number(m.saldo_prestamo)
+                );
+
+                if ($modal[0]) {
+                    $modal[0].showModal();
+                }
+
+                // Calcular nuevamente con los valores actuales
+                calcularEdicion();
+
+            }).fail(function () {
+
+                alert("No se pudo cargar el movimiento.");
+
+            });
+
+        });
+        // =====================================================
+        // 2. CANCELAR / CERRAR MODAL
+        // =====================================================
+        $("#btnCancelarEditarMovimiento").on("click", function () {
+            if ($modal[0]) {
+                $modal[0].close();
+            }
+        });
+
+        // Calcular edicion
+        function calcularEdicion() {
+
+            const id = $("#editMovimientoId").val();
+
+            if (!id) {
+                return;
+            }
+
+            const datos = {
+                aporte: $("#editAporte").val(),
+                cuota_pagada: $("#editCuota").val(),
+                multa: $("#editMulta").val(),
+                sobre: $("#editSobre").val()
+            };
+
+            $.ajax({
+
+                url: `/movimientos/editar_movimiento/${id}/calcular`,
+                method: "POST",
+                data: datos,
+                success: function (resp) {
+
+                    if (!resp.ok) {
+
+                        alert(resp.mensaje);
+
+                        return;
+                    }
+
+                    const r = resp.resultado;
+
+                    $("#editSaldoApertura").text(
+                        "S/ " + Number(r.saldo_apertura).toFixed(2)
+                    );
+
+                    $("#editMultaAnterior").text(
+                        "S/ " + Number(r.multa_anterior).toFixed(2)
+                    );
+
+                    $("#editDeudaTotal").text(
+                        "S/ " + Number(r.deuda_total).toFixed(2)
+                    );
+
+                    $("#editInteres").text(
+                        "S/ " + Number(r.interes).toFixed(2)
+                    );
+
+                    $("#editAmortizacion").text(
+                        "S/ " + Number(r.amortizacion).toFixed(2)
+                    );
+
+                    $("#editSaldoNuevo").text(
+                        "S/ " + Number(r.saldo_nuevo).toFixed(2)
+                    );
+
+                    actualizarEstadoDeuda(
+                        Number(r.saldo_nuevo)
+                    );
+
+                },
+
+                error: function (xhr) {
+
+                    console.error(xhr.responseText);
+
+                }
+
+            });
+        }
+
+        // boton págar toda deuda
+        $("#btnPagarTodaDeuda").on("click", function () {
+
+            const id = $("#editMovimientoId").val();
+
+            if (!id) {
+                alert("Movimiento no identificado.");
+                return;
+            }
+
+            const boton = $(this);
+
+            boton.prop("disabled", true);
+
+            boton.html(
+                '<span class="spinner-border spinner-border-sm"></span> Calculando...'
+            );
+
+            $.get(
+                `/movimientos/editar_movimiento/${id}/pagar_toda_deuda`,
+                function (resp) {
+
+                    if (!resp.ok) {
+
+                        alert(resp.mensaje);
+
+                        return;
+                    }
+
+                    const r = resp.resultado;
+
+                    // =========================================
+                    // COLOCAR LA CUOTA EXACTA
+                    // =========================================
+
+                    $("#editAporte").val(
+                        Number(r.aporte).toFixed(2)
+                    );
+
+                    $("#editCuota").val(
+                        Number(r.cuota_pagar).toFixed(2)
+                    );
+
+
+                    // =========================================
+                    // MOSTRAR RESULTADOS
+                    // =========================================
+
+                    $("#editSaldoApertura").text(
+                        "S/ " + Number(r.saldo_apertura).toFixed(2)
+                    );
+
+                    $("#editMultaAnterior").text(
+                        "S/ " + Number(r.multa_anterior).toFixed(2)
+                    );
+
+                    $("#editDeudaTotal").text(
+                        "S/ " + Number(r.deuda_total).toFixed(2)
+                    );
+
+                    $("#editInteres").text(
+                        "S/ " + Number(r.interes).toFixed(2)
+                    );
+
+                    $("#editAmortizacion").text(
+                        "S/ " + Number(r.amortizacion).toFixed(2)
+                    );
+
+                    $("#editSaldoNuevo").text(
+                        "S/ " + Number(r.saldo_nuevo).toFixed(2)
+                    );
+
+
+                    // =========================================
+                    // OBSERVACIÓN AUTOMÁTICA
+                    // =========================================
+
+                    const observacionActual =
+                        $("#editObservacion").val().trim();
+
+                    const texto =
+                        "Pago total de deuda. " +
+                        "Cuota calculada automáticamente para " +
+                        "dejar el saldo de préstamo y multa anterior " +
+                        "en S/ 0.00.";
+
+                    if (!observacionActual) {
+
+                        $("#editObservacion").val(texto);
+
+                    }
+
+
+                    actualizarEstadoDeuda(
+                        Number(r.saldo_nuevo)
+                    );
+
+                }
+            )
+                .fail(function () {
+
+                    alert(
+                        "No se pudo calcular la cuota para cancelar la deuda."
+                    );
+
+                })
+                .always(function () {
+
+                    boton.prop("disabled", false);
+
+                    boton.html(
+                        '<i class="bi bi-check2-circle"></i> Pagar toda la deuda'
+                    );
+
+                });
+
+        });
+
+        // estado visual deuda:
+        function actualizarEstadoDeuda(saldo) {
+
+            const badge = $("#editEstadoDeuda");
+
+            saldo = Number(saldo || 0);
+
+            if (saldo <= 0.00) {
+
+                badge
+                    .removeClass("bg-light text-dark bg-warning bg-danger")
+                    .addClass("bg-success")
+                    .text("Deuda cancelada");
+
+            } else {
+
+                badge
+                    .removeClass("bg-light text-dark bg-success bg-danger")
+                    .addClass("bg-warning text-dark")
+                    .text(
+                        "Saldo: S/ " + saldo.toFixed(2)
+                    );
+            }
+        }
+
+        //Agregamos debounce para no disparar una consulta por cada tec
+
+        let timerCalculoEdicion = null;
+
+        function programarCalculoEdicion() {
+
+            clearTimeout(timerCalculoEdicion);
+
+            timerCalculoEdicion = setTimeout(function () {
+
+                calcularEdicion();
+
+            }, 350);
+        }
+
+        $("#editAporte, #editCuota, #editMulta, #editSobre")
+            .on("input change", function () {
+
+                programarCalculoEdicion();
+
+            });
+
+        // =====================================================
+        // 3. GUARDAR EDICION DE MOVIMIENTO (AJAX POST)
+        // =====================================================
+        $("#btnGuardarEdicionMovimiento").on("click", function () {
+            const id = $("#editMovimientoId").val();
+
+            const datos = {
+                aporte: $("#editAporte").val(),
+                cuota_pagada: $("#editCuota").val(),
+                multa: $("#editMulta").val(),
+                sobre: $("#editSobre").val(),
+                observacion: $("#editObservacion").val()
+            };
+
+            $.ajax({
+                url: `/movimientos/editar_movimiento/${id}`,
+                method: "POST",
+                data: datos,
+                success: function (resp) {
+                    if (!resp.ok) {
+                        alert(resp.mensaje);
+                        return;
+                    }
+
+                    // Cerrar modal
+                    if ($modal[0]) {
+                        $modal[0].close();
+                    }
+
+                    // Actualizar la fila en la interfaz usando la respuesta del servidor
+                    actualizarFilaMovimiento(id, resp);
+
+                    // Obtener el ID de la acción (prioriza la respuesta del servidor, o una variable global)
+                    // Nota: Asegúrate de que tu backend en Flask devuelva 'accion_id' en el JSON
+                    const accionId = resp.accion_id;
+
+                    if (typeof mostrarMensaje === "function") {
+                        mostrarMensaje("Movimiento actualizado correctamente.", "success");
+
+                        // Esperar 1.5 segundos para que el usuario vea el mensaje verde antes de redirigir
+                        setTimeout(function () {
+                            if (accionId) {
+                                window.location.href = `/acciones/detalle/${accionId}`;
+                            } else {
+                                // Alternativa por si no tienes el ID a la mano (recarga la página actual)
+                                window.location.reload();
+                            }
+                        }, 1500);
+
+                    } else {
+                        alert("Movimiento actualizado correctamente.");
+                        if (accionId) {
+                            window.location.href = `/acciones/detalle/${accionId}`;
+                        } else {
+                            window.location.reload();
+                        }
+                    }
+                },
+                error: function (xhr) {
+                    let mensaje = "Error al actualizar el movimiento.";
+                    if (xhr.responseJSON && xhr.responseJSON.mensaje) {
+                        mensaje = xhr.responseJSON.mensaje;
+                    }
+
+                    if (typeof mostrarMensaje === "function") {
+                        mostrarMensaje(mensaje, "danger");
+                    } else {
+                        alert(mensaje);
+                    }
+                }
+            });
+        });
+
+        // =====================================================
+        // 4. ELIMINAR MOVIMIENTO
+        // =====================================================
+        $(document).on("click", ".btn-eliminar-movimiento", function () {
+            const id = $(this).data("id");
+
+            if (!confirm("¿Está seguro de eliminar este movimiento?")) {
+                return;
+            }
+
+            $.ajax({
+                url: `/movimientos/eliminar_movimiento/${id}`,
+                method: "DELETE",
+                success: function (resp) {
+                    if (resp.ok) {
+                        location.reload(); // Recarga para actualizar saldos globales
+                    } else {
+                        alert(resp.mensaje);
+                    }
+                }
+            });
+        });
+    });
+
+    // =====================================================
+    // FUNCION GLOBAL: ACTUALIZAR FILA DINÁMICAMENTE
+    // =====================================================
+    function actualizarFilaMovimiento(id, movimiento) {
+        // Busca el botón específico de la fila editada
+        const $btn = $(`.btn-editar-movimiento[data-id="${id}"]`);
+        if ($btn.length === 0) return;
+
+        const $fila = $btn.closest("tr");
+        if ($fila.length === 0) return;
+
+        // Actualiza apuntando directamente a las clases asignadas en el HTML
+        // Valida si la propiedad existe en el objeto 'movimiento' que envía tu backend
+        if (movimiento.aporte !== undefined) $fila.find(".celda-aporte").text(Number(movimiento.aporte).toFixed(2));
+        if (movimiento.cuota_pagada !== undefined) $fila.find(".celda-cuota").text(Number(movimiento.cuota_pagada).toFixed(2));
+        if (movimiento.amortizacion !== undefined) $fila.find(".celda-amortizacion").text(Number(movimiento.amortizacion).toFixed(2));
+        if (movimiento.multa !== undefined) $fila.find(".celda-multa").text(Number(movimiento.multa).toFixed(2));
+        if (movimiento.sobre !== undefined) $fila.find(".celda-sobre").text(Number(movimiento.sobre).toFixed(2));
+        if (movimiento.saldo_prestamo !== undefined) $fila.find(".celda-saldo").text(Number(movimiento.saldo_prestamo).toFixed(2));
+    }
+
+    // Prestamo
+    // =====================================================
+    // =====================================================
+    // 4. ELIMINAR PRESTAMO
+    // =====================================================
+    $(document).on("click", ".btn-eliminar-prestamo", function () {
+
+        const id = $(this).data("id");
+
+        if (!confirm("¿Está seguro de eliminar este préstamo?")) {
+            return;
+        }
+        console.log("ingrese a eliminar prestamo");
+
+        $.ajax({
+            url: `/movimientos/eliminar_prestamo/${id}`,
+            method: "DELETE",
+
+            success: function (resp) {
+                console.log("ingrese a success, resp: ", resp);
+
+                if (resp.ok) {
+                    location.reload(); // Recarga para actualizar saldos globales
+                } else {
+                    alert(resp.mensaje);
+                }
+                console.log("xx");
+            }
+
+        });
+    });
+
+    // =====================================================
+    // FUNCION GLOBAL: ACTUALIZAR FILA DINÁMICAMENTE
+    // =====================================================
+    function actualizarFilaPrestamo(id, prestamo) {
+        // Busca el botón específico de la fila editada
+        const $btn = $(`.btn-editar-prestamo[data-id="${id}"]`);
+        if ($btn.length === 0) return;
+
+        const $fila = $btn.closest("tr");
+        if ($fila.length === 0) return;
+
+        // Actualiza apuntando directamente a las clases asignadas en el HTML
+        // Valida si la propiedad existe en el objeto 'movimiento' que envía tu backend
+        if (prestamo.monto !== undefined) $fila.find(".celda-monto").text(Number(prestamo.monto).toFixed(2));
+
+    }
+
+
+
+
+</script>
+
+{% endblock %}

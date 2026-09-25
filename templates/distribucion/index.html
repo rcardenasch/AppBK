@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="bi bi-diagram-3-fill text-primary"></i>
+                Simulación de Distribución
+            </h2>
+            <small class="text-muted">
+                Periodo {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
+            </small>
+        </div>
+
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Fondo Disponible -->
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="card h-100 shadow-sm border-0 bg-light-subtle">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div>
+                        <h6 class="text-uppercase text-muted small fw-bold mb-2">Fondo Aportes</h6>
+                        <h3 class="text-success fw-bold mb-0">S/ {{ "{:,.2f}".format(fondo|float) }}</h3>
+                    </div>
+                    <div class="rounded-3 p-3 bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-wallet2 fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Solicitudes -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0 bg-light-subtle">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div>
+                        <h6 class="text-uppercase text-muted small fw-bold mb-2">Solicitudes</h6>
+                        <h3 class="text-dark fw-bold mb-0">{{ solicitudes|length }}</h3>
+                    </div>
+                    <div class="rounded-3 p-3 bg-dark bg-opacity-10 text-dark">
+                        <i class="bi bi-file-earmark-person fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Solicitado -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0 bg-light-subtle">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div>
+                        <h6 class="text-uppercase text-muted small fw-bold mb-2">Total Solicitado</h6>
+                        <h3 class="text-primary fw-bold mb-0">S/ {{ "{:,.2f}".format(total_solicitado|float) }}</h3>
+                    </div>
+                    <div class="rounded-3 p-3 bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-cash-stack fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saldo Restante -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card h-100 shadow-sm border-0 bg-light-subtle">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div>
+                        <h6 class="text-uppercase text-muted small fw-bold mb-2">Saldo Restante</h6>
+                        <h2 id="saldo_restante" data-fondo="{{ capacidad }}" class="text-danger fw-bold mb-0">
+                            <span class="text-danger bg-opacity-50 fw-normal fs-4">S/</span> {{
+                            "{:,.2f}".format(capacidad|float) }}
+                        </h2>
+                    </div>
+                    <div class="rounded-3 p-3 bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-calculator fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="card shadow">
+        <div class="card-header bg-secondary text-white">
+            <div class="d-flex justify-content-between">
+                <div>Solicitudes del periodo</div>
+                <div>
+                    <div>
+                        <button id="btnTodo" class="btn btn-success btn-sm" data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            title="Asigna a cada solicitud el monto completo solicitado hasta agotar el fondo disponible. Las últimas solicitudes pueden quedar sin financiamiento.">
+                            <i class="bi bi-check-circle"></i>
+                            Asignar Todo
+                        </button>
+
+                        <button id="btnProrratear" class="btn btn-warning btn-sm" data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            title="Distribuye el fondo proporcionalmente entre todas las solicitudes. Todos reciben un porcentaje similar del monto solicitado.">
+                            <i class="bi bi-pie-chart"></i>
+                            Prorratear
+                        </button>
+
+                        <button id="btnScore" class="btn btn-info btn-sm" data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            title="Prioriza primero a los socios con mayor Score. Se financian completamente mientras exista saldo disponible.">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            Priorizar Score
+                        </button>
+
+                        <button id="btnPrioridad" class="btn btn-sm text-white" style="background-color: #6f42c1;"
+                            data-bs-toggle="tooltip" data-bs-placement="bottom"
+                            title="Ordena primero por Prioridad y, si existen empates, por Score. Es la estrategia recomendada para la asignación automática.">
+                            <i class="bi bi-award"></i>
+                            Prioridad + Score
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped datatable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Socio</th>
+                            <th>Acción</th>
+                            <th>Score</th>
+                            <th>Prioridad</th>
+                            <th>Solicita</th>
+                            <th>Asignar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in solicitudes %}
+                        <tr>
+                            <td class="ps-3 fw-bold text-dark d-flex align-items-center gap-2">
+                                <!-- Definimos la lista de palabras del nombre completo -->
+                                {% set palabras = s.socio.nombres.split() %}
+
+                                <!-- Icono redondo con iniciales extraídas de una sola cadena -->
+                                <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center fw-bold border border-secondary-subtle"
+                                    style="width: 32px; height: 32px; font-size: 0.8rem; min-width: 32px;"
+                                    title="{{ s.socio.nombres }}">
+                                    {% if palabras | length > 0 %}
+                                    {{ palabras[0][:1] | upper }}{{ palabras[-1][:1] | upper if palabras | length >
+                                    1
+                                    else
+                                    '' }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </div>
+                                <!-- Nombre completo -->
+                                <span>
+                                    {{ s.socio.nombres }} {{ s.socio.apellidos if s.socio.apellidos else '' }}
+                                </span>
+                            </td>
+                            <td><span class="badge bg-primary">{{ s.accion.numero_accion }}</span></td>
+                            <td>{{ s.score }}</td>
+                            <td>
+                                <span class="badge 
+                                {% if s.prioridad == 4 or s.prioridad == '4' %} bg-danger
+                                {% elif s.prioridad == 3 or s.prioridad == '3' %} bg-warning text-dark
+                                {% elif s.prioridad == 2 or s.prioridad == '2' %} bg-info
+                                {% else %} bg-secondary {% endif %}">
+
+                                {% if s.prioridad == 4 or s.prioridad == '4' %} Salud ({{ s.prioridad }})
+                                {% elif s.prioridad == 3 or s.prioridad == '3' %} Muy urgente ({{ s.prioridad }})
+                                {% elif s.prioridad == 2 or s.prioridad == '2' %} Urgente ({{ s.prioridad }})
+                                {% else %} Normal ({{ s.prioridad }}) {% endif %}
+                                </span>
+                            </td>
+                            <td class="solicitado" data-solicitado="{{ s.monto_solicitado }}">
+                                {{ "{:,.2f}".format(s.monto_solicitado) }}
+                            </td>
+
+                            <td>
+                                <input type="number" step="0.01" class="form-control asignado" data-id="{{ s.id }}"
+                                    value="0.00" max="{{ s.monto_solicitado }}">
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+                {% if solicitudes|length == 0 %}
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i>
+                    No existen solicitudes pendientes para este período. Registre solicitudes antes de ejecutar
+                    una
+                    estrategia de distribución.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+
+
+
+        <button class="btn btn-lg btn-success" id="btnGenerar" data-periodo-id="{{ periodo.id }}"
+            data-periodo-texto="{{ periodo.anio }}-{{ '%02d'|format(periodo.mes) }}">
+
+            <i class="bi bi-cash-stack"></i>
+            Generar préstamos
+
+        </button>
+
+    </div>
+
+</div>
+
+<dialog id="modalConfirmar"
+    style="border: none; border-radius: 8px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); max-width: 400px; font-family: sans-serif;">
+    <h3 id="modalTitulo" style="margin-top: 0; color: #333;"></h3>
+    <p style="color: #666; font-size: 14px; line-height: 1.5;">Esta acción reemplazará todas las asignaciones
+        actuales.
+    </p>
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button id="btnCancelar"
+            style="padding: 8px 16px; border: 1px solid #ccc; border-radius: 4px; background: white; cursor: pointer;">Cancelar</button>
+        <button id="btnConfirmar"
+            style="padding: 8px 16px; border: none; border-radius: 4px; background: #007bff; color: white; cursor: pointer;">Confirmar</button>
+    </div>
+</dialog>
+
+<dialog id="modalConfirmarGenerar"
+    style="border: none; border-radius: 8px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); max-width: 400px; font-family: sans-serif;">
+    <h3 id="modalTituloGenerar" style="margin-top: 0; color: #333;"></h3>
+    <p style="color: #666; font-size: 14px; line-height: 1.5;">Esta operación creará los préstamos, marcará las
+        solicitudes como ATENDIDAS y no podrá deshacerse fácilmente.
+    </p>
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button id="btnCancelarGenerar"
+            style="padding: 8px 16px; border: 1px solid #ccc; border-radius: 4px; background: white; cursor: pointer;">Cancelar</button>
+        <button id="btnConfirmarGenerar"
+            style="padding: 8px 16px; border: none; border-radius: 4px; background: #007bff; color: white; cursor: pointer;">Confirmar</button>
+    </div>
+</dialog>
+
+<dialog id="modalRevertir"
+    style="border: none; border-radius: 8px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); max-width: 400px; font-family: sans-serif;">
+    <h3 id="modalTituloRevertir" style="margin-top: 0; color: #333;"></h3>
+    <p id="mensajeRevertir" style="color: #666; font-size: 14px; line-height: 1.5;">
+    </p>
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button id="btnCancelarRevertir"
+            style="padding: 8px 16px; border: 1px solid #ccc; border-radius: 4px; background: white; cursor: pointer;">Cancelar</button>
+        <button id="btnConfirmarRevertir"
+            style="padding: 8px 16px; border: none; border-radius: 4px; background: #007bff; color: white; cursor: pointer;">Confirmar</button>
+    </div>
+</dialog>
+
+<dialog id="modalCerrarPeriodo" class="rounded border-0 shadow" style="max-width:520px">
+    <div class="p-4">
+        <h5 class="text-danger mb-3">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            Confirmar cierre
+        </h5>
+        <p id="modalTituloCerrar"></p>
+        <div class="alert alert-warning">
+
+            <strong>Esta acción realizará:</strong>
+            <ul class="mb-0 mt-2">
+
+                <li>Calcular intereses del período.</li>
+                <li>Registrar movimientos mensuales.</li>
+                <li>Actualizar saldos de préstamos.</li>
+                <li>Acumular utilidades.</li>
+                <li>Cerrar definitivamente el período.</li>
+            </ul>
+
+        </div>
+        <div class="text-end">
+            <button id="btnCancelarCerrar" class="btn btn-secondary">
+                Cancelar
+            </button>
+            <button id="btnConfirmarCerrar" class="btn btn-danger">
+                Sí, cerrar período
+            </button>
+        </div>
+    </div>
+</dialog>
+
+
+<script src="{{url_for('static',filename='js/distribucion.js')}}"></script>
+
+{% endblock %}

@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if modo == "editar" %}
+Editar usuario
+{% else %}
+Nuevo usuario
+{% endif %}
+{% endblock %}
+
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10">
+            <div class="d-flex align-items-center mb-4">
+
+                <a href="{{ url_for('usuarios.index') }}"
+                   class="btn btn-light me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h3 class="fw-bold mb-0">
+                        {% if modo == "editar" %}
+                            Editar usuario
+                        {% else %}
+                            Nuevo usuario
+                        {% endif %}
+                    </h3>
+                    <small class="text-muted">
+                        Configuración de acceso al sistema
+                    </small>
+                </div>
+
+            </div>
+
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body p-4">
+
+                    <form method="POST">
+
+                        <!-- ================================= -->
+                        <!-- DATOS -->
+                        <!-- ================================= -->
+
+                        <h5 class="fw-bold mb-3">
+
+                            <i class="bi bi-person me-2"></i>
+
+                            Información del usuario
+
+                        </h5>
+
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    Nombres completos
+                                </label>
+
+                                <input type="text"
+                                       name="nombres"
+                                       class="form-control"
+                                       value="{{ usuario.nombres if usuario else '' }}"
+                                       required>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    Nombre de usuario
+                                </label>
+
+                                <input type="text"
+                                       name="usuario"
+                                       class="form-control"
+                                       value="{{ usuario.usuario if usuario else '' }}"
+                                       {% if modo == "editar" %}
+                                       readonly
+                                       {% endif %}
+                                       required>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    Correo electrónico
+                                </label>
+
+                                <input type="email"
+                                       name="correo"
+                                       class="form-control"
+                                       value="{{ usuario.correo if usuario else '' }}">
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+                                    Rol
+                                </label>
+
+                                <select name="rol_id"
+                                        class="form-select"
+                                        required>
+
+                                    <option value="">
+                                        Seleccionar rol...
+                                    </option>
+
+                                    {% for rol in roles %}
+
+                                    <option value="{{ rol.id }}"
+                                        {% if usuario
+                                           and usuario.rol_id == rol.id %}
+                                            selected
+                                        {% endif %}>
+
+                                        {{ rol.nombre }}
+
+                                    </option>
+
+                                    {% endfor %}
+
+                                </select>
+
+                            </div>
+
+
+                            <!-- ================================= -->
+                            <!-- SOCIO -->
+                            <!-- ================================= -->
+
+                            <div class="col-12">
+
+                                <label class="form-label">
+
+                                    Socio asociado
+
+                                    <span class="text-muted">
+                                        (opcional)
+                                    </span>
+
+                                </label>
+
+                                <select name="socio_id"
+                                        class="form-select">
+
+                                    <option value="">
+                                        Sin socio asociado
+                                    </option>
+
+                                    {% for socio in socios %}
+
+                                    <option value="{{ socio.id }}"
+                                        {% if usuario
+                                           and usuario.socio_id == socio.id %}
+                                            selected
+                                        {% endif %}>
+
+                                        {{ socio.nombres }}
+
+                                        {% if socio.documento %}
+                                            — {{ socio.documento }}
+                                        {% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">
+                                    Cada socio puede tener
+                                    solamente un usuario del sistema.
+                                </div>
+                            </div>
+                            <!-- ================================= -->
+                            <!-- PASSWORD -->
+                            <!-- ================================= -->
+                            {% if modo == "nuevo" %}
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Contraseña inicial
+                                </label>
+
+                                <input type="password"
+                                       name="password"
+                                       class="form-control"
+                                       minlength="6"
+                                       required>
+                                <div class="form-text">
+
+                                    Puede ser temporal.
+                                    En el primer ingreso el usuario
+                                    podrá conservarla o cambiarla.
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- ================================= -->
+                            <!-- ESTADO -->
+                            <!-- ================================= -->
+
+                            {% if modo == "editar" %}
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    Estado
+                                </label>
+                                <select name="estado"
+                                        class="form-select">
+                                    <option value="1"
+                                        {% if usuario.estado %}
+                                            selected
+                                        {% endif %}>
+                                        Activo
+                                    </option>
+                                    <option value="0"
+                                        {% if not usuario.estado %}
+                                            selected
+                                        {% endif %}>
+                                        Inactivo
+                                    </option>
+                                </select>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <hr class="my-4">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ url_for('usuarios.index') }}"
+                               class="btn btn-light">
+                                Cancelar
+                            </a>
+
+                            <button type="submit"
+                                    class="btn btn-primary">
+
+                                <i class="bi bi-check-lg me-1"></i>
+
+                                {% if modo == "editar" %}
+                                    Guardar cambios
+                                {% else %}
+                                    Crear usuario
+                                {% endif %}
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

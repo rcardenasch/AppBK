@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+
+        BK_FAM | Inicio de Sesión
+
+    </title>
+
+    <!-- Bootstrap -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Google Font -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+
+</head>
+
+<body>
+
+    <div class="container-fluid vh-100">
+
+        <div class="row h-100">
+
+            <!-- PANEL IZQUIERDO -->
+
+            <div class="col-lg-7 d-none d-lg-flex login-left">
+
+                <div class="overlay"></div>
+
+                <div class="content">
+
+                    <i class="bi bi-bank2 display-1"></i>
+
+                    <h1>
+
+                        BK_FAM
+
+                    </h1>
+
+                    <h3>
+
+                        Sistema de Gestión Financiera Familiar
+
+                    </h3>
+
+                    <p>
+
+                        Control de aportes, préstamos,
+                        intereses, utilidades y estados
+                        financieros del banquito familiar.
+
+                    </p>
+
+                </div>
+
+            </div>
+                                
+
+
+            <!-- LOGIN -->
+
+            <div class="col-lg-5 d-flex align-items-center justify-content-center">
+
+                <div class="login-card">
+
+                    <!-- MENSAJES -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                    {% for categoria, mensaje in messages %}
+                    <!-- Nota: Asegúrate de que "categoria" devuelva un nombre válido como success, danger, warning o info -->
+                    <div class="alert alert-{{ categoria }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ mensaje }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                        </button>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% endwith %}
+
+                    {% block content %}
+                    {% endblock %}
+                    <div class="text-center mb-4">
+
+                        <i class="bi bi-person-circle login-icon"></i>
+
+                        <h2>
+
+                            Bienvenido
+
+                        </h2>
+
+                        <small class="text-muted">
+
+                            Ingrese sus credenciales
+
+                        </small>
+
+                    </div>
+
+                    <form method="POST">
+
+                        <div class="mb-3">
+
+                            <label>
+
+                                Usuario
+
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+
+                                    <i class="bi bi-person"></i>
+
+                                </span>
+
+                                <input type="text" class="form-control" name="usuario" placeholder="Ingrese usuario"
+                                    required>
+
+                            </div>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label>
+
+                                Contraseña
+
+                            </label>
+
+                            <div class="input-group">
+
+                                <span class="input-group-text">
+
+                                    <i class="bi bi-lock"></i>
+
+                                </span>
+
+                                <input type="password" class="form-control" name="password" id="password"
+                                    placeholder="********" required>
+
+                                <button class="btn btn-outline-secondary" type="button" onclick="mostrarPassword()">
+
+                                    <i id="iconPassword" class="bi bi-eye">
+
+                                    </i>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <div class="form-check mb-4">
+
+                            <input class="form-check-input" type="checkbox" id="remember">
+
+                            <label class="form-check-label" for="remember">
+
+                                Recordarme
+
+                            </label>
+
+                        </div>
+
+                        <button class="btn btn-primary w-100 btn-lg">
+
+                            <i class="bi bi-box-arrow-in-right"></i>
+
+                            Ingresar
+
+                        </button>
+
+                    </form>
+
+                    <div class="text-center mt-4">
+
+                        <small class="text-muted">
+
+                            BK_FAM © {{ current_year }}
+
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Bootstrap para que funcione el cerrar mensages-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+
+        function mostrarPassword() {
+
+            let input = document.getElementById("password");
+
+            let icon = document.getElementById("iconPassword");
+
+            if (input.type === "password") {
+
+                input.type = "text";
+
+                icon.className = "bi bi-eye-slash";
+
+            } else {
+
+                input.type = "password";
+
+                icon.className = "bi bi-eye";
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>

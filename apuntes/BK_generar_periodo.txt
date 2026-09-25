@@ -1,0 +1,335 @@
+
+   @staticmethod
+   def generar_periodo(db, periodo_id):
+
+        # =========================================================
+        # CONFIGURACIÓN
+        # =========================================================
+
+        configuracion = (
+            db.query(Configuracion)
+            .filter(
+                Configuracion.estado == True
+            )
+            .first()
+        )
+
+        if not configuracion:
+            raise Exception(
+                "No existe configuración del sistema"
+            )
+
+        # =========================================================
+        # PERÍODO
+        # =========================================================
+
+        periodo = (
+            db.query(Periodo)
+            .filter(
+                Periodo.id == periodo_id
+            )
+            .first()
+        )
+
+        if not periodo:
+            raise Exception(
+                "Periodo no encontrado"
+            )
+
+        if periodo.cerrado:
+            raise Exception(
+                "No se pueden generar movimientos "
+                "en un periodo cerrado"
+            )
+
+        # =========================================================
+        # SOCIOS ACTIVOS
+        # =========================================================
+
+        socios = (
+            db.query(Socio)
+            .filter(
+                Socio.estado == True
+            )
+            .all()
+        )
+
+        movimientos_creados = 0
+        prestamos_actualizados = 0
+
+        # =========================================================
+        # RECORRER SOCIOS
+        # =========================================================
+
+        for socio in socios:
+
+            # =====================================================
+            # RECORRER ACCIONES
+            # =====================================================
+
+            for accion in socio.acciones:
+
+                # =================================================
+                # VERIFICAR MOVIMIENTO EXISTENTE
+                # =================================================
+
+                movimiento_existente = (
+                    db.query(Movimiento)
+                    .filter(
+                        Movimiento.socio_id == socio.id,
+                        Movimiento.accion_id == accion.id,
+                        Movimiento.periodo_id == periodo_id
+                    )
+                    .first()
+                )
+
+                if movimiento_existente:
+                    continue
+
+                # =================================================
+                # APORTE
+                # =================================================
+
+                aporte = Decimal(
+                    str(
+                        configuracion.aporte_minimo or 0
+                    )
+                ).quantize(
+                    Decimal("0.01")
+                )
+
+                # =================================================
+                # SOBRE
+                # =================================================
+
+                sobre = (
+                    Decimal("1.00")
+                    *
+                    Decimal(
+                        str(
+                            configuracion.sobre_por_accion or 0
+                        )
+                    )
+                ).quantize(
+                    Decimal("0.01")
+                )
+
+                # =================================================
+                # =================================================
+                #
+                # AQUÍ NO SE CALCULA:
+                #
+                # - saldo apertura
+                # - multa anterior
+                # - interés
+                # - cuota
+                # - amortización
+                # - saldo final
+                #
+                # TODO ESO LO HACE:
+                #
+                # MovimientoService.calcular_movimiento_accion()
+                #
+                # =================================================
+                # =================================================
+
+                # -------------------------------------------------
+                # Primero calculamos el interés/base con una cuota
+                # temporal de 0 solamente para conocer la situación
+                # financiera de la acción.
+                #
+                # Pero para mantener una sola fuente de cálculo,
+                # primero obtenemos la base de la acción.
+                # -------------------------------------------------
+
+                saldo_apertura = (
+                    PrestamoService.obtener_saldo_apertura_accion(
+                        db=db,
+                        accion_id=accion.id,
+                        periodo_id=periodo_id
+                    )
+                )
+
+                multa_anterior = (
+                    MovimientoService
+                    .obtener_multa_periodo_anterior_accion(
+                        db=db,
+                        accion_id=accion.id,
+                        periodo_id=periodo_id
+                    )
+                )
+
+                saldo_base_interes = (
+                    Decimal(str(saldo_apertura or 0))
+                    +
+                    Decimal(str(multa_anterior or 0))
+                ).quantize(
+                    Decimal("0.01")
+                )
+
+                #saldo_base_interes_max=
+
+                # =================================================
+                # DETERMINAR CUOTA, agregar calcular saldo_base_interes maximo desde el 2025 en adelante
+                # =================================================
+
+                if saldo_base_interes <= 0:
+
+                    cuota_pagada = aporte
+
+                else:
+
+                    cuota_pagada = (
+                        PrestamoService.calcular_cuota_minima(
+                            saldo_base_interes
+                        )
+                    )
+
+                    cuota_pagada = Decimal(
+                        str(cuota_pagada or 0)
+                    ).quantize(
+                        Decimal("0.01")
+                    )
+
+                # =================================================
+                # CÁLCULO FINANCIERO CENTRALIZADO
+                # =================================================
+
+                resultado = (
+                    MovimientoService.calcular_movimiento_accion(
+                        db=db,
+                        accion_id=accion.id,
+                        periodo_id=periodo_id,
+                        aporte=aporte,
+                        cuota_pagada=cuota_pagada
+                    )
+                )
+
+                # =================================================
+                # VALIDACIÓN
+                # =================================================
+
+                if resultado["cuota_pagada"] != cuota_pagada:
+
+                    raise Exception(
+                        f"Inconsistencia en cuota calculada "
+                        f"para acción {accion.id}."
+                    )
+
+                # =================================================
+                # OBTENER PRÉSTAMOS DE LA ACCIÓN
+                #
+                # Solo para conservar una referencia en
+                # Movimiento.prestamo_id.
+                #
+                # NO se utiliza para el cálculo financiero.
+                # =================================================
+
+                prestamos = (
+                    db.query(Prestamo)
+                    .filter(
+                        Prestamo.accion_id == accion.id
+                    )
+                    .order_by(
+                        Prestamo.fecha_prestamo.asc(),
+                        Prestamo.id.asc()
+                    )
+                    .all()
+                )
+
+                prestamos_con_saldo = [
+                    p
+                    for p in prestamos
+                    if Decimal(
+                        str(p.saldo_actual or 0)
+                    ) > 0
+                ]
+
+                prestamo_referencia = None
+
+                if prestamos_con_saldo:
+
+                    prestamo_referencia = (
+                        prestamos_con_saldo[0]
+                    )
+
+                # =================================================
+                # CREAR MOVIMIENTO
+                # =================================================
+
+                movimiento = Movimiento(
+                    socio_id=socio.id,
+                    accion_id=accion.id,
+                    periodo_id=periodo_id,
+
+                    # -------------------------------------------------
+                    # Este campo es solamente REFERENCIA.
+                    # Nunca usarlo para calcular interés.
+                    # -------------------------------------------------
+
+                    prestamo_id=(
+                        prestamo_referencia.id
+                        if prestamo_referencia
+                        else None
+                    ),
+                    aporte=(resultado["aporte"]),
+                    cuota_pagada=(resultado["cuota_pagada"]),
+                    interes=(resultado["interes"]),
+                    amortizacion=(resultado["amortizacion"]),
+                    saldo_prestamo=(resultado["saldo_prestamo"]),
+
+                    # -------------------------------------------------
+                    # La multa actual NO participa en el interés
+                    # actual.
+                    #
+                    # Se utilizará para el siguiente período.
+                    # -------------------------------------------------
+                    multa=Decimal("0.00"),
+                    sobre=sobre,
+                    observacion=(
+                        "Registro mensual automático"
+                    )
+                )
+
+                db.add(movimiento)
+
+                # =================================================
+                # APLICAR AMORTIZACIÓN A LOS PRÉSTAMOS
+                # IMPORTANTE:
+                # resultado["saldo_prestamo"] es el saldo TOTAL
+                # de la acción.
+                # Nunca hacer:
+                # prestamo.saldo_actual =
+                #       resultado["saldo_prestamo"]
+                # =================================================
+
+                resultado_saldos = (
+                    PrestamoService
+                    .reconstruir_saldos_accion_periodo(
+                        db=db,
+                        accion_id=accion.id,
+                        periodo_id=periodo_id,
+                        amortizacion=resultado["amortizacion"],
+                        multa_periodo_anterior=multa_anterior
+                    )
+                )
+
+                prestamos_actualizados += (
+                    resultado_saldos[
+                        "prestamos_actualizados"
+                    ]
+                )
+
+                movimientos_creados += 1
+
+        # =========================================================
+        # CONFIRMAR TODO
+        # =========================================================
+
+        db.commit()
+
+        return {
+            "socios_procesados": len(socios),
+            "movimientos_creados": movimientos_creados,
+            "prestamos_actualizados": prestamos_actualizados
+        }

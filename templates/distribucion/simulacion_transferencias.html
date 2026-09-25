@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- =====================================================
+         CABECERA
+    ====================================================== -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-arrow-left-right text-primary"></i>
+                Simulación de Transferencias
+            </h2>
+            <div class="text-muted">
+                Período {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         RESUMEN
+    ====================================================== -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">FONDO DISPONIBLE</small>
+                    <h3 class="text-success fw-bold">
+                        S/ {{ "%.2f"|format(fondo|float) }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">PRÉSTAMOS APROBADOS</small>
+                    <h3 class="fw-bold">
+                        S/ {{ "%.2f"|format(total_aprobado|float) }}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">TRANSFERENCIAS</small>
+                    <h3 id="totalTransferencias" class="text-primary fw-bold">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <small class="text-muted">SALDO SIN DISTRIBUIR</small>
+                    <h3 id="saldoRestante" class="text-success fw-bold">S/ 0.00</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- =====================================================
+         SOLICITUDES
+    ====================================================== -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header bg-primary text-white">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <strong>
+                    <i class="bi bi-people"></i>
+                    Situación de socios
+                </strong>
+
+                <div class="d-flex gap-2">
+
+                    <button type="button" id="btnOptimizar" class="btn btn-light btn-sm">
+
+                        <i class="bi bi-magic"></i>
+                        Optimizar transferencias
+
+                    </button>
+
+                    <button type="button" id="btnLimpiar" class="btn btn-outline-light btn-sm">
+
+                        <i class="bi bi-eraser"></i>
+                        Limpiar
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>Socio</th>
+
+                            <th class="text-center">
+                                Préstamos
+                            </th>
+
+                            <th class="text-end">
+                                Total aprobado
+                            </th>
+
+                            <th class="text-end">
+                                Fondo propio
+                            </th>
+
+                            <th class="text-end">
+                                Aplicado propio
+                            </th>
+
+                            <th class="text-end">
+                                Necesita
+                            </th>
+
+                            <th class="text-end">
+                                Excedente
+                            </th>
+
+                            <th class="text-center">
+                                Estado
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="tablaSocios">
+
+                        {% for s in socios %}
+
+                        <tr data-socio="{{ s.socio_id }}">
+
+                            <td class="fw-semibold">
+
+                                {{ s.nombre }}
+
+                            </td>
+
+                            <td class="text-center">
+
+                                <span class="badge bg-secondary">
+
+                                    {{ s.prestamos|length }}
+
+                                </span>
+
+                            </td>
+
+                            <td class="text-end">
+
+                                S/
+                                {{ "{:,.2f}".format(
+                                s.total_aprobado
+                                ) }}
+
+                            </td>
+
+                            <td class="text-end text-primary">
+
+                                S/
+                                {{ "{:,.2f}".format(
+                                s.cuota_propia
+                                ) }}
+
+                            </td>
+
+                            <td class="text-end text-success propio">
+
+                                S/
+                                {{ "{:,.2f}".format(
+                                s.propio_aplicado
+                                ) }}
+
+                            </td>
+
+                            <td class="text-end faltante">
+
+                                {% if s.necesidad > 0 %}
+
+                                <span class="badge bg-danger">
+
+                                    S/
+                                    {{ "{:,.2f}".format(
+                                    s.necesidad
+                                    ) }}
+
+                                </span>
+
+                                {% else %}
+
+                                <span class="badge bg-success">
+                                    Completo
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td class="text-end excedente">
+
+                                {% if s.excedente > 0 %}
+
+                                <span class="badge bg-info text-dark">
+
+                                    S/
+                                    {{ "{:,.2f}".format(
+                                    s.excedente
+                                    ) }}
+
+                                </span>
+
+                                {% else %}
+
+                                S/ 0.00
+
+                                {% endif %}
+
+                            </td>
+
+                            <td class="text-center estado">
+
+                                {% if s.necesidad > 0 %}
+
+                                <span class="badge bg-danger">
+                                    NECESITA
+                                </span>
+
+                                {% elif s.excedente > 0 %}
+
+                                <span class="badge bg-info text-dark">
+                                    PUEDE TRANSFERIR
+                                </span>
+
+                                {% else %}
+
+                                <span class="badge bg-success">
+                                    COMPLETO
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+    <!-- =====================================================
+         TRANSFERENCIAS PROPUESTAS (Sección corregida y cerrada)
+    ====================================================== -->
+    <div class="card shadow-sm mt-4">
+
+        <div class="card-header bg-success text-white">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <strong>
+                    <i class="bi bi-arrow-left-right"></i>
+                    Transferencias propuestas
+                </strong>
+
+                <div>
+
+                    <span class="badge bg-light text-dark">
+
+                        Transferencias:
+                        <span id="cantidadTransferencias">
+                            0
+                        </span>
+
+                    </span>
+
+                    <span class="badge bg-light text-dark ms-2">
+
+                        Total:
+                        <span id="sumaTotalTransferencias">
+                            S/ 0.00
+                        </span>
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive" id="contenedorTransferencias">
+
+                <div class="text-center text-muted py-5">
+
+                    <i class="bi bi-info-circle fs-3"></i>
+
+                    <div class="mt-2">
+
+                        Presione
+                        <strong>
+                            "Optimizar transferencias"
+                        </strong>
+                        para generar una propuesta.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- =====================================================
+         BOTONES
+    ====================================================== -->
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-success" id="btnConfirmarDistribucion" data-periodo-id="{{ periodo.id }}">
+            <i class="bi bi-check-circle"></i>
+            Confirmar distribución
+        </button>
+        <a href="{{ url_for(
+        'distribucion.visor_transferencias',
+        periodo_id=periodo.id
+    ) }}" class="btn btn-outline-primary">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+            Ver transferencias
+        </a>
+
+    </div>
+
+</div>
+<script>
+    window.DISTRIBUCION_DATA = {
+        periodoId: {{ periodo.id }},
+    fondo: {{ fondo | float }},
+    totalAprobado: {{ total_aprobado | float }},
+
+    socios: {{ socios | tojson }}
+    };
+
+    console.log(
+        "Simulación de transferencias iniciada"
+    );
+
+    console.log(
+        "DATA:",
+        window.DISTRIBUCION_DATA
+    );
+
+    console.log(
+        "Socios:",
+        window.DISTRIBUCION_DATA.socios
+    );
+</script>
+
+<script src="{{ url_for('static',filename='js/simulacion_transferencias.js') }}"></script>
+
+{% endblock %}

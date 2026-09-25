@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}
+Roles y permisos
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between
+                align-items-center mb-4">
+
+        <div>
+
+            <h3 class="fw-bold mb-1">
+                Roles y permisos
+            </h3>
+
+            <small class="text-muted">
+                Controle el nivel de acceso de los usuarios
+            </small>
+
+        </div>
+
+        <a href="{{ url_for('usuarios.index') }}"
+           class="btn btn-light">
+
+            <i class="bi bi-arrow-left me-1"></i>
+
+            Usuarios
+
+        </a>
+
+    </div>
+
+
+    <div class="row g-4">
+
+        <!-- CREAR -->
+
+        <div class="col-lg-4">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body p-4">
+
+                    <h5 class="fw-bold mb-3">
+
+                        <i class="bi bi-shield-plus me-2"></i>
+
+                        Nuevo rol
+
+                    </h5>
+
+                    <form method="POST">
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Nombre
+                            </label>
+
+                            <input type="text"
+                                   name="nombre"
+                                   class="form-control"
+                                   placeholder="Ej. TESORERO"
+                                   required>
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+                                Descripción
+                            </label>
+
+                            <textarea name="descripcion"
+                                      class="form-control"
+                                      rows="3"></textarea>
+
+                        </div>
+
+
+                        <button type="submit"
+                                class="btn btn-primary w-100">
+
+                            <i class="bi bi-plus-lg me-1"></i>
+
+                            Crear rol
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ROLES -->
+
+        <div class="col-lg-8">
+
+            <div class="card border-0 shadow-sm">
+
+                <div class="card-body p-0">
+
+                    <div class="table-responsive">
+
+                        <table class="table align-middle mb-0">
+
+                            <thead class="table-light">
+
+                                <tr>
+
+                                    <th>
+                                        Rol
+                                    </th>
+
+                                    <th>
+                                        Descripción
+                                    </th>
+
+                                    <th>
+                                        Usuarios
+                                    </th>
+
+                                    <th class="text-end">
+                                        Acciones
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {% for rol in roles %}
+
+                                <tr>
+
+                                    <td>
+
+                                        <span class="fw-semibold">
+
+                                            <i class="bi bi-shield-check
+                                                      text-primary me-1"></i>
+
+                                            {{ rol.nombre }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ rol.descripcion or '—' }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span class="badge text-bg-light">
+
+                                            {{ rol.usuarios|length }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td class="text-end">
+
+                                        <a href="{{ url_for(
+                                            'usuarios.permisos_rol',
+                                            rol_id=rol.id
+                                        ) }}"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-key me-1"></i>
+                                            Permisos
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+
+                                {% else %}
+
+                                <tr>
+
+                                    <td colspan="4"
+                                        class="text-center py-5 text-muted">
+
+                                        No existen roles.
+
+                                    </td>
+
+                                </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
