@@ -1,5 +1,4 @@
 CREATE TABLE configuracion(
-<<<<<<< HEAD
     id SERIAL PRIMARY KEY,
     aporte_minimo NUMERIC(12,2),
     sobre_por_accion NUMERIC(12,2),
@@ -77,36 +76,6 @@ CREATE TABLE solicitudes_prestamo (
 -- Índices optimizados
 CREATE INDEX ix_solicitudes_prestamo_id ON solicitudes_prestamo(id);
 
-=======
-
-    id SERIAL PRIMARY KEY,
-
-    aporte_minimo NUMERIC(12,2),
-
-    sobre_por_accion NUMERIC(12,2),
-
-    interes_mensual NUMERIC(5,2),
-
-    metodo_distribucion VARCHAR(20)
-);
-
-CREATE TABLE fondo_utilidades(
-
-    id SERIAL PRIMARY KEY,
-
-    periodo_id INT REFERENCES periodos(id),
-
-    intereses NUMERIC(12,2),
-
-    multas NUMERIC(12,2),
-
-    sobres NUMERIC(12,2),
-
-    total NUMERIC(12,2),
-
-    fecha_registro TIMESTAMP DEFAULT NOW()
-);
->>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
 
 ALTER TABLE solicitudes_prestamo
 ADD COLUMN acciones INT DEFAULT 0;
@@ -128,42 +97,22 @@ UNIQUE(periodo_id);
 CREATE TABLE roles (
 
     id SERIAL PRIMARY KEY,
-<<<<<<< HEAD
     nombre VARCHAR(50) NOT NULL UNIQUE,
     descripcion VARCHAR(200),
-=======
-
-    nombre VARCHAR(50) NOT NULL UNIQUE,
-
-    descripcion VARCHAR(200),
-
->>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
     estado BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE permisos (
 
     id SERIAL PRIMARY KEY,
-<<<<<<< HEAD
     modulo VARCHAR(50),
     accion VARCHAR(50),
-=======
-
-    modulo VARCHAR(50),
-
-    accion VARCHAR(50),
-
->>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
     descripcion VARCHAR(150)
 );
 
 CREATE TABLE roles_permisos(
 
     rol_id INT REFERENCES roles(id),
-<<<<<<< HEAD
-=======
-
->>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
     permiso_id INT REFERENCES permisos(id),
 
     PRIMARY KEY(rol_id,permiso_id)
@@ -172,34 +121,17 @@ CREATE TABLE roles_permisos(
 CREATE TABLE usuarios(
 
     id SERIAL PRIMARY KEY,
-<<<<<<< HEAD
     rol_id INT REFERENCES roles(id),
     nombres VARCHAR(150) NOT NULL,
     usuario VARCHAR(50) UNIQUE NOT NULL,
     correo VARCHAR(120),
     password_hash VARCHAR(255) NOT NULL,
     ultimo_acceso TIMESTAMP,
-=======
-
-    rol_id INT REFERENCES roles(id),
-
-    nombres VARCHAR(150) NOT NULL,
-
-    usuario VARCHAR(50) UNIQUE NOT NULL,
-
-    correo VARCHAR(120),
-
-    password_hash VARCHAR(255) NOT NULL,
-
-    ultimo_acceso TIMESTAMP,
-
->>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
     estado BOOLEAN DEFAULT TRUE,
 
     fecha_registro TIMESTAMP DEFAULT NOW()
 );
 
-<<<<<<< HEAD
 --
 CREATE TABLE prestamos (
     id SERIAL PRIMARY KEY,
@@ -286,50 +218,6 @@ CREATE INDEX ix_movimientos_id ON movimientos(id);
 
 -- ALTER TABLE prestamos
 ALTER TABLE solicitudes_prestamo
-=======
--- agregar columnas a Socios:
-ALTER TABLE socios
-ADD COLUMN documento VARCHAR(20),
-ADD COLUMN telefono VARCHAR(20),
-ADD COLUMN fecha_ingreso DATE DEFAULT CURRENT_DATE;
-
--- agregar columnas a movimientos
-ALTER TABLE movimientos
-ADD COLUMN prestamo_id INT REFERENCES prestamos(id);
-
--- nueva tabla acciones:
-DROP TABLE acciones;
-
-CREATE TABLE acciones(
-
-    id SERIAL PRIMARY KEY,
-
-    socio_id INT REFERENCES socios(id),
-
-    numero_accion VARCHAR(20),
-
-    valor NUMERIC(12,2),
-
-    estado VARCHAR(20) DEFAULT 'ACTIVA',
-
-    fecha_registro DATE DEFAULT CURRENT_DATE
-
-);
-
--- modificamos en prestamos:
-ALTER TABLE prestamos
-ADD COLUMN accion_id INT REFERENCES acciones(id);
-
--- modificamos movimientos.
-ALTER TABLE movimientos
-ADD COLUMN accion_id INT REFERENCES acciones(id);
-
--- ALTER TABLE prestamos
-ALTER TABLE solicitudes_prestamo
-    ADD COLUMN periodo_id INTEGER NOT NULL,
-    ADD COLUMN accion_id INTEGER NOT NULL,
-   
->>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
     ADD CONSTRAINT fk_periodo FOREIGN KEY (periodo_id) REFERENCES periodos(id),
     ADD CONSTRAINT fk_accion FOREIGN KEY (accion_id) REFERENCES acciones(id);
 --
@@ -338,36 +226,13 @@ ADD CONSTRAINT fk_solicitud_accion
 FOREIGN KEY (accion_id)
 REFERENCES acciones(id);
 --
-<<<<<<< HEAD
-=======
-ALTER TABLE solicitudes_prestamo
-    ADD COLUMN monto_aprobado NUMERIC(12,2)
---
->>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
 ALTER TABLE solicitudes_prestamo 
     ALTER COLUMN prioridad TYPE integer USING prioridad::integer;	
 
 --
 ALTER TABLE prestamos
-<<<<<<< HEAD
 ADD COLUMN saldo_interes NUMERIC(12,2);
 
-=======
-ADD COLUMN cuota_minima NUMERIC(12,2);
-
---
-ALTER TABLE prestamos
-ADD COLUMN saldo_interes NUMERIC(12,2);
-
---
-ALTER TABLE periodos
-ADD COLUMN saldo_caja NUMERIC(12,2);
-
---
-ALTER TABLE prestamos
-ADD COLUMN periodo_id int;
-
->>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
 -- estado de solicitudes_prestamo
 PENDIENTE
       │
@@ -379,54 +244,6 @@ APROBADA      ANULADA  CANCELADA
       ▼
 ATENDIDA
 
-<<<<<<< HEAD
-=======
--- AGREGAMOS NUEVA TABLA DE ASISTENCIAS
-
-CREATE TABLE asistencias
-(
-    id                  SERIAL PRIMARY KEY,
-
-    periodo_id          INTEGER NOT NULL,
-    socio_id            INTEGER NOT NULL,
-    usuario_id          INTEGER NOT NULL,
-
-    estado              VARCHAR(20) NOT NULL,
-
-    acciones            INTEGER NOT NULL,
-
-    multa               NUMERIC(12,2) NOT NULL DEFAULT 0,
-
-    observacion         VARCHAR(100),
-
-    fecha_registro      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_asistencia_periodo
-        FOREIGN KEY (periodo_id)
-        REFERENCES periodos(id),
-
-    CONSTRAINT fk_asistencia_socio
-        FOREIGN KEY (socio_id)
-        REFERENCES socios(id),
-
-    CONSTRAINT fk_asistencia_usuario
-        FOREIGN KEY (usuario_id)
-        REFERENCES usuarios(id),
-
-    CONSTRAINT uq_asistencia_periodo_socio
-        UNIQUE(periodo_id, socio_id),
-
-    CONSTRAINT ck_estado_asistencia
-        CHECK (
-            estado IN (
-                'ASISTIO',
-                'TARDANZA',
-                'FALTA',
-                'PERMISO'
-            )
-        )
-);
->>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
 
 -- agregar columnas a configuracion:
 ALTER TABLE configuracion
@@ -438,13 +255,6 @@ ADD COLUMN multa_falta NUMERIC(12,2);
 ALTER TABLE configuracion
 ADD COLUMN estado BOOLEAN;
 
-<<<<<<< HEAD
-=======
--- agregar columna a movimientos:
-ALTER TABLE movimientos
-ADD COLUMN asistencia_id int REFERENCES asistencias(id);
-
->>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
 -- Fujo de trabajo BK
 RegistroMensualService
         │
@@ -493,12 +303,8 @@ PrestamoService.calcular_pago()
           └───────────┬────────────┘
                       │
                       ▼
-<<<<<<< HEAD
                  PRE CIERRE 
 			    REVISAR TODO
-=======
-               REVISAR TODO
->>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
                       │
                       ▼
              ┌────────────────┐
@@ -587,58 +393,6 @@ WHERE socio_id IS NOT NULL;
 ALTER TABLE usuarios
 ADD COLUMN debe_cambiar_password BOOLEAN NOT NULL DEFAULT TRUE;
 --
-<<<<<<< HEAD
-=======
-select * from periodos;
-select * from caja_chica;
-select * from movimientos_caja_chica;
---
-select * from roles;
-select * from usuarios;
-select * from permisos;
-select * from roles_permisos;
-
-
-select * from periodos;
-select * from socios;
-SELECT * FROM acciones;
-select * from acciones;
-select * from fondo_utilidades;
-
-select * from configuracion;
-select * from prestamos where socio_id=2  order by 1 desc; 
-select * from movimientos where socio_id=4 order by 1 desc; 
-
-select * from prestamos order by 1 desc;
-
-select * from solicitudes_prestamo; 
-select * from transferencias;
-
-select * from acciones WHERE SOCIO_ID=15;
-SELECT * FROM movimientos WHERE SOCIO_ID=15;
-
-SELECT * FROM prestamos where prestamos.accion_id=27;
-select * from acciones;
-SELECT SUM(APORTE),SUM(AMORTIZACION) FROM movimientos;
-
-SELECT * from socios order by 2 asc;
-SELECT * FROM movimientos order by movimientos.socio_id, movimientos.periodo_id;
-select * from prestamos order by socio_id;
-select * from solicitudes_prestamo;
-select * from fondo_utilidades;
-select * from distribucion_utilidades;
-
-select * from periodos;
-select * from configuracion;
-select * from asistencias;
-select * from solicitudes_prestamo;
-
-select * from usuarios;
-select * from permisos;
-select * from roles;
-select * from roles_permisos;
-
->>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
 INSERT INTO permisos
 (modulo, accion, descripcion)
 VALUES
@@ -704,7 +458,6 @@ VALUES
 alter table configuracion
 add column multa_no_transferir NUMERIC(12,2);
 
-<<<<<<< HEAD
 --
 INSERT INTO periodos (anio, mes, fecha_inicio, fecha_fin, saldo_caja, cerrado) 
 VALUES (2026, 1, '2026-01-01', '2026-01-31', NULL, FALSE);
@@ -747,45 +500,3 @@ select * from permisos;
 select * from roles;
 select * from roles_permisos;
 
-=======
--- luego dar en roles_permisos al administrador a todos estos permisos
-select * from configuracion
-select * from usuarios
-select * from roles
-select * from permisos;
-select * from roles_permisos
-select * from periodos
-select * from fondo_utilidades
-select * from caja_chica
-select * from movimientos_caja_chica
-select * from prestamos where socio_id=5
-select * from solicitudes_prestamo order by id asc;
-select * from acciones where socio_id=15 order by id asc
-SELECT * FROM socios
-SELECT * FROM movimientos m
-where m.socio_id=4 order by m.socio_id, m.periodo_id;
-where m.id=489 --and m.periodo_id=14 
-
-select * from solicitudes_prestamo
-select * from prestamos where socio_id=13  order by saldo_actual desc;
-select * from asistencias;
-select * from transferencias;
-
-select socios.nombres,movimientos.sobre FROM movimientos 
-inner join socios on socios.id=movimientos.socio_id
-where sobre>0 order by movimientos.socio_id;
-
--- suma de aportes socios,
--- capacida prestamo BK sum(cuota_pagada)
-select movimientos.periodo_id,
-sum(aporte)aporte,sum(amortizacion)amortizacion
-,sum(interes)interes,sum(sobre) sobre
-,(sum(cuota_pagada)+sum(sobre)) capacidad
-,sum(cuota_pagada)cuota_pagada
-,sum(sobre)sobre,sum(saldo_prestamo) saldo_prestamo
-,sum(multa)multa,(sum(cuota_pagada)+sum(sobre))Cancelar_periodo
-from movimientos
-inner join socios on socios.id=movimientos.socio_id
-group by movimientos.periodo_id order by 1  
-;
->>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
