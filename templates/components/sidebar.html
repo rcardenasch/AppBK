@@ -10,15 +10,21 @@
 
     <ul class="nav flex-column">
         <!-- SECCIÓN: PRINCIPAL -->
+<<<<<<< HEAD
          
          {% if current_user.rol.nombre in ["Tesorero", "Administrador","Socio"] %}
+=======
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
         <li class="nav-item">
             <a href="{{ url_for('dashboard.index') }}" class="nav-link">
                 <i class="bi bi-speedometer2"></i> Dashboard
             </a>
         </li>
+<<<<<<< HEAD
         {% endif %}
         {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
+=======
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
         <!-- SEPARATOR: usuarios -->
         <!-- border-secondary hace que la línea divisoria también sea visible en fondo oscuro -->
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
@@ -32,9 +38,13 @@
                 <i class="bi bi-people"></i> Usuarios
             </a>
         </li>
+<<<<<<< HEAD
         {% endif %}
 
          {% if current_user.rol.nombre in ["Tesorero", "Administrador","Socio"] %}
+=======
+
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
             <span class="nav-link text-light small fw-bold text-uppercase pb-1 opacity-75"
                 style="font-size: 0.75rem; letter-spacing: 0.5px;">
@@ -54,8 +64,12 @@
                 <!-- <i class="bi bi-credit-card"></i> Portal -->
             </a>
         </li>
+<<<<<<< HEAD
         {% endif %}
         {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
+=======
+
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
         <!-- SEPARATOR: GESTIÓN -->
         <!-- border-secondary hace que la línea divisoria también sea visible en fondo oscuro -->
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
@@ -116,7 +130,11 @@
             </a>
         </li>
 
+<<<<<<< HEAD
         
+=======
+        {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
         <!-- SEPARATOR: CONFIGURACIÓN -->
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
             <span class="nav-link text-light small fw-bold text-uppercase pb-1 opacity-75"
@@ -137,7 +155,11 @@
             </a>
         </li>
     </ul>
+<<<<<<< HEAD
     
+=======
+    {% endif %}
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
     <div class="sidebar-footer mt-auto">
         <div class="card border-0 bg-primary text-white">
             <div class="card-body">
@@ -153,6 +175,7 @@
                 <span class="badge bg-danger">
                     CERRADO
                 </span>
+<<<<<<< HEAD
                 {% endif %}
             </div>
         </div>
@@ -160,4 +183,15 @@
 
     {% endif %}
 
+=======
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
 </aside>

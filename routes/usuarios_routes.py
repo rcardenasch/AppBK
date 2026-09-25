@@ -310,19 +310,39 @@ def nuevo():
             nuevo_usuario = Usuario(
 
                 nombres=nombres,
+<<<<<<< HEAD
                 usuario=usuario_nombre,
                 correo=correo,
                 rol_id=rol.id,
+=======
+
+                usuario=usuario_nombre,
+
+                correo=correo or None,
+
+                rol_id=rol.id,
+
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
                 socio_id=(
                     socio.id
                     if socio
                     else None
                 ),
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
                 password_hash=
                     generate_password_hash(
                         password
                     ),
+<<<<<<< HEAD
                 estado=True,
+=======
+
+                estado=True,
+
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
                 debe_cambiar_password=True
 
             )
@@ -427,11 +447,19 @@ def editar(id):
                 (Usuario.id == None) |
                 (Usuario.id == usuario.id)
             )
+<<<<<<< HEAD
             .order_by(Socio.nombres).all()
+=======
+            .order_by(
+                Socio.nombres
+            )
+            .all()
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
         )
 
         if request.method == "POST":
 
+<<<<<<< HEAD
             nombres = request.form.get("nombres","").strip()
             correo = request.form.get("correo","").strip()
             rol_id = request.form.get("rol_id")
@@ -441,6 +469,37 @@ def editar(id):
             if not nombres:
 
                 flash("Los nombres son obligatorios.", "danger")
+=======
+            nombres = request.form.get(
+                "nombres",
+                ""
+            ).strip()
+
+            correo = request.form.get(
+                "correo",
+                ""
+            ).strip()
+
+            rol_id = request.form.get(
+                "rol_id"
+            )
+
+            socio_id = request.form.get(
+                "socio_id"
+            )
+
+            estado = (
+                request.form.get("estado")
+                == "1"
+            )
+
+            if not nombres:
+
+                flash(
+                    "Los nombres son obligatorios.",
+                    "danger"
+                )
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
 
                 return redirect(
                     request.url
@@ -469,7 +528,15 @@ def editar(id):
 
                 if not socio:
 
+<<<<<<< HEAD
                     flash("El socio seleccionado no existe.", "danger")
+=======
+                    flash(
+                        "El socio seleccionado no existe.",
+                        "danger"
+                    )
+
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
                     return redirect(
                         request.url
                     )
@@ -477,7 +544,12 @@ def editar(id):
                 otro_usuario = (
                     db.query(Usuario)
                     .filter(
+<<<<<<< HEAD
                         Usuario.socio_id == nuevo_socio_id,
+=======
+                        Usuario.socio_id ==
+                        nuevo_socio_id,
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
                         Usuario.id != usuario.id
                     )
                     .first()
@@ -499,7 +571,11 @@ def editar(id):
             # ------------------------------------------------
 
             usuario.nombres = nombres
+<<<<<<< HEAD
             usuario.correo = correo
+=======
+            usuario.correo = correo or None
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
             usuario.rol_id = int(rol_id)
             usuario.socio_id = nuevo_socio_id
             usuario.estado = estado

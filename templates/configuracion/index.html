@@ -17,7 +17,11 @@
             </small>
         </div>
         <!-- Botón Nuevo agregado de forma visible en la parte superior derecha -->
+<<<<<<< HEAD
         <a href="{{ url_for('configuracion.nuevo') }}" class="btn btn-primary shadow-sm">
+=======
+        <a href="{{ url_for('configuracion.nuevo') }}" class="btn btn-success shadow-sm">
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
             <i class="bi bi-plus-circle me-1"></i> Nueva Configuración
         </a>
     </div>
@@ -38,9 +42,14 @@
                         <th class="text-end">Sobre por Acción</th>
                         <th class="text-end">Interés Mensual</th>
                         <th class="text-end">Método Distribución</th>
+<<<<<<< HEAD
                         <th class="text-end">Tardanza</th>
                         <th class="text-end">Falta</th>
                         <th class="text-end">No Transferir</th>
+=======
+                        <th class="text-end">Multa Tardanza</th>
+                        <th class="text-end">Multa Falta</th>
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
                         <th class="text-center">Estado</th>
                         <th class="text-end pe-3">Acciones</th>
                     </tr>
@@ -69,12 +78,17 @@
                             {{ "{:,.2f}".format(c.multa_tardanza | float) }}
 
                         </td>
+<<<<<<< HEAD
                         <td class="text-end text-warning">
                             {{ "{:,.2f}".format(c.multa_falta | float) }}
 
                         </td>
                         <td class="text-end text-danger">
                             {{ "{:,.2f}".format(c.multa_no_transferir | float) }}
+=======
+                        <td class="text-end text-danger">
+                            {{ "{:,.2f}".format(c.multa_falta | float) }}
+>>>>>>> 9735a76f2390c160db2f78f98c7a1d0957fb9f46
 
                         </td>
                         <td class="text-center">
