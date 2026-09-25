@@ -310,26 +310,19 @@ def nuevo():
             nuevo_usuario = Usuario(
 
                 nombres=nombres,
-
                 usuario=usuario_nombre,
-
-                correo=correo or None,
-
+                correo=correo,
                 rol_id=rol.id,
-
                 socio_id=(
                     socio.id
                     if socio
                     else None
                 ),
-
                 password_hash=
                     generate_password_hash(
                         password
                     ),
-
                 estado=True,
-
                 debe_cambiar_password=True
 
             )
@@ -434,43 +427,20 @@ def editar(id):
                 (Usuario.id == None) |
                 (Usuario.id == usuario.id)
             )
-            .order_by(
-                Socio.nombres
-            )
-            .all()
+            .order_by(Socio.nombres).all()
         )
 
         if request.method == "POST":
 
-            nombres = request.form.get(
-                "nombres",
-                ""
-            ).strip()
-
-            correo = request.form.get(
-                "correo",
-                ""
-            ).strip()
-
-            rol_id = request.form.get(
-                "rol_id"
-            )
-
-            socio_id = request.form.get(
-                "socio_id"
-            )
-
-            estado = (
-                request.form.get("estado")
-                == "1"
-            )
+            nombres = request.form.get("nombres","").strip()
+            correo = request.form.get("correo","").strip()
+            rol_id = request.form.get("rol_id")
+            socio_id = request.form.get("socio_id")
+            estado = (request.form.get("estado") == "1")
 
             if not nombres:
 
-                flash(
-                    "Los nombres son obligatorios.",
-                    "danger"
-                )
+                flash("Los nombres son obligatorios.", "danger")
 
                 return redirect(
                     request.url
@@ -499,11 +469,7 @@ def editar(id):
 
                 if not socio:
 
-                    flash(
-                        "El socio seleccionado no existe.",
-                        "danger"
-                    )
-
+                    flash("El socio seleccionado no existe.", "danger")
                     return redirect(
                         request.url
                     )
@@ -511,8 +477,7 @@ def editar(id):
                 otro_usuario = (
                     db.query(Usuario)
                     .filter(
-                        Usuario.socio_id ==
-                        nuevo_socio_id,
+                        Usuario.socio_id == nuevo_socio_id,
                         Usuario.id != usuario.id
                     )
                     .first()
@@ -534,7 +499,7 @@ def editar(id):
             # ------------------------------------------------
 
             usuario.nombres = nombres
-            usuario.correo = correo or None
+            usuario.correo = correo
             usuario.rol_id = int(rol_id)
             usuario.socio_id = nuevo_socio_id
             usuario.estado = estado

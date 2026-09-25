@@ -5,11 +5,12 @@ from flask import flash
 from flask import redirect
 from flask import url_for
 
-from flask_login import login_user
+from flask_login import current_user, login_user
 from flask_login import logout_user
 
 from database.connection import SessionLocal
 
+from models.periodo import Periodo
 from models.usuario import Usuario
 
 from services.auth_service import AuthService
@@ -74,14 +75,26 @@ def login():
                     "login.html"
                 )
 
-            login_user(user,remember=True)
+            periodo=(db.query(Periodo).order_by(Periodo.anio.desc(),Periodo.mes.desc()).first()) #Ultimo periodo
 
-            return redirect(
-                url_for(
-                    "dashboard.index"
-                )
-            )
+             # Iniciar sesión de Flask-Login
+            login_user(user, remember=True)
 
+            # Redirección según el rol del usuario
+            rol_nombre = user.rol.nombre
+
+            if rol_nombre in ["Administrador", "Tesorero"]:
+                return redirect(url_for("dashboard.index"))
+                
+            elif rol_nombre in ["Socio"]:
+                
+                return redirect(url_for("socio_portal.mi_estado_cuenta",periodo_Id=periodo.id))
+            
+            else:
+                # Redirección de respaldo si el rol no coincide con los anteriores
+                flash("Rol no autorizado", "warning")
+                return render_template("login.html")
+         
         finally:
 
             db.close()

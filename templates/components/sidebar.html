@@ -10,11 +10,13 @@
 
     <ul class="nav flex-column">
         <!-- SECCIÓN: PRINCIPAL -->
+         {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
         <li class="nav-item">
             <a href="{{ url_for('dashboard.index') }}" class="nav-link">
                 <i class="bi bi-speedometer2"></i> Dashboard
             </a>
         </li>
+        
         <!-- SEPARATOR: usuarios -->
         <!-- border-secondary hace que la línea divisoria también sea visible en fondo oscuro -->
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
@@ -28,8 +30,9 @@
                 <i class="bi bi-people"></i> Usuarios
             </a>
         </li>
-
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
+            {% endif %}
+            {% if current_user.rol.nombre in ["Tesorero", "Administrador","Socio"] %}
             <span class="nav-link text-light small fw-bold text-uppercase pb-1 opacity-75"
                 style="font-size: 0.75rem; letter-spacing: 0.5px;">
                 Estado Cuenta Socio
@@ -48,7 +51,8 @@
                 <!-- <i class="bi bi-credit-card"></i> Portal -->
             </a>
         </li>
-
+        {% endif %}
+        {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
         <!-- SEPARATOR: GESTIÓN -->
         <!-- border-secondary hace que la línea divisoria también sea visible en fondo oscuro -->
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
@@ -109,7 +113,7 @@
             </a>
         </li>
 
-        {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
+        
         <!-- SEPARATOR: CONFIGURACIÓN -->
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
             <span class="nav-link text-light small fw-bold text-uppercase pb-1 opacity-75"
@@ -130,7 +134,7 @@
             </a>
         </li>
     </ul>
-    {% endif %}
+    
     <div class="sidebar-footer mt-auto">
         <div class="card border-0 bg-primary text-white">
             <div class="card-body">
@@ -146,13 +150,11 @@
                 <span class="badge bg-danger">
                     CERRADO
                 </span>
-
                 {% endif %}
-
             </div>
-
         </div>
-
     </div>
+
+    {% endif %}
 
 </aside>
