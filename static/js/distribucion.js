@@ -563,104 +563,56 @@ document
         
 
 // boton para revertir distribución
-document
-.getElementById("btnRevertir")
-.onclick = () => {
+//document
+//.getElementById("btnRevertir")
+//.onclick = () => {
 
-    const periodoId =
-        document.getElementById("btnRevertir").dataset.periodoId;
+//    const periodoId =
+//        document.getElementById("btnRevertir").dataset.periodoId;
 
-    const periodoTexto =
-        document.getElementById("btnRevertir").dataset.periodoTexto;
+//    const periodoTexto =
+//        document.getElementById("btnRevertir").dataset.periodoTexto;
 
-    confirmarRevertir(
+//    confirmarRevertir(
 
-        periodoTexto,
+//        periodoTexto,
 
-        () => {
+//        () => {
 
-            fetch(
+//            fetch(
 
-                `/distribucion/revertir/${periodoId}`,
+//                `/distribucion/revertir/${periodoId}`,
 
-                {
-                    method: "POST"
+//                {
+//                    method: "POST"
 
-                }
+//                }
 
-            )
-            .then(r => r.json())
+//            )
+//            .then(r => r.json())
 
-            .then(data => {
+//            .then(data => {
 
-                if(data.ok){
+//                if(data.ok){
 
-                    alert(data.mensaje);
-                    location.reload();
+//                    alert(data.mensaje);
+//                    location.reload();
 
-                }
+//                }
 
-                else{
+//                else{
 
-                    alert(data.mensaje);
+//                    alert(data.mensaje);
 
-                }
+//                }
 
-            });
+//            });
 
-        }
+//        }
 
-    );
+//    );
 
-};
-
-// Cerrar periodo AJAX
-document
-.getElementById("btnCerrarPeriodo")
-.onclick = () => {
-
-    const periodoId =
-        document.getElementById("btnCerrarPeriodo").dataset.periodoId;
-
-    const periodoTexto =
-        document.getElementById("btnCerrarPeriodo").dataset.periodoTexto;
-
-    confirmarCerrarPeriodo(
-
-        periodoId,
-        periodoTexto,
-
-        () => {
-
-            fetch(`/periodos/cerrar/${periodoId}`, {
-
-                method: "POST"
-
-            })
-
-            .then(r => r.json())
-
-            .then(resp => {
-
-                if(resp.ok){
-
-                    alert(resp.mensaje);
-
-                    location.reload();
-
-                }else{
-
-                    alert(resp.mensaje);
-
-                }
-
-            });
-
-        }
-
-    );
-
-};
+//};
 
 
 

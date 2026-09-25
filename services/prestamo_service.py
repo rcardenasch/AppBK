@@ -843,18 +843,10 @@ class PrestamoService:
             print("\n==============================================")
             print("RECONSTRUIR SALDOS - SOLO MULTA")
             print("==============================================")
-            print(
-                f"Acción             : {accion_id}"
-            )
-            print(
-                f"Período            : {periodo_id}"
-            )
-            print(
-                f"Multa pendiente    : {deuda_multa}"
-            )
-            print(
-                f"Amortización       : {amortizacion}"
-            )
+            print(f"Acción             : {accion_id}")
+            print(f"Período            : {periodo_id}")
+            print(f"Multa pendiente    : {deuda_multa}")
+            print(f"Amortización       : {amortizacion}")
             print("Capital             : 0.00")
             print("==============================================\n")
 

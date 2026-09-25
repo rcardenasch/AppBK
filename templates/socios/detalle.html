@@ -257,7 +257,7 @@
                             <th class="text-center">Aporte</th>
                             <th class="text-center">Amortización</th>
                             <th class="text-center">Sobre</th>
-                            <th width="320">Opciones</th>
+                            <th class="text-center">Opciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -265,17 +265,12 @@
                         {% for accion in socio.acciones |sort(attribute='id')%}
                         <tr>
                             <td class="ps-3 fw-bold text-dark align-middle">
-                                <!-- Icono redondo con iniciales -->
-                                <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center fw-bold border border-secondary-subtle"
-                                    style="width: 32px; height: 32px; font-size: 0.75rem; min-width: 32px;"
-                                    title="{{ accion.numero_accion }}">
-                                    {{ accion.numero_accion }}
-                                </div>
+                                <span class="badge bg-primary">{{ accion.numero_accion }}</span>
                             </td>
 
                             <td class="text-center align-middle">
                                 {% if accion.prestamos|length > 0 %}
-                                <div class="d-flex align-items-center justify-content-center mx-auto bg-success-subtle text-success rounded-circle border border-success-subtle"
+                                <div class="d-flex align-items-center justify-content-center mx-auto bg-warning-subtle text-warning rounded-circle border border-warning-subtle"
                                     style="width: 32px; height: 32px;"
                                     title="Tiene préstamo ({{ accion.prestamos|length }})">
                                     <span class="fw-bold small">{{ accion.prestamos|length }}</span>
@@ -295,7 +290,7 @@
                                 <span class="text-muted small">-</span>
                                 {% endif %}
                             </td>
-                            <td>
+                            <td class="text-center align-middle">
                                 {% set saldo = namespace(total=0) %}
                                 {% for p in accion.prestamos %}
 
@@ -315,35 +310,25 @@
                             {% if movimiento.periodo_id == periodo.id %}
                             {% if movimiento.accion_id == accion.id %}
 
-                            <td>
+                            <td class="text-center align-middle">
                                 {{ "{:,.2f}".format(movimiento.cuota_pagada) }}
                             </td>
-                            <td>
+                            <td class="text-center align-middle">
                                 {{ "{:,.2f}".format(movimiento.aporte) }}
                             </td>
-                            <td>
+                            <td class="text-center align-middle">
                                 {{ "{:,.2f}".format(movimiento.amortizacion) }}
                             </td>
-                            <td>
+                            <td class="text-center align-middle">
                                 {{ "{:,.2f}".format(movimiento.sobre) }}
                             </td>
                             {% endif %}
                             {% endif %}
                             {% endfor %}
-                            <td>
+                            <td class="text-center align-middle">
                                 <a href="{{ url_for('acciones.detalle',id=accion.id) }}"
                                     class="btn btn-outline-primary btn-sm" title="Ver acción">
                                     <i class="bi bi-eye"></i>
-                                </a>
-
-                                <a href="{{ url_for('prestamos.nuevo',socio_id=socio.id,accion_id=accion.id) }}"
-                                    class="btn btn-outline-warning btn-sm" title="Nuevo Préstamo">
-                                    <i class="bi bi-cash-stack"></i>
-                                </a>
-
-                                <a href="{{ url_for('movimientos.nuevo',socio_id=socio.id,accion_id=accion.id) }}"
-                                    class="btn btn-success btn-sm" title="Nuevo Movimiento">
-                                    <i class="bi bi-wallet2"></i>
                                 </a>
 
                             </td>

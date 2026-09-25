@@ -339,10 +339,10 @@
     new Chart(document.getElementById("chartAportes"), {
         type: "bar",
         data: {
-            labels: {{ mes_nombre_aportes | tojson }},
+            labels: {{mes_nombre_aportes|tojson}},
         datasets: [{
             label: "Aportes (S/)",
-            data: {{ aportes_mes | tojson }},
+            data: {{aportes_mes|tojson}},
         backgroundColor: 'rgba(40, 167, 69, 0.2)', // Color verde éxito transparente
         borderColor: 'rgba(40, 167, 69, 1)',       // Borde verde sólido
         borderWidth: 1
@@ -360,10 +360,10 @@
     new Chart(document.getElementById("chartPrestamos"), {
         type: "bar",
         data: {
-            labels: {{ mes_nombre_prestamos | tojson }},
+            labels: {{mes_nombre_prestamos|tojson}},
         datasets: [{
             label: "Prestamos (S/)",
-            data: {{ prestamos_mes | tojson }},
+            data: {{prestamos_mes|tojson}},
         backgroundColor: 'rgba(13, 202, 240, 0.2)', // Celeste bajito transparente
         borderColor: 'rgba(13, 202, 240, 1)',       // Borde celeste sólido
         borderWidth: 1

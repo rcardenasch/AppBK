@@ -3086,7 +3086,7 @@ def exportar_estado_operaciones_excel(periodo_id):
 
                 for col in range(2, 11):
 
-                    ws.cell(row=fila,olumn=col).number_format = "#,##0.00"
+                    ws.cell(row=fila,column=col).number_format = "#,##0.00"
 
                 # ====================================================
                 # TOTALES GENERALES
