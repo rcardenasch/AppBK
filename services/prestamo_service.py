@@ -767,6 +767,19 @@ class PrestamoService:
         if multa_periodo_anterior < Decimal("0.00"):
             multa_periodo_anterior = Decimal("0.00")
 
+        # log
+        print("\n")
+        print("=" * 70)
+        print("ENTRADA RECONSTRUIR_SALDOS_ACCION_PERIODO")
+        print("=" * 70)
+
+        print(f"accion_id                 : {accion_id}")
+        print(f"periodo_id                : {periodo_id}")
+        print(f"amortizacion              : {amortizacion}")
+        print(f"multa_periodo_anterior    : {multa_periodo_anterior}")
+        print(f"saldo_multa_restaurado    : {saldo_multa_restaurado}")
+
+        print("=" * 70)
         # =====================================================
         # 1. OBTENER PERÍODO
         # =====================================================
@@ -816,6 +829,57 @@ class PrestamoService:
             )
             .all()
         )
+
+        # =====================================================
+        # DIAGNÓSTICO RECONSTRUCCIÓN
+        # =====================================================
+
+        print("\n")
+        print("=" * 70)
+        print("DIAGNÓSTICO RECONSTRUIR SALDOS")
+        print("=" * 70)
+        print(f"Acción                         : {accion_id}")
+        print(f"Período actual                : {periodo_id}")
+        print(f"Período fecha                 : {periodo.anio}-{periodo.mes:02d}")
+        print(f"Amortización recibida         : {amortizacion}")
+        print(f"Multa recibida                : {multa_periodo_anterior}")
+        print(f"Multa restaurada              : {saldo_multa_restaurado}")
+        print("-" * 70)
+        print("PRÉSTAMOS QUE LA RECONSTRUCCIÓN ESTÁ TOMANDO")
+        print("-" * 70)
+        saldo_capital_debug = Decimal("0.00")
+        for prestamo in prestamos:
+            saldo = Decimal(
+                str(prestamo.saldo_actual or 0)
+            ).quantize(CENTAVOS)
+            saldo_capital_debug += saldo
+            print(
+                f"Préstamo {prestamo.id} "
+                f"| periodo={prestamo.periodo_id} "
+                f"| monto={prestamo.monto} "
+                f"| saldo={saldo} "
+                f"| estado={prestamo.estado}"
+            )
+
+        print("-" * 70)
+
+        print(
+            f"TOTAL CAPITAL OBTENIDO     : "
+            f"{saldo_capital_debug}"
+        )
+
+        print(
+            f"MULTA PERÍODO ANTERIOR     : "
+            f"{multa_periodo_anterior}"
+        )
+
+        print(
+            f"DEUDA ANTES DE AMORTIZAR   : "
+            f"{saldo_capital_debug + multa_periodo_anterior}"
+        )
+
+        print("=" * 70)
+        print()
 
         # =====================================================
         # 3. CASO SIN PRÉSTAMOS
@@ -895,6 +959,26 @@ class PrestamoService:
                 pendiente,
                 multa_periodo_anterior
             ).quantize(CENTAVOS)
+
+            # Log
+            print("\n" + "-" * 70)
+            print("APLICACIÓN MULTA EN RECONSTRUCCIÓN")
+            print("-" * 70)
+
+            print(f"Amortización recibida : {amortizacion}")
+            print(f"Multa recibida        : {multa_periodo_anterior}")
+            print(f"Pendiente inicial     : {pendiente}")
+
+            if multa_periodo_anterior > Decimal("0.00"):
+
+                print(">>> EXISTE MULTA PARA PAGAR")
+
+                pago_multa = min(
+                    pendiente,
+                    multa_periodo_anterior
+                ).quantize(CENTAVOS)
+
+                print(f"Pago multa calculado  : {pago_multa}")
 
             multa_periodo_anterior = (
                 multa_periodo_anterior

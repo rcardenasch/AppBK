@@ -800,43 +800,6 @@ def editar_movimiento(id):
         amortizacion_anterior = Decimal(str(movimiento.amortizacion or 0)).quantize(Decimal("0.01"))
         interes_anterior = Decimal(str(movimiento.interes or 0)).quantize(Decimal("0.01"))
         saldo_anterior = Decimal(str(movimiento.saldo_prestamo or 0)).quantize(Decimal("0.01"))
-        # Agregue por recomendacion pero debe ser en 
-        aporte_anterior=Decimal(str(movimiento.aporte or 0)).quantize(Decimal("0.01"))
-        multa_anterior=Decimal(str(movimiento.multa or 0)).quantize(Decimal("0.01"))
-        movimiento_anterior=Decimal(str(movimiento.id or 0)).quantize(Decimal("0.01"))
-
-
-        print("\n" + "=" * 70)
-        print("TRAZABILIDAD SALDO ANTERIOR")
-        print("=" * 70)
-        print(f"Saldo préstamo período anterior : "f"{saldo_anterior:.2f}")
-        print(f"Aporte período anterior         : "f"{aporte_anterior:.2f}")
-        print(f"Amortización período anterior   : "f"{amortizacion_anterior:.2f}")
-        print(f"Multa período anterior          : "f"{multa_anterior:.2f}")
-        print(f"Saldo - aporte                  : "f"{saldo_anterior - aporte_anterior:.2f}")
-        print(f"Saldo - amortización            : "f"{saldo_anterior - amortizacion_anterior:.2f}")
-        print("=" * 70)
-
-
-        print(f"Movimiento que se está reconstruyendo : "f"{movimiento.id if movimiento else 'N/A'}")
-        print(f"Período movimiento                   : "f"{movimiento.periodo_id if movimiento else 'N/A'}")
-        print(f"Movimiento anterior ID               : "f"{movimiento_anterior.id if movimiento_anterior else 'N/A'}")
-        print(f"Período movimiento anterior          : "f"{movimiento_anterior.periodo_id if movimiento_anterior else 'N/A'}")
-
-        print("\nMOVIMIENTOS CONSIDERADOS PARA RECONSTRUIR:")
-
-        for mov in movimiento:
-            print(
-                f"ID={mov.id} | "
-                f"periodo={mov.periodo_id} | "
-                f"cuota={mov.cuota_pagada or 0} | "
-                f"aporte={mov.aporte or 0} | "
-                f"interes={mov.interes or 0} | "
-                f"amortizacion={mov.amortizacion or 0} | "
-                f"multa={mov.multa or 0} | "
-                f"saldo={mov.saldo_prestamo or 0}"
-            )
-
 
         # =====================================================
         # DATOS NUEVOS
