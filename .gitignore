@@ -1,0 +1,6 @@
+# Ignorar configuraciones de base de datos locales
+database/connection.py
+
+# Ignorar archivos temporales de Python
+__pycache__/
+*.pyc
