@@ -752,6 +752,7 @@ select * from roles_permisos;
 select * from configuracion
 select * from usuarios
 select * from roles
+select * from permisos;
 select * from roles_permisos
 select * from periodos
 select * from fondo_utilidades
