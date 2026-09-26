@@ -616,6 +616,9 @@ INSERT INTO configuracion (aporte_minimo, sobre_por_accion, interes_mensual, met
 VALUES (170,30,0.01,1,5.00,10.00,true,50.00);
 
 --
+insert into caja_chica (nombre,saldo_inicial,saldo_actual,activo)
+values('Caja Chica Gral',76.86,76.86,true)
+--
 select * from periodos;
 select * from configuracion;
 select * from permisos;
@@ -658,6 +661,7 @@ select * from roles_permisos
 select * from periodos
 select * from fondo_utilidades
 select * from caja_chica
+
 select * from movimientos_caja_chica
 select * from solicitudes_prestamo order by id asc;
 select * from acciones where socio_id=15 order by id asc

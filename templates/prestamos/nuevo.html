@@ -16,7 +16,7 @@
             <div class="mb-3">
                 <label class="form-label">Socio</label>
 
-                <select id="socio" class="form-select" required {% if socio_seleccionado %}disabled{% endif %}>
+                <select id="socio" name="socio_id" class="form-select" required {% if socio_seleccionado %}disabled{% endif %}>
                     <option value="">Seleccione un socio</option>
                     {% for socio in socios %}
                     <option value="{{ socio.id }}" {% if socio.id==socio_seleccionado %}selected{% endif %}>
@@ -38,7 +38,7 @@
                 </label>
 
                 <!-- 1. Si existe accion_seleccionada, añadimos el atributo disabled -->
-                <select id="accion" class="form-select" required {% if accion_seleccionada %}disabled{% endif %}>
+                <select id="accion" name="accion_id" class="form-select" required {% if accion_seleccionada %}{% endif %}>
                     <option value="">Seleccione una accion</option>
 
                     {% for accion in acciones %}
@@ -52,7 +52,8 @@
                 <!-- Como quitamos el atributo 'name="accion_id"' del select de arriba para cuando está deshabilitado, -->
                 <!-- este input hidden enviará el valor correcto al backend sin romper tu ruta de Flask. -->
                 {% if accion_seleccionada %}
-                <input type="hidden" name="accion_id" value="{{ accion_seleccionada }}">
+                <input type="hidden" id="accion_id" name="accion_id" value="{{ accion_seleccionada }}" required>
+
                 {% endif %}
 
             </div>
