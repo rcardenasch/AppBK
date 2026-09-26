@@ -76,7 +76,6 @@ CREATE TABLE solicitudes_prestamo (
 -- Índices optimizados
 CREATE INDEX ix_solicitudes_prestamo_id ON solicitudes_prestamo(id);
 
-<<<<<<< Updated upstream
 
     id SERIAL PRIMARY KEY,
     aporte_minimo NUMERIC(12,2),
@@ -95,8 +94,6 @@ CREATE TABLE fondo_utilidades(
     total NUMERIC(12,2),
     fecha_registro TIMESTAMP DEFAULT NOW()
 );
-=======
->>>>>>> Stashed changes
 
 ALTER TABLE solicitudes_prestamo
 ADD COLUMN acciones INT DEFAULT 0;
@@ -120,11 +117,8 @@ CREATE TABLE roles (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL UNIQUE,
     descripcion VARCHAR(200),
-<<<<<<< Updated upstream
     nombre VARCHAR(50) NOT NULL UNIQUE,
     descripcion VARCHAR(200),
-=======
->>>>>>> Stashed changes
     estado BOOLEAN DEFAULT TRUE
 );
 
@@ -133,11 +127,8 @@ CREATE TABLE permisos (
     id SERIAL PRIMARY KEY,
     modulo VARCHAR(50),
     accion VARCHAR(50),
-<<<<<<< Updated upstream
     modulo VARCHAR(50),
     accion VARCHAR(50),
-=======
->>>>>>> Stashed changes
     descripcion VARCHAR(150)
 );
 
@@ -157,7 +148,6 @@ CREATE TABLE usuarios(
     correo VARCHAR(120),
     password_hash VARCHAR(255) NOT NULL,
     ultimo_acceso TIMESTAMP,
-<<<<<<< Updated upstream
 
     rol_id INT REFERENCES roles(id),
     nombres VARCHAR(150) NOT NULL,
@@ -165,8 +155,6 @@ CREATE TABLE usuarios(
     correo VARCHAR(120),
     password_hash VARCHAR(255) NOT NULL,
     ultimo_acceso TIMESTAMP,
-=======
->>>>>>> Stashed changes
     estado BOOLEAN DEFAULT TRUE,
     fecha_registro TIMESTAMP DEFAULT NOW()
 );
@@ -257,47 +245,6 @@ CREATE INDEX ix_movimientos_id ON movimientos(id);
 
 -- ALTER TABLE prestamos
 ALTER TABLE solicitudes_prestamo
-<<<<<<< Updated upstream
-=======
--- agregar columnas a Socios:
-ALTER TABLE socios
-ADD COLUMN documento VARCHAR(20),
-ADD COLUMN telefono VARCHAR(20),
-ADD COLUMN fecha_ingreso DATE DEFAULT CURRENT_DATE;
-
--- agregar columnas a movimientos
-ALTER TABLE movimientos
-ADD COLUMN prestamo_id INT REFERENCES prestamos(id);
-
--- nueva tabla acciones:
-DROP TABLE acciones;
-
-CREATE TABLE acciones(
-
-    id SERIAL PRIMARY KEY,
-    socio_id INT REFERENCES socios(id),
-    numero_accion VARCHAR(20),
-    valor NUMERIC(12,2),
-    estado VARCHAR(20) DEFAULT 'ACTIVA',
-    fecha_registro DATE DEFAULT CURRENT_DATE
-
-);
-
--- modificamos en prestamos:
-ALTER TABLE prestamos
-ADD COLUMN accion_id INT REFERENCES acciones(id);
-
--- modificamos movimientos.
-ALTER TABLE movimientos
-ADD COLUMN accion_id INT REFERENCES acciones(id);
-
--- ALTER TABLE prestamos
-ALTER TABLE solicitudes_prestamo
-    ADD COLUMN periodo_id INTEGER NOT NULL,
-    ADD COLUMN accion_id INTEGER NOT NULL,
-   
-=======
->>>>>>> Stashed changes
     ADD CONSTRAINT fk_periodo FOREIGN KEY (periodo_id) REFERENCES periodos(id),
     ADD CONSTRAINT fk_accion FOREIGN KEY (accion_id) REFERENCES acciones(id);
 --
@@ -306,18 +253,14 @@ ADD CONSTRAINT fk_solicitud_accion
 FOREIGN KEY (accion_id)
 REFERENCES acciones(id);
 --
-<<<<<<< Updated upstream
 ALTER TABLE solicitudes_prestamo
     ADD COLUMN monto_aprobado NUMERIC(12,2)
 --
-=======
->>>>>>> Stashed changes
 ALTER TABLE solicitudes_prestamo 
     ALTER COLUMN prioridad TYPE integer USING prioridad::integer;	
 
 --
 ALTER TABLE prestamos
-<<<<<<< Updated upstream
 
 ADD COLUMN saldo_interes NUMERIC(12,2);
 
@@ -335,10 +278,6 @@ ADD COLUMN saldo_caja NUMERIC(12,2);
 ALTER TABLE prestamos
 ADD COLUMN periodo_id int;
 
-=======
-ADD COLUMN saldo_interes NUMERIC(12,2);
-
->>>>>>> Stashed changes
 -- estado de solicitudes_prestamo
 PENDIENTE
       │
@@ -350,7 +289,6 @@ APROBADA      ANULADA  CANCELADA
       ▼
 ATENDIDA
 
-<<<<<<< Updated upstream
 -- AGREGAMOS NUEVA TABLA DE ASISTENCIAS
 
 CREATE TABLE asistencias
@@ -396,8 +334,6 @@ CREATE TABLE asistencias
             )
         )
 );
-=======
->>>>>>> Stashed changes
 
 -- agregar columnas a configuracion:
 ALTER TABLE configuracion
@@ -409,14 +345,11 @@ ADD COLUMN multa_falta NUMERIC(12,2);
 ALTER TABLE configuracion
 ADD COLUMN estado BOOLEAN;
 
-<<<<<<< Updated upstream
 -- agregar columna a movimientos:
 ALTER TABLE movimientos
 ADD COLUMN asistencia_id int REFERENCES asistencias(id);
 
 
-=======
->>>>>>> Stashed changes
 -- Fujo de trabajo BK
 RegistroMensualService
         │
@@ -465,17 +398,12 @@ PrestamoService.calcular_pago()
           └───────────┬────────────┘
                       │
                       ▼
-<<<<<<< Updated upstream
 
                  PRE CIERRE 
 			    REVISAR TODO
 
                REVISAR TODO
 
-=======
-                 PRE CIERRE 
-			    REVISAR TODO
->>>>>>> Stashed changes
                       │
                       ▼
              ┌────────────────┐
@@ -564,7 +492,6 @@ WHERE socio_id IS NOT NULL;
 ALTER TABLE usuarios
 ADD COLUMN debe_cambiar_password BOOLEAN NOT NULL DEFAULT TRUE;
 --
-<<<<<<< Updated upstream
 
 select * from periodos;
 select * from caja_chica;
@@ -614,8 +541,6 @@ select * from permisos;
 select * from roles;
 select * from roles_permisos;
 
-=======
->>>>>>> Stashed changes
 INSERT INTO permisos
 (modulo, accion, descripcion)
 VALUES
@@ -724,7 +649,6 @@ select * from permisos;
 select * from roles;
 select * from roles_permisos;
 
-<<<<<<< Updated upstream
 -- luego dar en roles_permisos al administrador a todos estos permisos
 select * from configuracion
 select * from usuarios
@@ -766,5 +690,3 @@ inner join socios on socios.id=movimientos.socio_id
 group by movimientos.periodo_id order by 1  
 ;
 
-=======
->>>>>>> Stashed changes

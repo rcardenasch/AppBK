@@ -10,13 +10,13 @@
 
     <ul class="nav flex-column">
         <!-- SECCIÓN: PRINCIPAL -->
-         {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
+        {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
         <li class="nav-item">
             <a href="{{ url_for('dashboard.index') }}" class="nav-link">
                 <i class="bi bi-speedometer2"></i> Dashboard
             </a>
         </li>
-        
+
         <!-- SEPARATOR: usuarios -->
         <!-- border-secondary hace que la línea divisoria también sea visible en fondo oscuro -->
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
@@ -67,6 +67,16 @@
             </a>
         </li>
         <li class="nav-item">
+            <a href="{{ url_for('acciones.index', socio_id=1) }}" class="nav-link">
+                <i class="bi bi-people"></i> Acciones
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('prestamos.index') }}" class="nav-link">
+                <i class="bi bi-people"></i> Prestamos
+            </a>
+        </li>
+        <li class="nav-item">
             <a href="{{ url_for('periodos.index') }}" class="nav-link">
                 <i class="bi bi-calendar-event"></i> Periodos
             </a>
@@ -113,7 +123,7 @@
             </a>
         </li>
 
-        
+
         <!-- SEPARATOR: CONFIGURACIÓN -->
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
             <span class="nav-link text-light small fw-bold text-uppercase pb-1 opacity-75"
@@ -134,7 +144,7 @@
             </a>
         </li>
     </ul>
-    
+
     <div class="sidebar-footer mt-auto">
         <div class="card border-0 bg-primary text-white">
             <div class="card-body">

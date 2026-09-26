@@ -937,7 +937,7 @@ def confirmar_transferencias(periodo_id):
 
             "total":
                 float(total),
-            "redirect_url": f"/distribucion/simulacion_transferencias/{periodo_id}"  # Corregido con F-string
+            "redirect_url": f"/distribucion/transferencias/visor/{periodo_id}"  # Corregido con F-string
         })
 
 
