@@ -87,9 +87,11 @@
                         Préstamo
                     </label>
 
-                    <select name="prestamo_id" id="prestamo_id" class="form-select">
-                        <input type="hidden" id="accion_id" value="{{ accion.id }}">
-                        <option value="" disabled selected>
+                    <input type="hidden" id="accion_id" value="{{ accion.id }}">
+
+                    <select name="prestamo_id" id="prestamo_id" class="form-select" required>
+
+                        <option value="" selected disabled>
                             -- Seleccione --
                         </option>
 
@@ -100,12 +102,10 @@
                         {% for p in prestamos %}
 
                         <option value="{{ p.id }}">
-
                             Préstamo {{ p.id }}
                             -
                             Saldo actual:
                             S/ {{ "{:,.2f}".format(p.saldo_actual or 0) }}
-
                         </option>
 
                         {% endfor %}
@@ -399,9 +399,9 @@
 
     const infoInteres =
         document.getElementById("infoInteres");
-    
+
     const accionId =
-    document.getElementById("accion_id").value;
+        document.getElementById("accion_id").value;
 
 
     /* ==========================================================
