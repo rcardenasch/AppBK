@@ -643,24 +643,16 @@ def saldos_iniciales():
 
     try:
 
-        # NUEVO: Capturar los IDs opcionales desde la URL (?socio_id=X&accion_id=Y)
-        socio_seleccionado = request.args.get("socio_id", type=int)
-        accion_seleccionada = request.args.get("accion_id", type=int)
-
-        config = (db.query(Configuracion)
-            .filter(Configuracion.estado==True)
-            .first()
-        )
-
-        periodo = (db.query(Periodo)
-            .filter(Periodo.cerrado==False)
+        config = (
+            db.query(Configuracion)
+            .filter(Configuracion.estado == True)
             .first()
         )
 
         if not config:
 
             flash(
-                "Debe actualizar la configuración del sistema.",
+                "Debe configurar el sistema antes de registrar saldos iniciales.",
                 "danger"
             )
 
@@ -670,97 +662,140 @@ def saldos_iniciales():
 
         if request.method == "POST":
 
-            accion_id = int(request.form["accion_id"])
-            monto = Decimal(request.form["monto"])
-            accion = (db.query(Accion).filter(Accion.id == accion_id).first())
+            accion_id = request.form.get(
+                "accion_id",
+                type=int
+            )
+
+            saldo_inicial = Decimal(
+                request.form.get(
+                    "saldo_inicial",
+                    "0"
+                ) or "0"
+            )
+
+            if not accion_id:
+
+                flash(
+                    "Debe seleccionar una acción.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "prestamos.saldos_iniciales"
+                    )
+                )
+
+            if saldo_inicial <= 0:
+
+                flash(
+                    "El saldo inicial debe ser mayor que cero.",
+                    "danger"
+                )
+
+                return redirect(
+                    url_for(
+                        "prestamos.saldos_iniciales"
+                    )
+                )
+
+            accion = (
+                db.query(Accion)
+                .filter(
+                    Accion.id == accion_id,
+                    Accion.estado == "ACTIVO"
+                )
+                .first()
+            )
+
             if not accion:
-                flash("Acción no encontrada.","danger")
-                return redirect(
-                    url_for("prestamos.nuevo")
-                )
-           
-            saldo_anterior = Decimal(
-                request.form.get("saldo_anterior", "0") or "0"
-            )
 
-            monto = Decimal(
-                request.form.get("monto", "0") or "0"
-            )
-
-            tiene_anterior = (
-                request.form.get("saldo_anterior") is not None
-                and saldo_anterior > 0
-            )
-
-            # No permitir valores negativos
-            if monto < 0:
                 flash(
-                    "El monto del préstamo no puede ser negativo.",
+                    "La acción seleccionada no existe o no está activa.",
                     "danger"
                 )
+
                 return redirect(
-                    url_for("prestamos.nuevo")
+                    url_for(
+                        "prestamos.saldos_iniciales"
+                    )
                 )
 
-            if saldo_anterior < 0:
+            # ==================================================
+            # EVITAR DUPLICAR SALDO INICIAL
+            # ==================================================
+
+            saldo_existente = (
+                db.query(Prestamo)
+                .filter(
+                    Prestamo.accion_id == accion.id,
+                    Prestamo.periodo_id.is_(None),
+                    Prestamo.estado == "ACTIVO"
+                )
+                .first()
+            )
+
+            if saldo_existente:
+
                 flash(
-                    "El saldo anterior no puede ser negativo.",
-                    "danger"
-                )
-                return redirect(
-                    url_for("prestamos.nuevo")
+                    "Esta acción ya tiene un saldo inicial registrado.",
+                    "warning"
                 )
 
-            # Debe existir al menos una deuda
-            if monto == 0 and saldo_anterior == 0:
-                flash(
-                    "Debe ingresar un monto de préstamo o un saldo pendiente del período anterior.",
-                    "danger"
-                )
                 return redirect(
-                    url_for("prestamos.nuevo")
+                    url_for(
+                        "prestamos.saldos_iniciales"
+                    )
                 )
-            
-            cuota_minima = PrestamoService.calcular_cuota_minima(
-                saldo_anterior + monto
-             )
 
-            deuda_total = saldo_anterior + monto
+            # ==================================================
+            # CREAR SALDO INICIAL
+            # ==================================================
+
             prestamo = Prestamo(
 
                 socio_id=accion.socio_id,
                 accion_id=accion.id,
+                # IMPORTANTE:
+                # NULL = saldo de apertura
                 periodo_id=None,
                 fecha_prestamo=date.today(),
-                monto=monto,
-                # deuda total
-                saldo_actual = deuda_total,
-                # SOLO el saldo heredado genera interés
-                saldo_interes = 0,
+                monto=saldo_inicial,
+                saldo_actual=saldo_inicial,
+                saldo_interes=Decimal("0.00"),
                 tasa_interes=config.interes_mensual,
-                cuota_minima=cuota_minima,
+                cuota_minima=PrestamoService.calcular_cuota_minima(
+                    saldo_inicial
+                ),
+
                 estado="ACTIVO"
             )
-            
+
             db.add(prestamo)
 
             db.commit()
 
             flash(
-                "Saldo inicial de prestamos registrado correctamente.",
+                (
+                    f"Saldo inicial registrado correctamente. "
+                    f"Acción {accion.numero_accion}: "
+                    f"S/ {saldo_inicial:,.2f}"
+                ),
                 "success"
             )
 
             return redirect(
-                url_for("prestamos.index")
+                url_for(
+                    "prestamos.saldos_iniciales"
+                )
             )
 
-        # ==========================
+        # ==================================================
         # GET
-        # ==========================
+        # ==================================================
 
         socios = (
-
             db.query(Socio)
             .filter(
                 Socio.estado == True
@@ -769,12 +804,10 @@ def saldos_iniciales():
                 Socio.nombres
             )
             .all()
-
         )
 
         acciones = (
             db.query(Accion)
-            .join(Accion.socio)
             .options(
                 joinedload(Accion.socio)
             )
@@ -782,21 +815,31 @@ def saldos_iniciales():
                 Accion.estado == "ACTIVO"
             )
             .order_by(
-                Socio.nombres,
                 Accion.numero_accion
             )
             .all()
         )
-        return render_template(
 
-            "prestamos/nuevo.html",
+        return render_template(
+            "prestamos/saldos_iniciales.html",
             socios=socios,
             acciones=acciones,
-            interes=config.interes_mensual,
-            # NUEVO: Enviamos las variables a la plantilla HTML
-            socio_seleccionado=socio_seleccionado,
-            accion_seleccionada=accion_seleccionada
+            interes=config.interes_mensual
+        )
 
+    except Exception as e:
+
+        db.rollback()
+
+        flash(
+            f"Error al registrar saldo inicial: {str(e)}",
+            "danger"
+        )
+
+        return redirect(
+            url_for(
+                "prestamos.saldos_iniciales"
+            )
         )
 
     finally:

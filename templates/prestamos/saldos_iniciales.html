@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid">
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="mb-1">
+            <i class="bi bi-wallet2"></i>
+            Saldos iniciales de préstamos
+        </h4>
+        <small class="text-muted">
+            Registre la deuda pendiente con la que se inicia el sistema.
+        </small>
+    </div>
+
+    <a href="{{ url_for('prestamos.index') }}"
+       class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i>
+        Volver
+    </a>
+</div>
+
+<div class="row">
+
+    <!-- FORMULARIO -->
+    <div class="col-lg-7">
+
+        <div class="card shadow-sm">
+
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-plus-circle"></i>
+                    Registrar saldo inicial
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                <form method="POST"
+                      action="{{ url_for('prestamos.saldos_iniciales') }}">
+
+                    <!-- SOCIO -->
+                    <div class="mb-3">
+
+                        <label class="form-label fw-semibold">
+                            Socio
+                        </label>
+
+                        <select
+                            id="socio_id"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="">
+                                Seleccione un socio
+                            </option>
+
+                            {% for socio in socios %}
+
+                            <option value="{{ socio.id }}"
+                                {% if socio_seleccionado == socio.id %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ socio.nombres }}
+                                {% if socio.documento %}
+                                    - {{ socio.documento }}
+                                {% endif %}
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <!-- ACCIÓN -->
+                    <div class="mb-3">
+
+                        <label class="form-label fw-semibold">
+                            Acción
+                        </label>
+
+                        <select
+                            id="accion_id"
+                            name="accion_id"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="">
+                                Primero seleccione un socio
+                            </option>
+
+                            {% for accion in acciones %}
+
+                            <option
+                                value="{{ accion.id }}"
+                                data-socio="{{ accion.socio_id }}"
+                                {% if accion_seleccionada == accion.id %}
+                                    selected
+                                {% endif %}
+                            >
+                                Acción {{ accion.numero_accion }}
+                                -
+                                {{ accion.socio.nombres }}
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <!-- SALDO -->
+                    <div class="mb-3">
+
+                        <label class="form-label fw-semibold">
+                            Saldo de préstamo al inicio del sistema
+                        </label>
+
+                        <div class="input-group">
+
+                            <span class="input-group-text">
+                                S/
+                            </span>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                name="saldo_inicial"
+                                id="saldo_inicial"
+                                class="form-control"
+                                placeholder="0.00"
+                                required
+                            >
+
+                        </div>
+
+                        <div class="form-text">
+                            Este importe será el saldo pendiente con el
+                            que comenzará la acción.
+                        </div>
+
+                    </div>
+
+                    <!-- INTERÉS -->
+                    <div class="mb-3">
+
+                        <label class="form-label fw-semibold">
+                            Tasa de interés mensual
+                        </label>
+
+                        <div class="input-group">
+
+                            <input
+                                type="text"
+                                class="form-control bg-light"
+                                value="{{ interes }}"
+                                readonly
+                            >
+
+                            <span class="input-group-text">
+                                %
+                            </span>
+
+                        </div>
+
+                        <div class="form-text">
+                            Se utilizará la configuración vigente para
+                            calcular los intereses de los siguientes
+                            períodos.
+                        </div>
+
+                    </div>
+
+                    <hr>
+
+                    <div class="alert alert-info">
+
+                        <div class="d-flex">
+
+                            <i class="bi bi-info-circle fs-4 me-2"></i>
+
+                            <div>
+                                <strong>Saldo inicial</strong>
+
+                                <div class="small mt-1">
+                                    Este registro no pertenece a un
+                                    período mensual. Se utilizará como
+                                    deuda de apertura cuando se genere
+                                    el primer período del sistema.
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+
+                        <a
+                            href="{{ url_for('prestamos.index') }}"
+                            class="btn btn-secondary"
+                        >
+                            Cancelar
+                        </a>
+
+                        <button
+                            type="submit"
+                            class="btn btn-success"
+                        >
+                            <i class="bi bi-check-circle"></i>
+                            Registrar saldo inicial
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- AYUDA -->
+    <div class="col-lg-5">
+
+        <div class="card shadow-sm">
+
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-question-circle"></i>
+                    ¿Qué es un saldo inicial?
+                </h6>
+            </div>
+
+            <div class="card-body">
+
+                <p class="small text-muted">
+                    Utilice esta opción cuando el sistema comienza a
+                    funcionar y ya existen préstamos pendientes cuyo
+                    historial no se encuentra registrado.
+                </p>
+
+                <div class="border rounded p-3 mb-3">
+
+                    <div class="small text-muted">
+                        Ejemplo
+                    </div>
+
+                    <div class="fw-semibold">
+                        Acción 38
+                    </div>
+
+                    <div class="fs-4">
+                        S/ 17,207.00
+                    </div>
+
+                </div>
+
+                <p class="small mb-0">
+                    Al registrar este importe, el sistema lo considerará
+                    como saldo de préstamo de apertura. Las amortizaciones
+                    posteriores podrán afectar este saldo.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const socio = document.getElementById("socio_id");
+    const accion = document.getElementById("accion_id");
+
+    function filtrarAcciones() {
+
+        const socioId = socio.value;
+
+        Array.from(accion.options).forEach(function (option) {
+
+            if (!option.value) {
+                option.hidden = false;
+                return;
+            }
+
+            option.hidden =
+                option.dataset.socio !== socioId;
+
+        });
+
+        /*
+         * Si la acción actualmente seleccionada
+         * pertenece a otro socio, limpiarla.
+         */
+        const seleccionada = accion.options[accion.selectedIndex];
+
+        if (
+            seleccionada &&
+            seleccionada.value &&
+            seleccionada.dataset.socio !== socioId
+        ) {
+            accion.value = "";
+        }
+    }
+
+    socio.addEventListener("change", filtrarAcciones);
+
+    filtrarAcciones();
+
+});
+
+</script>
+
+{% endblock %}
