@@ -29,7 +29,7 @@ class Prestamo(Base):
     periodo = relationship("Periodo",back_populates="prestamos")
 
 
-    periodo_id = Column(Integer,ForeignKey("periodos.id"), nullable=False)
+    periodo_id = Column(Integer,ForeignKey("periodos.id"), nullable=True) #Debe permitir null para iniciar con saldo de años anteriores
 
     @property
     def porcentaje_pagado(self):

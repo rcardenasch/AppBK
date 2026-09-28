@@ -182,6 +182,10 @@ CREATE TABLE prestamos (
 -- Índices optimizados
 CREATE INDEX ix_prestamos_id ON prestamos(id);
 
+-- 
+ALTER TABLE prestamos
+ALTER COLUMN periodo_id DROP NOT NULL;
+
 --
 CREATE TABLE asistencias (
     id SERIAL PRIMARY KEY,

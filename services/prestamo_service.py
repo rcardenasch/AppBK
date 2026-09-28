@@ -89,18 +89,31 @@ class PrestamoService:
         # IMPORTANTE:
         # Se relaciona con Periodo para comparar
         # AÑO + MES, no simplemente el ID.
+        # Se considera el escenario de periodo_id=null para apertura de nuevo periodo
         # =====================================================
 
         prestamos = (
             db.query(Prestamo)
-            .join(
+            .outerjoin(
                 Periodo,
                 Prestamo.periodo_id == Periodo.id
             )
             .filter(
                 Prestamo.accion_id == accion_id,
                 or_(
+                    # ==================================================
+                    # SALDO DE APERTURA
+                    # ==================================================
+                    # periodo_id NULL significa que este préstamo
+                    # existía antes de iniciar el historial del sistema.
+                    # ==================================================
+                    Prestamo.periodo_id.is_(None),
+
+                    # ==================================================
+                    # PRÉSTAMOS DE PERÍODOS ANTERIORES
+                    # ==================================================
                     Periodo.anio < periodo_actual.anio,
+
                     and_(
                         Periodo.anio == periodo_actual.anio,
                         Periodo.mes < periodo_actual.mes
@@ -113,7 +126,6 @@ class PrestamoService:
             )
             .all()
         )
-
         # =====================================================
         # SUMAR SALDOS DE TODOS LOS PRÉSTAMOS ANTERIORES
         # =====================================================
@@ -816,6 +828,7 @@ class PrestamoService:
             .filter(
                 Prestamo.accion_id == accion_id,
                 or_(
+                    Prestamo.periodo_id.is_(None),
                     Periodo.anio < periodo.anio,
                     and_(
                         Periodo.anio == periodo.anio,

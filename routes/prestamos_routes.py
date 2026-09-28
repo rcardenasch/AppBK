@@ -629,6 +629,180 @@ def cancelar(id):
 
         db.close()
 
+
+#
+# Generar Saldos Iniciales
+@prestamos_bp.route(
+    "/saldos-iniciales",
+    methods=["GET", "POST"]
+)
+@login_required
+def saldos_iniciales():
+
+    db = SessionLocal()
+
+    try:
+
+        # NUEVO: Capturar los IDs opcionales desde la URL (?socio_id=X&accion_id=Y)
+        socio_seleccionado = request.args.get("socio_id", type=int)
+        accion_seleccionada = request.args.get("accion_id", type=int)
+
+        config = (db.query(Configuracion)
+            .filter(Configuracion.estado==True)
+            .first()
+        )
+
+        periodo = (db.query(Periodo)
+            .filter(Periodo.cerrado==False)
+            .first()
+        )
+
+        if not config:
+
+            flash(
+                "Debe actualizar la configuración del sistema.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("configuracion.index")
+            )
+
+        if request.method == "POST":
+
+            accion_id = int(request.form["accion_id"])
+            monto = Decimal(request.form["monto"])
+            accion = (db.query(Accion).filter(Accion.id == accion_id).first())
+            if not accion:
+                flash("Acción no encontrada.","danger")
+                return redirect(
+                    url_for("prestamos.nuevo")
+                )
+           
+            saldo_anterior = Decimal(
+                request.form.get("saldo_anterior", "0") or "0"
+            )
+
+            monto = Decimal(
+                request.form.get("monto", "0") or "0"
+            )
+
+            tiene_anterior = (
+                request.form.get("saldo_anterior") is not None
+                and saldo_anterior > 0
+            )
+
+            # No permitir valores negativos
+            if monto < 0:
+                flash(
+                    "El monto del préstamo no puede ser negativo.",
+                    "danger"
+                )
+                return redirect(
+                    url_for("prestamos.nuevo")
+                )
+
+            if saldo_anterior < 0:
+                flash(
+                    "El saldo anterior no puede ser negativo.",
+                    "danger"
+                )
+                return redirect(
+                    url_for("prestamos.nuevo")
+                )
+
+            # Debe existir al menos una deuda
+            if monto == 0 and saldo_anterior == 0:
+                flash(
+                    "Debe ingresar un monto de préstamo o un saldo pendiente del período anterior.",
+                    "danger"
+                )
+                return redirect(
+                    url_for("prestamos.nuevo")
+                )
+            
+            cuota_minima = PrestamoService.calcular_cuota_minima(
+                saldo_anterior + monto
+             )
+
+            deuda_total = saldo_anterior + monto
+            prestamo = Prestamo(
+
+                socio_id=accion.socio_id,
+                accion_id=accion.id,
+                periodo_id=None,
+                fecha_prestamo=date.today(),
+                monto=monto,
+                # deuda total
+                saldo_actual = deuda_total,
+                # SOLO el saldo heredado genera interés
+                saldo_interes = 0,
+                tasa_interes=config.interes_mensual,
+                cuota_minima=cuota_minima,
+                estado="ACTIVO"
+            )
+            
+            db.add(prestamo)
+
+            db.commit()
+
+            flash(
+                "Saldo inicial de prestamos registrado correctamente.",
+                "success"
+            )
+
+            return redirect(
+                url_for("prestamos.index")
+            )
+
+        # ==========================
+        # GET
+        # ==========================
+
+        socios = (
+
+            db.query(Socio)
+            .filter(
+                Socio.estado == True
+            )
+            .order_by(
+                Socio.nombres
+            )
+            .all()
+
+        )
+
+        acciones = (
+            db.query(Accion)
+            .join(Accion.socio)
+            .options(
+                joinedload(Accion.socio)
+            )
+            .filter(
+                Accion.estado == "ACTIVO"
+            )
+            .order_by(
+                Socio.nombres,
+                Accion.numero_accion
+            )
+            .all()
+        )
+        return render_template(
+
+            "prestamos/nuevo.html",
+            socios=socios,
+            acciones=acciones,
+            interes=config.interes_mensual,
+            # NUEVO: Enviamos las variables a la plantilla HTML
+            socio_seleccionado=socio_seleccionado,
+            accion_seleccionada=accion_seleccionada
+
+        )
+
+    finally:
+
+        db.close()
+
 #AJAX
 @prestamos_bp.route(
     "/acciones/<int:socio_id>"
