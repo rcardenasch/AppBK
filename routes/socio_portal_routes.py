@@ -184,7 +184,11 @@ def mi_estado_cuenta(periodo_Id):
             .filter(
                 Prestamo.socio_id == socio.id,
                 Prestamo.estado == "ACTIVO",
-                Prestamo.periodo_id<=periodo_Id
+                or_(
+                    Prestamo.periodo_id.is_(None),
+                    Prestamo.periodo_id <= periodo_Id
+                )
+                #Prestamo.periodo_id<=periodo_Id
             )
             .order_by(
                 Prestamo.id.desc()
