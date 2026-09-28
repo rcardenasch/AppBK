@@ -141,12 +141,18 @@
                     </thead>
                     <tbody>
 
-                        {% for p in accion.prestamos |sort(reverse=True, attribute='periodo.id') %}
+                        {% for p in accion.prestamos |sort(reverse=True, attribute='fecha_prestamo') %}
                         <tr>
                             <td>
+                                {% if p.periodo %}
                                 <span class="badge bg-warning">
-                                    {{p.periodo.anio}}-{{"%02d"|format(p.periodo.mes)}}
+                                    {{ p.periodo.anio }}-{{ "%02d"|format(p.periodo.mes) }}
                                 </span>
+                                {% else %}
+                                <span class="badge bg-info">
+                                    Saldo inicial
+                                </span>
+                                {% endif %}
                             </td>
 
                             <td class="celda-monto">
@@ -258,7 +264,8 @@
                                         <i class="bi bi-pencil"></i>
                                     </button>
 
-                                    <button type="button" class="btn btn-outline-danger disabled btn-eliminar-movimiento"
+                                    <button type="button"
+                                        class="btn btn-outline-danger disabled btn-eliminar-movimiento"
                                         data-id="{{ m.id }}" title="Eliminar movimiento" disabled>
                                         <i class="bi bi-trash"></i>
                                     </button>
