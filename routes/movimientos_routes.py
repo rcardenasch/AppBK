@@ -398,47 +398,20 @@ def api_movimiento(id):
 
             "ok": True,
             "movimiento": {
-                "id":
-                    movimiento.id,
-                "socio_id":
-                    movimiento.socio_id,
-                "accion_id":
-                    movimiento.accion_id,
-                "periodo_id":
-                    movimiento.periodo_id,
-                "prestamo_id":
-                    movimiento.prestamo_id,
-                "aporte":
-                    float(
-                        movimiento.aporte or 0
-                    ),
-                "cuota_pagada":
-                    float(
-                        movimiento.cuota_pagada or 0
-                    ),
-                "multa":
-                    float(
-                        movimiento.multa or 0
-                    ),
-                "sobre":
-                    float(
-                        movimiento.sobre or 0
-                    ),
-                "interes":
-                    float(
-                        movimiento.interes or 0
-                    ),
-                "amortizacion":
-                    float(
-                        movimiento.amortizacion or 0
-                    ),
-                "saldo_prestamo":
-                    float(
-                        movimiento.saldo_prestamo or 0
-                    ),
-                "observacion":
-                    movimiento.observacion or ""
-            }
+                "id":movimiento.id,
+                "socio_id": movimiento.socio_id,
+                "accion_id": movimiento.accion_id,
+                "periodo_id": movimiento.periodo_id,
+                "prestamo_id": movimiento.prestamo_id,
+                "aporte": float(movimiento.aporte or 0),
+                "cuota_pagada": float(movimiento.cuota_pagada or 0),
+                "multa": float(movimiento.multa or 0),
+                "sobre": float(movimiento.sobre or 0),
+                "interes": float(movimiento.interes or 0),
+                "amortizacion": float(movimiento.amortizacion or 0),
+                "saldo_prestamo": float(movimiento.saldo_prestamo or 0),
+                "observacion": movimiento.observacion or ""
+                }
 
         })
 
@@ -495,12 +468,12 @@ def api_accion(accion_id):
         ).quantize(
             Decimal("0.01")
         )
+        
 
 
         # =====================================================
         # PERÍODO
         # =====================================================
-
         periodo_id = request.args.get(
             "periodo_id",
             type=int
@@ -511,7 +484,6 @@ def api_accion(accion_id):
             return jsonify({
 
                 "ok": False,
-
                 "error":
                     "Debe indicar el período."
             }), 400
@@ -550,52 +522,39 @@ def api_accion(accion_id):
         # - Generar período
         # =====================================================
 
-        resumen = (
-            PrestamoService.obtener_resumen_deuda_accion(
+        saldo_apertura = (
+            PrestamoService.obtener_saldo_apertura_accion(
                 db=db,
                 accion_id=accion_id,
                 periodo_id=periodo_id
             )
         )
 
+        multa_anterior = (
+            MovimientoService.obtener_multa_periodo_anterior_accion(
+                db=db,
+                accion_id=accion_id,
+                periodo_id=periodo_id
+            )
+        )
+
+        deuda_total = (
+            Decimal(str(saldo_apertura or 0))
+            + Decimal(str(multa_anterior or 0))
+        ).quantize(Decimal("0.01"))
 
         return jsonify({
 
             "ok": True,
-            "accion_id":
-                accion_id,
-            "periodo_id":
-                periodo_id,
-            "saldo":
-                float(
-                    resumen["saldo_base"]
-                ),
-            "saldo_apertura":
-                float(
-                    resumen["saldo_apertura"]
-                ),
-            "multa_periodo_anterior":
-                float(
-                    resumen[
-                        "multa_periodo_anterior"
-                    ]
-                ),
-            "saldo_base":
-                float(
-                    resumen["saldo_base"]
-                ),
-            "interes":
-                float(
-                    resumen["interes"]
-                ),
-            "aporte":
-                float(
-                    aporte_min
-                ),
-            "cuota":
-                float(
-                    resumen["cuota"]
-                )
+            "accion_id": accion_id,
+            "periodo_id": periodo_id,
+            "saldo": float(deuda_total),
+            "saldo_apertura": float( saldo_apertura),
+            "multa_periodo_anterior": float(multa_anterior),
+            "saldo_base":float(deuda_total),
+            "interes":float(config.interes_mensual),
+            "aporte": float(aporte_min),
+            #"cuota": float()
         })
 
 
@@ -1621,6 +1580,7 @@ def eliminar_movimiento(id):
                     periodo_id
                 )
             )
+            
 
             prestamo.saldo_actual = saldo_apertura
 
