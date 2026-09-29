@@ -83,6 +83,7 @@ def nuevo():
                 metodo_distribucion=request.form["metodo_distribucion"],
                 multa_tardanza=float(request.form["multa_tardanza"]),
                 multa_falta=float(request.form["multa_falta"]),
+                multa_no_transferir=float(request.form["multa_no_transferir"]),
                 estado=estado_bool
             )
             
@@ -126,6 +127,7 @@ def editar(id):
             config.metodo_distribucion = request.form["metodo_distribucion"]
             config.multa_tardanza = float(request.form["multa_tardanza"])
             config.multa_falta = float(request.form["multa_falta"])
+            config.multa_no_transferir=float(request.form["multa_no_transferir"])
             config.estado = estado_bool
 
             db.commit()

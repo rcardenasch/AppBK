@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from flask import Blueprint, session
 from flask import jsonify
-from sqlalchemy import func
+from sqlalchemy import and_, func, or_
 
 from models.asistencia import Asistencia
 from models.movimiento import Movimiento
@@ -724,26 +724,64 @@ def precierre(periodo_id):
             # 2. SALDO ACTUAL DE LOS PRÉSTAMOS
             #
             # IMPORTANTE:
-            # Este saldo YA es posterior a la amortización.
+            # El saldo inicial tiene periodo_id = NULL.
+            #
+            # Por eso debemos considerar:
+            #
+            #   1. préstamos con periodo_id = NULL
+            #   2. préstamos de años anteriores
+            #   3. préstamos de meses anteriores
+            #
+            # NO se consideran préstamos creados en el período
+            # actual porque el saldo del movimiento corresponde
+            # a la deuda que existía al inicio del período.
             # =================================================
 
             saldo_prestamos = (
                 db.query(
                     func.coalesce(
-                        func.sum(Prestamo.saldo_actual),
+                        func.sum(
+                            Prestamo.saldo_actual
+                        ),
                         0
                     )
                 )
+                .outerjoin(
+                    Periodo,
+                    Prestamo.periodo_id == Periodo.id
+                )
                 .filter(
                     Prestamo.accion_id == m.accion_id,
-                    Prestamo.periodo_id < periodo_id,
+
+                    or_(
+                        # -----------------------------------------
+                        # SALDO INICIAL
+                        # -----------------------------------------
+                        Prestamo.periodo_id.is_(None),
+
+                        # -----------------------------------------
+                        # AÑOS ANTERIORES
+                        # -----------------------------------------
+                        Periodo.anio < periodo.anio,
+
+                        # -----------------------------------------
+                        # MESES ANTERIORES DEL MISMO AÑO
+                        # -----------------------------------------
+                        and_(
+                            Periodo.anio == periodo.anio,
+                            Periodo.mes < periodo.mes
+                        )
+                    ),
+
                     Prestamo.saldo_actual > 0
                 )
                 .scalar()
             )
 
             saldo_prestamos = Decimal(
-                str(saldo_prestamos or 0)
+                str(
+                    saldo_prestamos or 0
+                )
             ).quantize(
                 Decimal("0.01")
             )
@@ -763,6 +801,24 @@ def precierre(periodo_id):
 
             multa_anterior = Decimal(
                 str(multa_anterior or 0)
+            ).quantize(
+                Decimal("0.01")
+            )
+
+            # =================================================
+            # AMORTIZACIÓN QUE REALMENTE REDUJO CAPITAL
+            # =================================================
+
+            pago_multa = min(
+                amortizacion,
+                multa_anterior
+            ).quantize(
+                Decimal("0.01")
+            )
+
+            amortizacion_capital = (
+                amortizacion -
+                pago_multa
             ).quantize(
                 Decimal("0.01")
             )
@@ -794,7 +850,7 @@ def precierre(periodo_id):
 
             saldo_apertura_capital = (
                 saldo_prestamos +
-                amortizacion
+                amortizacion_capital
             ).quantize(
                 Decimal("0.01")
             )
@@ -826,7 +882,7 @@ def precierre(periodo_id):
 
             saldo_esperado = (
                 saldo_apertura_capital -
-                amortizacion
+                amortizacion_capital
             ).quantize(
                 Decimal("0.01")
             )
@@ -1159,7 +1215,7 @@ def precierre(periodo_id):
 
 
         # =====================================================
-        # 11. PRÉSTAMOS DEL PERÍODO
+        # 11. PRÉSTAMOS ACTIVOS DEL PERÍODO
         # =====================================================
 
         prestamos_periodo = (
@@ -1167,6 +1223,7 @@ def precierre(periodo_id):
             .filter(
                 Prestamo.periodo_id ==
                 periodo_id,
+                Prestamo.estado=='ACTIVO',
 
                 Prestamo.monto > 0
             )

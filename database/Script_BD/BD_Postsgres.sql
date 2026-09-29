@@ -516,16 +516,18 @@ select * from fondo_utilidades;
 
 select * from configuracion;
 select * from prestamos where socio_id=2  order by 1 desc; 
-select * from movimientos where socio_id=4 order by 1 desc; 
+select * from movimientos where id=121 order by 1 desc; 
 
 select * from prestamos order by 1 desc;
 
 select * from solicitudes_prestamo; 
 select * from transferencias;
 
-select * from acciones WHERE SOCIO_ID=8;
-select * from prestamos where socio_id=8
-SELECT * FROM movimientos WHERE SOCIO_ID=8;
+select * from acciones WHERE SOCIO_ID=20;
+select * from prestamos where socio_id=19
+SELECT * FROM movimientos WHERE SOCIO_ID=20;
+
+-- Periodo 2026-01, cerrado correctamente. Movimientos: 48. Saldo de caja: S/ -9819.40. Utilidad: S/ 3851.00.
 
 SELECT * FROM prestamos where prestamos.accion_id=27;
 select * from acciones;
