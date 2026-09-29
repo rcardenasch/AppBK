@@ -7,7 +7,7 @@ from flask import flash
 from decimal import Decimal
 
 from flask_login import login_required
-from sqlalchemy import func
+from sqlalchemy import and_, func, or_
 
 from database.connection import SessionLocal
 from services.cierre_service import CierreService
@@ -574,104 +574,6 @@ def api_accion(accion_id):
 
 
 # ============================================================
-# RECALCULA DESDE MOVIMIENTO
-# ============================================================
-@staticmethod
-def recalcular_desde_movimientos(db, prestamo_id):
-
-    movimientos = (
-        db.query(Movimiento)
-        .filter(
-            Movimiento.prestamo_id == prestamo_id
-        )
-        .order_by(
-            Movimiento.periodo_id.asc(),
-            Movimiento.id.asc()
-        )
-        .all()
-    )
-
-    prestamo = (
-        db.query(Prestamo)
-        .filter(
-            Prestamo.id == prestamo_id
-        )
-        .first()
-    )
-
-    if not prestamo:
-        raise Exception(
-            "Préstamo no encontrado."
-        )
-
-    # =====================================================
-    # SALDO INICIAL DEL PRÉSTAMO
-    # =====================================================
-
-    saldo = Decimal(
-        str(prestamo.monto or 0)
-    )
-
-    # =====================================================
-    # RECORRER MOVIMIENTOS EN ORDEN
-    # =====================================================
-
-    for movimiento in movimientos:
-
-        resultado = (
-            PrestamoService.calcular_pago_sobre_saldo(
-                db,
-                prestamo,
-                saldo,
-                movimiento.aporte,
-                movimiento.cuota_pagada
-            )
-        )
-
-        movimiento.interes = (
-            resultado["interes"]
-        )
-
-        movimiento.amortizacion = (
-            resultado["amortizacion"]
-        )
-
-        movimiento.saldo_prestamo = (
-            resultado["saldo_prestamo"]
-        )
-
-        # El siguiente movimiento parte
-        # del saldo resultante de este.
-        saldo = (
-            resultado["saldo_prestamo"]
-        )
-
-    # =====================================================
-    # ACTUALIZAR PRÉSTAMO
-    # =====================================================
-
-    prestamo.saldo_actual = saldo
-
-    if saldo <= 0:
-
-        prestamo.saldo_actual = Decimal("0.00")
-        #prestamo.saldo_interes = Decimal("0.00")
-        prestamo.estado = "CANCELADO"
-
-    else:
-
-        prestamo.saldo_actual = saldo
-
-        # Para el siguiente período,
-        # el interés se calculará sobre este saldo.
-        #prestamo.saldo_interes = saldo
-
-        prestamo.estado = "ACTIVO"
-
-    return prestamo
-
-
-# ============================================================
 # EDITAR MOVIMIENTO
 # ============================================================
 
@@ -793,6 +695,29 @@ def editar_movimiento(id):
                 "El sobre no puede ser negativo."
             )
 
+
+        # =====================================================
+        # OBTENER PERÍODO
+        # =====================================================
+
+        periodo = (
+            db.query(Periodo)
+            .filter(
+                Periodo.id == movimiento.periodo_id
+            )
+            .first()
+        )
+
+        if not periodo:
+            raise Exception(
+                "Período no encontrado."
+            )
+
+        if periodo.cerrado:
+            raise Exception(
+                "No se puede restaurar un movimiento "
+                "de un período cerrado."
+            )
         # =========================================================
         # 1. RESTAURAR AMORTIZACIÓN ANTERIOR
         # =========================================================
@@ -854,15 +779,35 @@ def editar_movimiento(id):
                         0
                     )
                 )
+                .outerjoin(
+                    Periodo,
+                    Prestamo.periodo_id == Periodo.id
+                )
                 .filter(
                     Prestamo.accion_id == movimiento.accion_id,
-                    Prestamo.periodo_id < movimiento.periodo_id,
+                    or_(
+                        # Saldo inicial
+                        Prestamo.periodo_id.is_(None),
+
+                        # Período anterior
+                        Periodo.anio < periodo.anio,
+
+                        # Mismo año, mes anterior
+                        and_(
+                            Periodo.anio == periodo.anio,
+                            Periodo.mes < periodo.mes
+                        )
+                    ),
                     Prestamo.saldo_actual > 0
                 )
                 .scalar()
             )
 
-            saldo_restaurado = Decimal(str(saldo_restaurado or 0)).quantize(Decimal("0.01"))
+            saldo_restaurado = Decimal(
+                str(saldo_restaurado or 0)
+            ).quantize(
+                Decimal("0.01")
+            )
 
         # =========================================================
         # 3. CALCULAR NUEVO MOVIMIENTO
@@ -1026,16 +971,35 @@ def editar_movimiento(id):
                     0
                 )
             )
+            .outerjoin(
+                Periodo,
+                Prestamo.periodo_id == Periodo.id
+            )
             .filter(
-                Prestamo.accion_id ==
-                movimiento.accion_id,
-                # NO considerar préstamos creados en el
-                # período que se está editando.
-                Prestamo.periodo_id <
-                movimiento.periodo_id,
+                Prestamo.accion_id == movimiento.accion_id,
+
+                or_(
+                    # Saldo inicial
+                    Prestamo.periodo_id.is_(None),
+
+                    # Préstamos anteriores
+                    Periodo.anio < periodo.anio,
+
+                    and_(
+                        Periodo.anio == periodo.anio,
+                        Periodo.mes < periodo.mes
+                    )
+                ),
+
                 Prestamo.saldo_actual > 0
             )
             .scalar()
+        )
+
+        saldo_prestamos = Decimal(
+            str(saldo_prestamos or 0)
+        ).quantize(
+            Decimal("0.01")
         )
 
         saldo_prestamos = Decimal(

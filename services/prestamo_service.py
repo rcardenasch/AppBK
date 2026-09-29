@@ -295,14 +295,25 @@ class PrestamoService:
 
         prestamos = (
             db.query(Prestamo)
-            .join(
+            .outerjoin(
                 Periodo,
                 Prestamo.periodo_id == Periodo.id
             )
             .filter(
                 Prestamo.accion_id == movimiento.accion_id,
                 or_(
+                    # ==================================================
+                    # SALDO INICIAL
+                    # periodo_id = NULL significa deuda heredada
+                    # antes del historial del sistema.
+                    # ==================================================
+                    Prestamo.periodo_id.is_(None),
+
+                    # ==================================================
+                    # PRÉSTAMOS DE PERÍODOS ANTERIORES
+                    # ==================================================
                     Periodo.anio < periodo.anio,
+
                     and_(
                         Periodo.anio == periodo.anio,
                         Periodo.mes < periodo.mes
@@ -607,12 +618,147 @@ class PrestamoService:
 
 
         # =====================================================
-        # 12. RESTAURAR SOLO LA PARTE QUE AFECTÓ AL CAPITAL
+        # 12. DETERMINAR SI REALMENTE HAY QUE RESTAURAR
+        # =====================================================
+        #
+        # IMPORTANTE:
+        #
+        # El movimiento puede haber sido generado masivamente
+        # sin que Prestamo.saldo_actual haya sido modificado
+        # todavía.
+        #
+        # Ejemplo:
+        #
+        #   Capital inicial       = 11860.00
+        #   Amortización anterior =   297.00
+        #   Saldo movimiento      = 11563.00
+        #
+        # En ese escenario:
+        #
+        #   Prestamo.saldo_actual = 11860.00
+        #
+        # Por lo tanto NO debemos hacer:
+        #
+        #   11860 + 297
+        #
+        # porque estaríamos duplicando la restauración.
+        #
+        # En cambio, después de una edición anterior:
+        #
+        #   Prestamo.saldo_actual = 11129.00
+        #   Amortización anterior =   731.00
+        #
+        # entonces:
+        #
+        #   11129 + 731 = 11860
+        #
+        # y sí debemos restaurar.
         # =====================================================
 
-        pendiente = amortizacion_capital_anterior
+        # -----------------------------------------------------
+        # CAPITAL QUE DEBERÍA EXISTIR ANTES DEL MOVIMIENTO
+        # -----------------------------------------------------
+
+        capital_antes_movimiento = (
+            saldo_total_anterior
+            - multa_pendiente_inferida
+        ).quantize(CENTAVOS)
+
+        # La amortización que realmente afectó capital
+        # se suma para reconstruir el capital anterior.
+        capital_esperado_restaurado = (
+            capital_antes_movimiento
+            + amortizacion_capital_anterior
+        ).quantize(CENTAVOS)
+
+        # -----------------------------------------------------
+        # CAPITAL QUE ACTUALMENTE TIENEN LOS PRÉSTAMOS
+        # -----------------------------------------------------
+
+        capital_actual = Decimal("0.00")
+
+        for prestamo in prestamos:
+
+            saldo = Decimal(
+                str(
+                    prestamo.saldo_actual or 0
+                )
+            ).quantize(CENTAVOS)
+
+            if saldo > Decimal("0.00"):
+                capital_actual += saldo
+
+        capital_actual = capital_actual.quantize(CENTAVOS)
+
+
+        print("\n==============================================")
+        print("CONTROL DE RESTAURACIÓN DE CAPITAL")
+        print("==============================================")
+        print(
+            f"Capital esperado antes movimiento : "
+            f"{capital_esperado_restaurado}"
+        )
+        print(
+            f"Capital actualmente registrado    : "
+            f"{capital_actual}"
+        )
+        print(
+            f"Amortización capital anterior     : "
+            f"{amortizacion_capital_anterior}"
+        )
+        print("==============================================\n")
+
+
+        # =====================================================
+        # DETERMINAR CUÁNTO REALMENTE HAY QUE RESTAURAR
+        # =====================================================
+        #
+        # Si el préstamo ya está en el capital anterior:
+        #
+        #   capital_actual >= capital_esperado
+        #
+        # entonces no restauramos nada.
+        #
+        # Si está por debajo:
+        #
+        #   diferencia = capital_esperado - capital_actual
+        #
+        # restauramos solamente esa diferencia.
+        # =====================================================
+
+        diferencia_restaurar = (
+            capital_esperado_restaurado
+            - capital_actual
+        ).quantize(CENTAVOS)
+
+        if diferencia_restaurar < Decimal("0.00"):
+            diferencia_restaurar = Decimal("0.00")
+
+
+        # Nunca restaurar más que la amortización
+        # que realmente afectó capital.
+
+        if diferencia_restaurar > amortizacion_capital_anterior:
+            diferencia_restaurar = (
+                amortizacion_capital_anterior
+            ).quantize(CENTAVOS)
+
+
+        print(
+            f"Diferencia a restaurar             : "
+            f"{diferencia_restaurar}"
+        )
+
+
+        # =====================================================
+        # 13. RESTAURAR SOLAMENTE LA DIFERENCIA NECESARIA
+        # =====================================================
+
+        pendiente = diferencia_restaurar
+
         restaurada = Decimal("0.00")
         prestamos_restaurados = 0
+
 
         for prestamo in prestamos:
 
@@ -647,8 +793,10 @@ class PrestamoService:
                 f"| capital={prestamo.saldo_actual}"
             )
 
+
         pendiente = pendiente.quantize(CENTAVOS)
         restaurada = restaurada.quantize(CENTAVOS)
+
 
         if pendiente > Decimal("0.00"):
             raise Exception(
@@ -657,7 +805,13 @@ class PrestamoService:
                 f"Pendiente: S/ {pendiente}"
             )
 
+
         db.flush()
+
+
+        # =====================================================
+        # SALDO RESTAURADO
+        # =====================================================
 
         saldo_restaurado = (
             db.query(
@@ -668,13 +822,29 @@ class PrestamoService:
                     0
                 )
             )
+            .outerjoin(
+                Periodo,
+                Prestamo.periodo_id == Periodo.id
+            )
             .filter(
                 Prestamo.accion_id == movimiento.accion_id,
-                Prestamo.periodo_id < movimiento.periodo_id,
+                or_(
+                    # SALDO INICIAL
+                    Prestamo.periodo_id.is_(None),
+
+                    # PERÍODOS ANTERIORES
+                    Periodo.anio < periodo.anio,
+
+                    and_(
+                        Periodo.anio == periodo.anio,
+                        Periodo.mes < periodo.mes
+                    )
+                ),
                 Prestamo.saldo_actual > 0
             )
             .scalar()
         )
+
 
         saldo_restaurado = Decimal(
             str(
@@ -682,19 +852,48 @@ class PrestamoService:
             )
         ).quantize(CENTAVOS)
 
+
+        print("\n==============================================")
+        print("RESULTADO RESTAURACIÓN")
+        print("==============================================")
+        print(
+            f"Capital antes de editar : "
+            f"{capital_esperado_restaurado}"
+        )
+        print(
+            f"Capital actual          : "
+            f"{capital_actual}"
+        )
+        print(
+            f"Capital restaurado      : "
+            f"{restaurada}"
+        )
+        print(
+            f"Saldo restaurado        : "
+            f"{saldo_restaurado}"
+        )
+        print("==============================================\n")
+
+
         return {
             "ok": True,
             "accion_id": movimiento.accion_id,
             "periodo_id": movimiento.periodo_id,
+
             "amortizacion_restaurada": restaurada,
-            "prestamos_restaurados": prestamos_restaurados,
-            "saldo_total_restaurado": saldo_restaurado,
 
-            # La multa que fue pagada por la amortización anterior
-            # vuelve a estar pendiente al editar.
-            "saldo_multa_restaurado": multa_pagada_anterior,
+            "prestamos_restaurados":
+                prestamos_restaurados,
 
-            "multa_separada": multa_pagada_anterior,
+            "saldo_total_restaurado":
+                saldo_restaurado,
+
+            "saldo_multa_restaurado":
+                multa_pagada_anterior,
+
+            "multa_separada":
+                multa_pagada_anterior,
+
             "solo_multa": False
         }
 
@@ -821,7 +1020,7 @@ class PrestamoService:
 
         prestamos = (
             db.query(Prestamo)
-            .join(
+            .outerjoin(
                 Periodo,
                 Prestamo.periodo_id == Periodo.id
             )

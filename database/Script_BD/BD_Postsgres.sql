@@ -182,9 +182,7 @@ CREATE TABLE prestamos (
 -- Índices optimizados
 CREATE INDEX ix_prestamos_id ON prestamos(id);
 
--- 
-ALTER TABLE prestamos
-ALTER COLUMN periodo_id DROP NOT NULL;
+
 
 --
 CREATE TABLE asistencias (
@@ -281,6 +279,10 @@ ADD COLUMN saldo_caja NUMERIC(12,2);
 --
 ALTER TABLE prestamos
 ADD COLUMN periodo_id int;
+
+-- 
+ALTER TABLE prestamos
+ALTER COLUMN periodo_id DROP NOT NULL;
 
 -- estado de solicitudes_prestamo
 PENDIENTE
@@ -521,8 +523,9 @@ select * from prestamos order by 1 desc;
 select * from solicitudes_prestamo; 
 select * from transferencias;
 
-select * from acciones WHERE SOCIO_ID=15;
-SELECT * FROM movimientos WHERE SOCIO_ID=15;
+select * from acciones WHERE SOCIO_ID=8;
+select * from prestamos where socio_id=8
+SELECT * FROM movimientos WHERE SOCIO_ID=8;
 
 SELECT * FROM prestamos where prestamos.accion_id=27;
 select * from acciones;
