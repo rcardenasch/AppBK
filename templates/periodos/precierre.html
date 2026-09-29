@@ -12,66 +12,40 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
     <!-- CABECERA -->
     <!-- ========================================================= -->
 
-    <div class="d-flex flex-wrap
-                justify-content-between
-                align-items-center mb-4">
-
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
-
             <div class="d-flex align-items-center gap-2">
-
                 <h3 class="fw-bold mb-0">
                     <i class="bi bi-clipboard2-check text-primary"></i>
                     Precierre de consistencia
                 </h3>
-
-                {% if periodo.cerrado %}
-
-                    <span class="badge bg-secondary">
-                        CERRADO
-                    </span>
-
-                {% else %}
-
-                    <span class="badge bg-success">
-                        ABIERTO
-                    </span>
-
-                {% endif %}
-
             </div>
-
             <p class="text-muted mb-0 mt-1">
-
                 Período
                 <strong>
                     {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
                 </strong>
 
             </p>
+            {% if periodo.cerrado %}
+            <span class="badge bg-secondary">Cerrado</span>
+            {% else %}
+            <span class="badge bg-info">Abierto</span>
+            {% endif %}
 
         </div>
 
         <div class="d-flex gap-2">
 
-            <a href="{{ url_for('periodos.index') }}"
-               class="btn btn-outline-secondary">
-
-                <i class="bi bi-arrow-left"></i>
-                Volver
-            </a>
             {% if puede_cerrar %}
             <a href="{{ url_for('periodos.index') }}">
-                <button type="submit"
-                        class="btn btn-success">
+                <button type="submit" class="btn btn-success">
                     <i class="bi bi-lock-fill"></i>
                     Ir a Cerrar período
                 </button>
             </a>
             {% else %}
-            <button type="button"
-                    class="btn btn-secondary"
-                    disabled>
+            <button type="button" class="btn btn-secondary" disabled>
                 <i class="bi bi-lock"></i>
                 Cierre bloqueado
             </button>
@@ -138,33 +112,33 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
 
     {% if errores == 0 %}
 
-        <div class="alert alert-success border-0 shadow-sm">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-check-circle-fill fs-3 me-3"></i>
-                <div>
-                    <strong> El período supera las validaciones bloqueantes. </strong>
-                    <div class="small">
-                        Puedes revisar las advertencias antes de confirmar
-                        el cierre.
-                    </div>
+    <div class="alert alert-success border-0 shadow-sm">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-check-circle-fill fs-3 me-3"></i>
+            <div>
+                <strong> El período supera las validaciones bloqueantes. </strong>
+                <div class="small">
+                    Puedes revisar las advertencias antes de confirmar
+                    el cierre.
                 </div>
             </div>
         </div>
+    </div>
     {% else %}
-        <div class="alert alert-danger border-0 shadow-sm">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
-                <div>
-                    <strong>
-                        El cierre está bloqueado.
-                    </strong>
-                    <div class="small">
-                        Debes corregir las inconsistencias
-                        marcadas como ERROR.
-                    </div>
+    <div class="alert alert-danger border-0 shadow-sm">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+            <div>
+                <strong>
+                    El cierre está bloqueado.
+                </strong>
+                <div class="small">
+                    Debes corregir las inconsistencias
+                    marcadas como ERROR.
                 </div>
             </div>
         </div>
+    </div>
     {% endif %}
 
     <!-- ========================================================= -->
@@ -188,7 +162,7 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
                         <div class="fs-5 fw-bold text-{{ color }}">
                             S/
                             {{ "{:,.2f}".format(
-                                valor|float
+                            valor|float
                             ) }}
                         </div>
                     </div>
@@ -196,51 +170,51 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
                 {% endmacro %}
 
                 {{ tarjeta(
-                    "Aportes",
-                    resumen.total_aportes,
-                    "success"
+                "Aportes",
+                resumen.total_aportes,
+                "success"
                 ) }}
 
                 {{ tarjeta(
-                    "Cuotas",
-                    resumen.total_cuotas,
-                    "primary"
+                "Cuotas",
+                resumen.total_cuotas,
+                "primary"
                 ) }}
 
                 {{ tarjeta(
-                    "Intereses",
-                    resumen.total_intereses,
-                    "warning"
+                "Intereses",
+                resumen.total_intereses,
+                "warning"
                 ) }}
 
                 {{ tarjeta(
-                    "Amortización",
-                    resumen.total_amortizacion,
-                    "info"
+                "Amortización",
+                resumen.total_amortizacion,
+                "info"
                 ) }}
 
                 {{ tarjeta(
-                    "Multas",
-                    resumen.total_multas,
-                    "danger"
+                "Multas",
+                resumen.total_multas,
+                "danger"
                 ) }}
 
                 {{ tarjeta(
-                    "Sobre",
-                    resumen.total_sobre,
-                    "secondary"
+                "Sobre",
+                resumen.total_sobre,
+                "secondary"
                 ) }}
 
                 {{ tarjeta(
-                    "Saldo préstamos",
-                    resumen.saldo_prestamos,
-                    "danger"
+                "Saldo préstamos",
+                resumen.saldo_prestamos,
+                "danger"
                 ) }}
 
                 {{ tarjeta(
-                    "Transferencias",
-                    resumen.total_transferencias,
-                    "dark"
+                "Transferencias",
+                resumen.total_transferencias,
+                "dark"
                 ) }}
             </div>
         </div>
@@ -288,7 +262,7 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
                     <small class="text-muted">
                         S/
                         {{ "{:,.2f}".format(
-                            resumen.monto_prestamos_periodo|float
+                        resumen.monto_prestamos_periodo|float
                         ) }}
                     </small>
                 </div>
@@ -306,7 +280,7 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
                     <small class="text-muted">
                         S/
                         {{ "{:,.2f}".format(
-                            resumen.monto_aprobado|float
+                        resumen.monto_aprobado|float
                         ) }}
                     </small>
                 </div>
@@ -356,7 +330,7 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
                     </thead>
                     <tbody>
 
-                    {% for v in validaciones %}
+                        {% for v in validaciones %}
 
                         <tr>
 
@@ -364,35 +338,35 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
 
                                 {% if v.estado == "OK" %}
 
-                                    <span class="badge
+                                <span class="badge
                                                  rounded-pill
                                                  bg-success">
 
-                                        <i class="bi bi-check-lg"></i>
-                                        OK
-                                    </span>
+                                    <i class="bi bi-check-lg"></i>
+                                    OK
+                                </span>
 
                                 {% elif v.estado == "WARNING" %}
 
-                                    <span class="badge
+                                <span class="badge
                                                  rounded-pill
                                                  bg-warning text-dark">
 
-                                        <i class="bi bi-exclamation"></i>
-                                        REVISAR
-                                    </span>
+                                    <i class="bi bi-exclamation"></i>
+                                    REVISAR
+                                </span>
 
                                 {% else %}
 
-                                    <span class="badge
+                                <span class="badge
                                                  rounded-pill
                                                  bg-danger">
 
-                                        <i class="bi bi-x-lg"></i>
+                                    <i class="bi bi-x-lg"></i>
 
-                                        ERROR
+                                    ERROR
 
-                                    </span>
+                                </span>
 
                                 {% endif %}
 
@@ -419,18 +393,18 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
 
                                 {% if v.cantidad %}
 
-                                    <span class="badge
+                                <span class="badge
                                                  bg-light
                                                  text-dark
                                                  border">
 
-                                        {{ v.cantidad }}
+                                    {{ v.cantidad }}
 
-                                    </span>
+                                </span>
 
                                 {% else %}
 
-                                    —
+                                —
 
                                 {% endif %}
 
@@ -441,22 +415,19 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
 
                                 {% if v.detalle %}
 
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm
-                                               btn-outline-primary"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#detalle{{ loop.index }}">
+                                <button type="button" class="btn btn-sm
+                                               btn-outline-primary" data-bs-toggle="collapse"
+                                    data-bs-target="#detalle{{ loop.index }}">
 
-                                        <i class="bi bi-eye"></i>
+                                    <i class="bi bi-eye"></i>
 
-                                    </button>
+                                </button>
 
                                 {% else %}
 
-                                    <span class="text-muted">
-                                        —
-                                    </span>
+                                <span class="text-muted">
+                                    —
+                                </span>
 
                                 {% endif %}
 
@@ -469,12 +440,9 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
 
                         <tr>
 
-                            <td colspan="5"
-                                class="p-0">
+                            <td colspan="5" class="p-0">
 
-                                <div
-                                    id="detalle{{ loop.index }}"
-                                    class="collapse">
+                                <div id="detalle{{ loop.index }}" class="collapse">
 
                                     <div class="p-3 bg-light">
 
@@ -490,11 +458,11 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
                                                     <tr>
 
                                                         {% for clave
-                                                              in v.detalle[0].keys() %}
+                                                        in v.detalle[0].keys() %}
 
-                                                            <th>
-                                                                {{ clave }}
-                                                            </th>
+                                                        <th>
+                                                            {{ clave }}
+                                                        </th>
 
                                                         {% endfor %}
 
@@ -505,22 +473,22 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
                                                 <tbody>
 
                                                     {% for registro
-                                                          in v.detalle %}
+                                                    in v.detalle %}
 
-                                                        <tr>
+                                                    <tr>
 
-                                                            {% for clave
-                                                                  in registro.keys() %}
+                                                        {% for clave
+                                                        in registro.keys() %}
 
-                                                                <td>
+                                                        <td>
 
-                                                                    {{ registro[clave] }}
+                                                            {{ registro[clave] }}
 
-                                                                </td>
+                                                        </td>
 
-                                                            {% endfor %}
+                                                        {% endfor %}
 
-                                                        </tr>
+                                                    </tr>
 
                                                     {% endfor %}
 
@@ -540,7 +508,7 @@ Precierre {{ periodo.anio }}-{{ "%02d"|format(periodo.mes) }}
 
                         {% endif %}
 
-                    {% endfor %}
+                        {% endfor %}
 
                     </tbody>
 

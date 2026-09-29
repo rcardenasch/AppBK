@@ -1,8 +1,9 @@
 <aside id="sidebar" class="sidebar shadow">
     <div class="logo">
-        <i class="bi bi-bank2"></i>
+        <i class="bi bi-bank2 text-primary"></i>
         <div>
-            <small>Banquito Familiar</small>
+            <small class="text-primary small fw-bold text-uppercase pb-1"
+                style="font-size: 0.75rem; letter-spacing: 0.5px;">Banquito Familiar</small>
         </div>
     </div>
 
@@ -20,9 +21,9 @@
         <!-- SEPARATOR: usuarios -->
         <!-- border-secondary hace que la línea divisoria también sea visible en fondo oscuro -->
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
-            <span class="nav-link text-light small fw-bold text-uppercase pb-1 opacity-75"
-                style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                Gestión de Usuarios
+            <span class="nav-link text-secondary small fw-bold text-uppercase pb-1 opacity-75"
+                style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                Gestión de Accesos
             </span>
         </li>
         <li class="nav-item">
@@ -33,16 +34,17 @@
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
             {% endif %}
             {% if current_user.rol.nombre in ["Tesorero", "Administrador","Socio"] %}
-            <span class="nav-link text-light small fw-bold text-uppercase pb-1 opacity-75"
-                style="font-size: 0.75rem; letter-spacing: 0.5px;">
+            <span class="nav-link text-secondary small fw-bold text-uppercase pb-1 opacity-75"
+                style="font-size: 0.65rem; letter-spacing: 0.5px;">
                 Estado Cuenta Socio
             </span>
+
         </li>
         <li class="nav-item">
             <a href="{{ url_for('socio_portal.mi_estado_cuenta', periodo_Id=periodo.id if periodo else periodo_respaldo_id) }}"
                 class="nav-link text-light-hover d-flex align-items-center gap-2">
                 <!-- OPCIÓN 1: Billetera/Finanzas (Recomendado) -->
-                <i class="bi bi-wallet2"></i> Portal
+                <i class="bi bi-cash-coin me-2 text-secondary"></i> Portal
 
                 <!-- OPCIÓN 2: Reporte/Extracto de cuenta (Descomenta si prefieres este) -->
                 <!-- <i class="bi bi-file-earmark-bar-graph"></i> Portal -->
@@ -55,25 +57,87 @@
         {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
         <!-- SEPARATOR: GESTIÓN -->
         <!-- border-secondary hace que la línea divisoria también sea visible en fondo oscuro -->
-        <li class="nav-item mt-3 pt-2 border-top border-secondary">
-            <span class="nav-link text-light small fw-bold text-uppercase pb-1 opacity-75"
-                style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                Gestión de Socios
-            </span>
+
+        <span class="nav-link text-secondary small fw-bold text-uppercase pb-1 opacity-75"
+            style="font-size: 0.65rem; letter-spacing: 0.5px;">
+            Gestión de Socios
+        </span>
         </li>
         <li class="nav-item">
             <a href="{{ url_for('socios.detalle', id=1) }}" class="nav-link">
-                <i class="bi bi-people"></i> Socios
+                <i class="bi-person-vcard text-secondary"></i> Socios
             </a>
         </li>
         <li class="nav-item">
             <a href="{{ url_for('acciones.index') }}" class="nav-link">
-                <i class="bi bi-people"></i> Acciones
+                <i class="bi bi-person-up text-secondary"></i> Acciones
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('prestamos.saldos_iniciales') }}" class="nav-link">
+                <i class="bi bi-calendar-event text-secondary"></i> Saldos Iniciales
             </a>
         </li>
         <li class="nav-item">
             <a href="{{ url_for('prestamos.index') }}" class="nav-link">
-                <i class="bi bi-people"></i> Prestamos
+                <i class="bi bi-people text-secondary"></i> Prestamos
+            </a>
+        </li>
+
+        <!-- SEPARATOR: PROCESOS Y FINANZAS -->
+        <li class="nav-item mt-3 pt-2 border-top border-secondary">
+            <span class="nav-link text-secondary small fw-bold text-uppercase pb-1 opacity-75"
+                style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                Operaciones y Finanzas
+            </span>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('solicitudes.index') }}" class="nav-link">
+                <i class="bi bi-file-earmark-text text-success"></i> Solicitud Préstamo
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('asistencias.index') }}" class="nav-link">
+                <i class="bi bi-calendar-check text-success"></i> Asistencia
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('distribucion.index', periodo_id=periodo.id if periodo else periodo_respaldo_id) }}"
+                class="nav-link">
+                <i class="bi bi-diagram-3 text-success"></i> Distribución Préstamo
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('distribucion.simulacion_transferencias', periodo_id=periodo.id if periodo else periodo_respaldo_id) }}"
+                class="nav-link">
+                <i class="bi bi-arrow-left-right text-success"></i> Transferencia
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('socios.multas_periodo', periodo_id=periodo.id if periodo else periodo_respaldo_id) }}"
+                class="nav-link">
+                    <i class="bi bi-clipboard-data-fill text-danger"></i> Multas Post
+
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('periodos.precierre', periodo_id=periodo.id if periodo else periodo_respaldo_id) }}"
+                class="nav-link">
+                <i class="bi bi-card-checklist text-success"></i> Precierre
+            </a>
+        </li>
+
+        <!-- SEPARATOR: CONFIGURACIÓN -->
+        <li class="nav-item mt-3 pt-2 border-top border-secondary">
+            <span class="nav-link text-secondary small fw-bold text-uppercase pb-1 opacity-75"
+                style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                Sistema
+            </span>
+        </li>
+
+        <li class="nav-item">
+            <a href="{{ url_for('configuracion.index') }}" class="nav-link">
+                <i class="bi bi-gear"></i> Configuración
             </a>
         </li>
         <li class="nav-item">
@@ -81,59 +145,11 @@
                 <i class="bi bi-calendar-event"></i> Periodos
             </a>
         </li>
-        <li class="nav-item">
-            <a href="{{ url_for('prestamos.saldos_iniciales') }}" class="nav-link">
-                <i class="bi bi-calendar-event"></i> Saldos Iniciales
-            </a>
-        </li>
-        <!-- SEPARATOR: PROCESOS Y FINANZAS -->
-        <li class="nav-item mt-3 pt-2 border-top border-secondary">
-            <span class="nav-link text-light small fw-bold text-uppercase pb-1 opacity-75"
-                style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                Operaciones y Finanzas
-            </span>
-        </li>
-        <li class="nav-item">
-            <a href="{{ url_for('solicitudes.index') }}" class="nav-link">
-                <i class="bi bi-file-earmark-text"></i> Solicitudes Prestamo
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ url_for('asistencias.index') }}" class="nav-link">
-                <i class="bi bi-calendar-check"></i> Asistencia
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ url_for('distribucion.index', periodo_id=periodo.id if periodo else periodo_respaldo_id) }}"
-                class="nav-link">
-                <i class="bi bi-diagram-3"></i> Distribución
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ url_for('distribucion.simulacion_transferencias', periodo_id=periodo.id if periodo else periodo_respaldo_id) }}"
-                class="nav-link">
-                <i class="bi bi-arrow-left-right"></i> Transferencia
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ url_for('socios.multas_periodo', periodo_id=periodo.id if periodo else periodo_respaldo_id) }}"
-                class="nav-link">
-                <i class="bi bi-card-checklist"></i> Multas Post
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ url_for('periodos.precierre', periodo_id=periodo.id if periodo else periodo_respaldo_id) }}"
-                class="nav-link">
-                <i class="bi bi-card-checklist"></i> PreCierre
-            </a>
-        </li>
-
-
         <!-- SEPARATOR: CONFIGURACIÓN -->
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
-            <span class="nav-link text-light small fw-bold text-uppercase pb-1 opacity-75"
-                style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                Reportes y Sistema
+            <span class="nav-link text-secondary small fw-bold text-uppercase pb-1 opacity-75"
+                style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                Reportes
             </span>
         </li>
         <li class="nav-item">
@@ -142,28 +158,22 @@
                 <i class="bi bi-bar-chart"></i> Estado de Operaciones
             </a>
         </li>
-
-        <li class="nav-item">
-            <a href="{{ url_for('configuracion.index') }}" class="nav-link">
-                <i class="bi bi-gear"></i> Configuración
-            </a>
-        </li>
     </ul>
 
     <div class="sidebar-footer mt-auto">
         <div class="card border-0 bg-primary text-white">
             <div class="card-body">
                 <small>Periodo Actual</small>
-                <h6>
+                <h10>
                     {{ periodo_actual }}
-                </h6>
+                </h10>
                 {% if periodo_abierto %}
                 <span class="badge bg-success">
-                    ABIERTO
+                    Abierto
                 </span>
                 {% else %}
                 <span class="badge bg-danger">
-                    CERRADO
+                    Cerrado
                 </span>
                 {% endif %}
             </div>

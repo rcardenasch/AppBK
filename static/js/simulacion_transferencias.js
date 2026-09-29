@@ -998,14 +998,12 @@ document.addEventListener("DOMContentLoaded", () => {
                             {
 
                                 method: "POST",
-
                                 headers: {
 
                                     "Content-Type":
                                         "application/json"
 
                                 },
-
                                 body:
                                     JSON.stringify(
                                         datos
@@ -1031,7 +1029,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     }
 
-
                     alert(
                         data.mensaje ||
                         "Distribución confirmada correctamente."
@@ -1056,7 +1053,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     btnConfirmar.disabled =
                         false;
-
                     btnConfirmar.innerHTML =
                         `<i class="bi bi-check-circle"></i>
                          Confirmar distribución`;
