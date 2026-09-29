@@ -1294,7 +1294,120 @@ class PrestamoService:
             )
 
         # =====================================================
-        # 4.4 SALDO DEUDA
+        # 4.3.1 VERIFICACIÓN DEL SALDO REAL
+        # =====================================================
+        #
+        # Prestamo.saldo_actual representa SOLO CAPITAL.
+        #
+        # La amortización del movimiento puede contener:
+        #
+        #   - pago de multa
+        #   - amortización de capital
+        #
+        # Por eso primero determinamos cuánto de la
+        # amortización realmente corresponde al capital.
+        # =====================================================
+
+        pago_multa = min(
+            amortizacion,
+            multa_periodo_anterior
+        ).quantize(CENTAVOS)
+
+        amortizacion_capital_esperada = (
+            amortizacion
+            - pago_multa
+        ).quantize(CENTAVOS)
+
+        if amortizacion_capital_esperada < Decimal("0.00"):
+            amortizacion_capital_esperada = Decimal("0.00")
+
+
+        saldo_capital_esperado = (
+            saldo_capital_debug
+            - amortizacion_capital_esperada
+        ).quantize(CENTAVOS)
+
+        if saldo_capital_esperado < Decimal("0.00"):
+            saldo_capital_esperado = Decimal("0.00")
+
+
+        # =====================================================
+        # OBTENER SALDO REAL DESPUÉS DE LA APLICACIÓN
+        # =====================================================
+
+        saldo_capital_real = Decimal("0.00")
+
+        for prestamo in prestamos:
+
+            saldo = Decimal(
+                str(
+                    prestamo.saldo_actual or 0
+                )
+            ).quantize(CENTAVOS)
+
+            if saldo > Decimal("0.00"):
+                saldo_capital_real += saldo
+
+        saldo_capital_real = saldo_capital_real.quantize(
+            CENTAVOS
+        )
+
+
+        print("\n==============================================")
+        print("VALIDACIÓN CAPITAL DESPUÉS DE AMORTIZAR")
+        print("==============================================")
+        print(
+            f"Capital apertura       : "
+            f"{saldo_capital_debug}"
+        )
+        print(
+            f"Amortización total     : "
+            f"{amortizacion}"
+        )
+        print(
+            f"Pago de multa          : "
+            f"{pago_multa}"
+        )
+        print(
+            f"Amortización capital   : "
+            f"{amortizacion_capital_esperada}"
+        )
+        print(
+            f"Capital esperado       : "
+            f"{saldo_capital_esperado}"
+        )
+        print(
+            f"Capital real           : "
+            f"{saldo_capital_real}"
+        )
+        print("==============================================\n")
+
+
+        # =====================================================
+        # VALIDAR
+        # =====================================================
+
+        if saldo_capital_real != saldo_capital_esperado:
+
+            raise Exception(
+                "Inconsistencia al actualizar saldo de préstamos. "
+                f"Esperado: S/ {saldo_capital_esperado:.2f} | "
+                f"Real: S/ {saldo_capital_real:.2f}"
+            )
+
+        # =====================================================
+        # 4.4 SALDO TOTAL DE PRÉSTAMOS
+        # =====================================================
+        # IMPORTANTE:
+        # Los saldos iniciales tienen periodo_id = NULL.
+        # Por eso NO podemos usar:
+        #
+        #     Prestamo.periodo_id < periodo_id
+        #
+        # porque NULL nunca cumple esa comparación.
+        #
+        # Debemos usar exactamente la misma regla cronológica
+        # utilizada para obtener la apertura.
         # =====================================================
 
         saldo_total_prestamos = (
@@ -1306,9 +1419,34 @@ class PrestamoService:
                     0
                 )
             )
+            .outerjoin(
+                Periodo,
+                Prestamo.periodo_id == Periodo.id
+            )
             .filter(
                 Prestamo.accion_id == accion_id,
-                Prestamo.periodo_id < periodo_id,
+
+                or_(
+                    # -----------------------------------------
+                    # SALDO INICIAL
+                    # -----------------------------------------
+                    Prestamo.periodo_id.is_(None),
+
+                    # -----------------------------------------
+                    # PRÉSTAMO DE AÑOS ANTERIORES
+                    # -----------------------------------------
+                    Periodo.anio < periodo.anio,
+
+                    # -----------------------------------------
+                    # PRÉSTAMO DE UN MES ANTERIOR
+                    # DEL MISMO AÑO
+                    # -----------------------------------------
+                    and_(
+                        Periodo.anio == periodo.anio,
+                        Periodo.mes < periodo.mes
+                    )
+                ),
+
                 Prestamo.saldo_actual > 0
             )
             .scalar()
@@ -1319,6 +1457,7 @@ class PrestamoService:
                 saldo_total_prestamos or 0
             )
         ).quantize(CENTAVOS)
+
 
         saldo_deuda_multa = multa_periodo_anterior.quantize(
             CENTAVOS

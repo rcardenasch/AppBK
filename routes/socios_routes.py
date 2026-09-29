@@ -324,7 +324,7 @@ def adquirir_accion(socio_id):
         )
 
     resultado_proceso_nueva_accion = session.pop(
-            "resultado_proceso_nueva_accion",
+            "resultado_proceso_nueva_accion", 
             None
         )
 
