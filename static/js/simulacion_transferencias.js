@@ -1038,7 +1038,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     );
 
                     window.location.href =
-                        `/distribucion/${periodoId}`;
+                        `/distribucion/transferencias/visor/${periodoId}`;
+
 
                 }
                 catch (error) {

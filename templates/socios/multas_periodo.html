@@ -27,8 +27,10 @@ Registro de multas
 
                 <!-- Título y Descripción -->
                 <h3 class="fw-bold mb-1 text-dark">Registro de multas</h3>
-                <p class="text-muted small mb-0">
-                    Registra las penalidades correspondientes al período vigente.
+                <p class="text-warning small mb-0">
+                    La multa registrada corresponde al
+                    período actual y será considerada como
+                    deuda para el siguiente período.
                 </p>
             </div>
 
@@ -57,27 +59,6 @@ Registro de multas
                 {% endif %}
             </div>
 
-        </div>
-    </div>
-
-    <!-- =====================================================
-         AVISO
-    ====================================================== -->
-    <div class="alert alert-warning
-                border-0 shadow-sm mb-4">
-        <div class="d-flex gap-3">
-            <i class="bi bi-exclamation-triangle-fill
-                      fs-4"></i>
-            <div>
-                <div class="fw-semibold">
-                    Registro de penalidades
-                </div>
-                <div class="small">
-                    La multa registrada corresponde al
-                    período actual y será considerada como
-                    deuda para el siguiente período.
-                </div>
-            </div>
         </div>
     </div>
 
@@ -224,12 +205,14 @@ Registro de multas
                         <div class="vr text-black-50 opacity-25 d-none d-sm-block"></div>
 
                         <div class="d-inline-flex align-items-center gap-1">
-                            <span class="badge bg-secondary-subtle text-secondary fw-bold">S/ {{configuracion.multa_tardanza}}</span>
+                            <span class="badge bg-secondary-subtle text-secondary fw-bold">S/
+                                {{configuracion.multa_tardanza}}</span>
                             <span>Tardanza</span>
                         </div>
                         <div class="vr text-black-50 opacity-25 d-none d-sm-block"></div>
                         <div class="d-inline-flex align-items-center gap-1">
-                            <span class="badge bg-danger-subtle text-danger fw-bold">S/ {{configuracion.multa_no_transferir}}</span>
+                            <span class="badge bg-danger-subtle text-danger fw-bold">S/
+                                {{configuracion.multa_no_transferir}}</span>
                             <span>No transferir</span>
                         </div>
                     </div>
@@ -254,7 +237,9 @@ Registro de multas
                     </tr>
                 </thead>
                 <tbody>
-                    {% for movimiento in movimientos %}
+
+                    {% for movimiento in movimientos | sort(reverse=True, attribute='multa') %}
+
                     <tr>
                         <td class="ps-4 text-muted">
                             {{ loop.index }}
@@ -299,15 +284,18 @@ Registro de multas
                         </td>
 
                         <td>
-                            <div class="text-truncate" style="max-width:250px;">
-
-                                {{ movimiento.observacion or '—' }}
-
+                            <!-- El icono y el texto están agrupados con flexbox para que queden perfectamente alineados en línea -->
+                            <div class="text-truncate d-inline-flex align-items-center gap-1.5" title="{{ movimiento.observacion }}">
+                                {% if movimiento.observacion %}
+                                <i class="bi bi-chat-square-dots text-secondary flex-shrink-0" style="font-size: 0.85rem; opacity: 0.8;"></i>
+                        
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
                             </div>
                         </td>
 
-                        <td class="text-center pe-4">
-
+                        <td class="text-center pe-8">
                             <button type="button" class="btn btn-sm
                                        btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalMulta"
                                 data-id="{{ movimiento.id }}" data-multa="{{ movimiento.multa or 0 }}"
@@ -320,7 +308,6 @@ Registro de multas
                             </button>
                         </td>
                     </tr>
-
                     {% endfor %}
                 </tbody>
             </table>
@@ -398,56 +385,57 @@ Registro de multas
     </div>
 </div>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function () {
 
-    const modal = document.getElementById("modalMulta");
-    const form = document.getElementById("formMulta");
-    const inputMulta = document.getElementById("inputMulta");
-    const inputObservacion = document.getElementById("inputObservacion");
-    const modalSocio = document.getElementById("modalSocio");
-    const modalAccion = document.getElementById("modalAccion");
+        const modal = document.getElementById("modalMulta");
+        const form = document.getElementById("formMulta");
+        const inputMulta = document.getElementById("inputMulta");
+        const inputObservacion = document.getElementById("inputObservacion");
+        const modalSocio = document.getElementById("modalSocio");
+        const modalAccion = document.getElementById("modalAccion");
 
-    if (!modal || !form) {
-        return;
-    }
-
-    modal.addEventListener("show.bs.modal", function (event) {
-
-        const button = event.relatedTarget;
-
-        if (!button) {
+        if (!modal || !form) {
             return;
         }
 
-        const id = button.dataset.id;
-        const multa = button.dataset.multa;
-        const observacion = button.dataset.observacion;
-        const socio = button.dataset.socio;
-        const accion = button.dataset.accion;
+        modal.addEventListener("show.bs.modal", function (event) {
 
-        form.action =
-            "{{ url_for(
-                'socios.actualizar_multa_movimiento',
-                movimiento_id=0
-            ) }}".replace(
+            const button = event.relatedTarget;
+
+            if (!button) {
+                return;
+            }
+
+            const id = button.dataset.id;
+            const multa = button.dataset.multa;
+            const observacion = button.dataset.observacion;
+            const socio = button.dataset.socio;
+            const accion = button.dataset.accion;
+
+            form.action =
+                "{{ url_for(
+            'socios.actualizar_multa_movimiento',
+                movimiento_id = 0
+            )
+    }}".replace(
                 "/0/multa",
-                "/" + id + "/multa"
-            );
+        "/" + id + "/multa"
+    );
 
-        modalSocio.textContent = socio;
+    modalSocio.textContent = socio;
 
-        modalAccion.textContent =
-            accion
-                ? "Acción " + accion
-                : "Sin acción";
+    modalAccion.textContent =
+        accion
+            ? "Acción " + accion
+            : "Sin acción";
 
-        inputMulta.value =
-            Number(multa) > 0
-                ? Number(multa).toFixed(2)
-                : "0.00";
+    inputMulta.value =
+        Number(multa) > 0
+            ? Number(multa).toFixed(2)
+            : "0.00";
 
-        inputObservacion.value =
-            observacion || "";
+    inputObservacion.value =
+        observacion || "";
 
     });
 

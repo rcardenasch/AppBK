@@ -23,8 +23,6 @@
             </a>
         </div>
     </div>
-
-
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover table-striped datatable">
@@ -74,7 +72,6 @@
                                 {{ s.socio.nombres }} {{ s.socio.apellidos if s.socio.apellidos else '' }}
                             </span>
                         </td>
-
                         <td>
                             {{"{:,.2f}".format(s.monto_solicitado|float)}}
                         </td>
@@ -91,31 +88,21 @@
                                 {% else %} Normal ({{ s.prioridad }}) {% endif %}
                             </span>
                         </td>
-
-
                         <td>
-
                             <span
                                 class="badge {% if s.estado == 'ANULADA' %}bg-secondary{% elif s.estado == 'PENDIENTE' %}bg-success{% else %}bg-info{% endif %}">
                                 {{ s.estado }}
                             </span>
-
                         </td>
-
                         <td>
-
                             <a href="{{ url_for('solicitudes.editar',id=s.id) }}" class="btn btn-warning btn-sm">
-                                <i class="bi bi-pencil"></i>
+                                <i class="bi bi-pencil" title="Editar solicitud"></i>
                             </a>
                             <form method="POST" action="{{ url_for('solicitudes.eliminar',id=s.id) }}" class="d-inline"
                                 onsubmit="return confirm('¿Eliminar solicitud de préstamo?');">
-
                                 <button class="btn btn-danger btn-sm">
-
-                                    <i class="bi bi-trash"></i>
-
+                                    <i class="bi bi-trash" title="Eliminar solicitud"></i>
                                 </button>
-
                             </form>
 
                             {% if s.estado=="PENDIENTE" %}
@@ -125,7 +112,7 @@
 
                                 <button class="btn btn-secondary btn-sm">
 
-                                    <i class="bi bi-x-circle"></i>
+                                    <i class="bi bi-x-circle" title="Anular solicitud"></i>
 
                                 </button>
 

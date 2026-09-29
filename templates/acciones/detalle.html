@@ -108,7 +108,7 @@
             Nuevo préstamo
         </a>
 
-        <a class="btn btn-success " href="{{ url_for('movimientos.nuevo',
+        <a class="btn btn-success disabled" href="{{ url_for('movimientos.nuevo',
                             socio_id=accion.socio.id,
                             accion_id=accion.id) }}">
 
@@ -136,7 +136,6 @@
                             <th>Saldo</th>
                             <th>Tasa</th>
                             <th>Estado</th>
-                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -156,7 +155,7 @@
                             </td>
 
                             <td class="celda-monto">
-                                {{ p.monto }}
+                                {{"{:,.2f}".format(p.monto)}}
                             </td>
 
                             <td>
@@ -166,8 +165,8 @@
                                     {{"{:,.2f}".format(p.saldo_actual)}}
                                 </span>
                                 {% else %}
-                                <span class="text-success fw-bold">
-                                    Cancelado
+                                <span class="text-secondary fw-bold">
+                                    0.00
                                 </span>
                                 {% endif %}
                             </td>
@@ -184,18 +183,6 @@
                                     {{ p.estado }}
                                 </span>
                                 {% endif %}
-                            </td>
-
-                            <td>
-
-                                <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-outline-danger btn-eliminar-prestamo"
-                                        data-id="{{ p.id }}" title="Eliminar prestamo" disabled>
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-
-                                </div>
-
                             </td>
 
                         </tr>
@@ -240,8 +227,8 @@
                                 </span>
                             </td>
                             <td class="celda-aporte">{{"{:,.2f}".format(m.aporte|float)}}</td>
-                            <td class="celda-cuota">{{ m.cuota_pagada }}</td>
-                            <td class="celda-amortizacion">{{ m.amortizacion }}</td>
+                            <td class="celda-cuota">{{"{:,.2f}".format(m.cuota_pagada)}}</td>
+                            <td class="celda-amortizacion">{{"{:,.2f}".format(m.amortizacion)}}</td>
                             <td class="celda-interes">{{ m.interes }}</td>
                             <td class="celda-multa">{{ m.multa }}</td>
                             <td class="celda-sobre">{{ m.sobre }}</td>
@@ -250,8 +237,8 @@
                                     {{"{:,.2f}".format(m.saldo_prestamo )}}
                                 </span>
                                 {% else %}
-                                <span class="text-success fw-bold">
-                                    Cancelado
+                                <span class="text-secondary">
+                                    0.00
                                 </span>
                                 {% endif %}
                             </td>
@@ -264,11 +251,6 @@
                                         <i class="bi bi-pencil"></i>
                                     </button>
 
-                                    <button type="button"
-                                        class="btn btn-outline-danger disabled btn-eliminar-movimiento"
-                                        data-id="{{ m.id }}" title="Eliminar movimiento" disabled>
-                                        <i class="bi bi-trash"></i>
-                                    </button>
                                 </div>
                             </td>
                         </tr>

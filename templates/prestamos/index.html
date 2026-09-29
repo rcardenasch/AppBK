@@ -31,37 +31,19 @@
                         <th>Fecha</th>
                         <th>Monto S/</th>
                         <th>Saldo S/</th>
-                        <th>Interés</th>
                         <th>Estado</th>
-                        <th width="220">
-                            Acciones
-                        </th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     {% for p in prestamos %}
                     <tr>
-                        <td>
-                            {{ p.id }}
-                        </td>
-
-                        <td>
-                            {{ p.socio.nombres }}
-                        </td>
-
-                        <td>
-                            {{ p.accion.numero_accion }}
-                        </td>
-
-                        <td>
-                            {{ p.fecha_prestamo.strftime("%d/%m/%Y") }}
-                        </td>
-
-                        <td>
-                            {{ "{:,.2f}".format(p.monto) }}
-                        </td>
-
+                        <td>{{ p.id }}</td>
+                        <td>{{ p.socio.nombres }}</td>
+                        <td>{{ p.accion.numero_accion }}</td>
+                        <td>{{ p.fecha_prestamo.strftime("%d/%m/%Y") }}</td>
+                        <td>{{ "{:,.2f}".format(p.monto) }}</td>
                         <td>
                             <strong>
                                 {{ "{:,.2f}".format(p.saldo_actual) }}
@@ -69,17 +51,13 @@
 
                         </td>
                         <td>
-                            {{ p.tasa_interes }} %
-
-                        </td>
-                        <td>
                             {% if p.estado=="ACTIVO" %}
-                            <span class="badge bg-success">
-                                ACTIVO
+                            <span class="badge bg-success-subtle text-success rounded-pill fw-bold px-2 py-1">
+                                Activo
                             </span>
                             {% elif p.estado=="CANCELADO" %}
                             <span class="badge bg-secondary">
-                                CANCELADO
+                                Cancelado
                             </span>
                             {% else %}
                             <span class="badge bg-danger">

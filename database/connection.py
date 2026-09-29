@@ -4,8 +4,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import declarative_base
 
 DATABASE_URL = (
-    "postgresql+psycopg2://postgres:1234@localhost:5432/BK_FAM" # PC-01-Casa
-    #"postgresql+psycopg2://postgres:123456@localhost:5433/BK_FAM" # PC-02-trabajo
+    #"postgresql+psycopg2://postgres:1234@localhost:5432/BK_FAM" # PC-01-Casa
+    "postgresql+psycopg2://postgres:123456@localhost:5433/BK_FAM" # PC-02-trabajo
 )
 
 engine = create_engine(
