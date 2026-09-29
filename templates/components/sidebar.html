@@ -1,8 +1,8 @@
 <aside id="sidebar" class="sidebar shadow">
     <div class="logo">
-        <i class="bi bi-bank2 text-primary"></i>
+        <i class="bi bi-bank2 text-info"></i>
         <div>
-            <small class="text-primary small fw-bold text-uppercase pb-1"
+            <small class="text-info small fw-bold text-uppercase pb-1"
                 style="font-size: 0.75rem; letter-spacing: 0.5px;">Banquito Familiar</small>
         </div>
     </div>
@@ -13,11 +13,11 @@
         <!-- SECCIÓN: PRINCIPAL -->
         {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
         <li class="nav-item">
-            <a href="{{ url_for('dashboard.index') }}" class="nav-link">
-                <i class="bi bi-speedometer2"></i> Dashboard
+            <a href="{{ url_for('dashboard.index') }}" class="nav-link text-white">
+                <i class="bi bi-speedometer2"></i> 
+                <span> Dashboard</span>
             </a>
         </li>
-
         <!-- SEPARATOR: usuarios -->
         <!-- border-secondary hace que la línea divisoria también sea visible en fondo oscuro -->
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
@@ -27,8 +27,8 @@
             </span>
         </li>
         <li class="nav-item">
-            <a href="{{ url_for('usuarios.index') }}" class="nav-link">
-                <i class="bi bi-people"></i> Usuarios
+            <a href="{{ url_for('usuarios.index') }}" class="nav-link text-white">
+                <i class="bi bi-people"></i><span> Usuarios</span>
             </a>
         </li>
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
@@ -42,30 +42,22 @@
         </li>
         <li class="nav-item">
             <a href="{{ url_for('socio_portal.mi_estado_cuenta', periodo_Id=periodo.id if periodo else periodo_respaldo_id) }}"
-                class="nav-link text-light-hover d-flex align-items-center gap-2">
-                <!-- OPCIÓN 1: Billetera/Finanzas (Recomendado) -->
-                <i class="bi bi-cash-coin me-2 text-secondary"></i> Portal
-
-                <!-- OPCIÓN 2: Reporte/Extracto de cuenta (Descomenta si prefieres este) -->
-                <!-- <i class="bi bi-file-earmark-bar-graph"></i> Portal -->
-
-                <!-- OPCIÓN 3: Tarjeta/Estado financiero (Descomenta si prefieres este) -->
-                <!-- <i class="bi bi-credit-card"></i> Portal -->
+                class="nav-link text-white">
+                <i class="bi bi-cash-coin"></i><span> Portal</span>
             </a>
         </li>
         {% endif %}
         {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
         <!-- SEPARATOR: GESTIÓN -->
         <!-- border-secondary hace que la línea divisoria también sea visible en fondo oscuro -->
-
         <span class="nav-link text-secondary small fw-bold text-uppercase pb-1 opacity-75"
             style="font-size: 0.65rem; letter-spacing: 0.5px;">
             Gestión de Socios
         </span>
         </li>
         <li class="nav-item">
-            <a href="{{ url_for('socios.detalle', id=1) }}" class="nav-link">
-                <i class="bi-person-vcard text-secondary"></i> Socios
+            <a href="{{ url_for('socios.detalle', id=1) }}" class="nav-link text-white">
+                <i class="bi-person-vcard"></i><span> Socios</span>
             </a>
         </li>
         <li class="nav-item">
@@ -74,13 +66,13 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="{{ url_for('prestamos.saldos_iniciales') }}" class="nav-link">
-                <i class="bi bi-calendar-event text-secondary"></i> Saldos Iniciales
+            <a href="{{ url_for('prestamos.saldos_iniciales') }}" class="nav-link text-white">
+                <i class="bi bi-calendar-event "></i><span> Saldos Iniciales</span>
             </a>
         </li>
         <li class="nav-item">
-            <a href="{{ url_for('prestamos.index') }}" class="nav-link">
-                <i class="bi bi-people text-secondary"></i> Prestamos
+            <a href="{{ url_for('prestamos.index') }}" class="nav-link text-white">
+                <i class="bi bi-people "></i><span> Prestamos</span>
             </a>
         </li>
 
@@ -88,7 +80,7 @@
         <li class="nav-item mt-3 pt-2 border-top border-secondary">
             <span class="nav-link text-secondary small fw-bold text-uppercase pb-1 opacity-75"
                 style="font-size: 0.65rem; letter-spacing: 0.5px;">
-                Operaciones y Finanzas
+                Operaciones
             </span>
         </li>
         <li class="nav-item">
@@ -117,7 +109,6 @@
             <a href="{{ url_for('socios.multas_periodo', periodo_id=periodo.id if periodo else periodo_respaldo_id) }}"
                 class="nav-link">
                     <i class="bi bi-clipboard-data-fill text-danger"></i> Multas Post
-
             </a>
         </li>
         <li class="nav-item">
