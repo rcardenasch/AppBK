@@ -16,7 +16,7 @@ body{
 
 .sidebar {
     width: 270px;
-    height: calc(100vh - 56px);
+    height: calc(150vh - 56px);
     min-height: 0;
 
     background: #0f172a;
@@ -108,6 +108,12 @@ body{
 .navbar{
 
     border-radius:18px;
+
+    /* Color sólido de respaldo (Azul Oscuro Ejecutivo) si falla el gradiente */
+    background-color: #0f172a !important; 
+    
+    /* Gradiente contemporáneo nativo */
+    background: linear-gradient(135deg, #0f172a, #1e3a8a, #2563eb) !important;
 
 }
 
@@ -311,7 +317,7 @@ body{
 
 /* Efecto Hover: Brillo celeste del sistema al pasar el mouse */
 .btn-hamburguesa:hover .linea {
-    background-color: #38bdf8; 
+    background-color: #f4f7f8; 
 }
 
 /* =====================================================
@@ -321,7 +327,7 @@ body{
 .sidebar.toggled ~ .main #sidebarToggle .linea:nth-child(1),
 .wrapper:has(.sidebar.toggled) #sidebarToggle .linea:nth-child(1) {
     transform: rotate(45deg) translateY(-2px);
-    background-color: #38bdf8;
+    background-color: #f1f5f7;
 }
 
 /* Desaparición de la línea central con desvanecimiento */
@@ -335,7 +341,7 @@ body{
 .sidebar.toggled ~ .main #sidebarToggle .linea:nth-child(3),
 .wrapper:has(.sidebar.toggled) #sidebarToggle .linea:nth-child(3) {
     transform: rotate(-45deg) translateY(2px);
-    background-color: #38bdf8;
+    background-color: #e9eef0;
 }
 
 
