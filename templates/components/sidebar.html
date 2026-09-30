@@ -14,7 +14,7 @@
         {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
         <li class="nav-item">
             <a href="{{ url_for('dashboard.index') }}" class="nav-link text-white">
-                <i class="bi bi-speedometer2"></i> 
+                <i class="bi bi-speedometer2"></i>
                 <span> Dashboard</span>
             </a>
         </li>
@@ -65,11 +65,7 @@
                 <i class="bi bi-person-up text-secondary"></i> Acciones
             </a>
         </li>
-        <li class="nav-item">
-            <a href="{{ url_for('prestamos.saldos_iniciales') }}" class="nav-link text-white">
-                <i class="bi bi-calendar-event "></i><span> Saldos Iniciales</span>
-            </a>
-        </li>
+
         <li class="nav-item">
             <a href="{{ url_for('prestamos.index') }}" class="nav-link text-white">
                 <i class="bi bi-people "></i><span> Prestamos</span>
@@ -108,7 +104,7 @@
         <li class="nav-item">
             <a href="{{ url_for('socios.multas_periodo', periodo_id=periodo.id if periodo else periodo_respaldo_id) }}"
                 class="nav-link">
-                    <i class="bi bi-clipboard-data-fill text-danger"></i> Multas Post
+                <i class="bi bi-clipboard-data-fill text-danger"></i> Multas Post
             </a>
         </li>
         <li class="nav-item">
@@ -134,6 +130,11 @@
         <li class="nav-item">
             <a href="{{ url_for('periodos.index') }}" class="nav-link">
                 <i class="bi bi-calendar-event"></i> Periodos
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ url_for('prestamos.saldos_iniciales') }}" class="nav-link text-white">
+                <i class="bi bi-calendar-check"></i><span> Saldos Iniciales</span>
             </a>
         </li>
         <!-- SEPARATOR: CONFIGURACIÓN -->

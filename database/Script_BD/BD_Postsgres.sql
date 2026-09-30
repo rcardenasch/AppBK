@@ -677,7 +677,7 @@ select * from acciones where socio_id=15 order by id asc
 SELECT * FROM socios
 select * from prestamos where socio_id=24
 SELECT * FROM movimientos m
-where m.socio_id=24 order by m.socio_id, m.periodo_id;
+where m.socio_id=4 order by m.socio_id, m.periodo_id;
 where m.id=489 --and m.periodo_id=14 
 
 select * from solicitudes_prestamo

@@ -978,6 +978,13 @@ class PrestamoService:
         if multa_periodo_anterior < Decimal("0.00"):
             multa_periodo_anterior = Decimal("0.00")
 
+
+        # =====================================================
+        # GUARDAR MULTA ORIGINAL
+        # =====================================================
+
+        multa_original = multa_periodo_anterior
+        
         # log
         print("\n")
         print("=" * 70)
@@ -1294,23 +1301,20 @@ class PrestamoService:
             )
 
         # =====================================================
-        # 4.3.1 VERIFICACIÓN DEL SALDO REAL
+        # MULTA ORIGINAL DEL PERÍODO ANTERIOR
         # =====================================================
         #
-        # Prestamo.saldo_actual representa SOLO CAPITAL.
+        # IMPORTANTE:
+        # multa_periodo_anterior fue reducida durante la
+        # aplicación de la amortización.
         #
-        # La amortización del movimiento puede contener:
-        #
-        #   - pago de multa
-        #   - amortización de capital
-        #
-        # Por eso primero determinamos cuánto de la
-        # amortización realmente corresponde al capital.
+        # Para validar cuánto de la amortización correspondió
+        # a multa debemos utilizar la multa ORIGINAL.
         # =====================================================
 
         pago_multa = min(
             amortizacion,
-            multa_periodo_anterior
+            multa_original
         ).quantize(CENTAVOS)
 
         amortizacion_capital_esperada = (
