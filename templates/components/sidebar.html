@@ -1,17 +1,10 @@
 <aside id="sidebar" class="sidebar shadow">
-    <div class="logo">
-        <i class="bi bi-bank2 text-info"></i>
-        <div>
-            <small class="text-info small fw-bold text-uppercase pb-1"
-                style="font-size: 0.75rem; letter-spacing: 0.5px;">Banquito Familiar</small>
-        </div>
-    </div>
 
-    <hr>
 
     <ul class="nav flex-column">
         <!-- SECCIÓN: PRINCIPAL -->
         {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
+    </br>
         <li class="nav-item">
             <a href="{{ url_for('dashboard.index') }}" class="nav-link text-white">
                 <i class="bi bi-speedometer2"></i>

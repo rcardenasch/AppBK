@@ -4,48 +4,69 @@
 
 <div class="row">
 
-    <div class="row mb-3 align-items-end">
-        <!-- Lado Izquierdo: Selección de Socio -->
-        <div class="col-md-6 col-lg-4">
-            <!-- text-muted y small hacen la etiqueta pequeña y discreta -->
-            <label for="socio" class="form-label small text-muted mb-1">Seleccionar Socio:</label>
+    <div class="row mb-4 align-items-end g-3">
+        <!-- LADO IZQUIERDO: Selección de Socio y Botón de Acción -->
+        <div class="col-md-7 col-lg-6">
+            <div class="d-flex align-items-end gap-2 flex-wrap flex-sm-nowrap">
+                <div class="w-100" style="max-width: 320px;">
+                    <label for="socio" class="form-label small text-muted fw-semibold text-uppercase mb-1"
+                        style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                        Seleccionar Socio
+                    </label>
+                    <select id="socio" class="form-select form-select-sm border-secondary-subtle py-1.5 shadow-sm"
+                        onchange="irADetalleSocio(this.value)">
+                        <option value="" class="small">Seleccione...</option>
+                        {% for socio in socios %}
+                        <option value="{{ socio.id }}" class="small">
+                            {{ socio.nombres }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <!-- form-select-sm reduce el tamaño del input y de su texto interno -->
-            <select id="socio" class="form-select form-select-sm border-secondary-subtle"
-                onchange="irADetalleSocio(this.value)">
-                <option value="" class="small">Seleccione...</option>
-                {% for socio in socios %}
-                <option value="{{ socio.id }}" class="small">
-                    {{ socio.nombres }}
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <!-- Lado Derecho: Período Vigente (Ahora dentro de una columna alineada a la derecha) -->
-        <div class="col-md-6 col-lg-8 text-md-end mt-3 mt-md-0">
-            <!-- Badge de Periodo Actual -->
-            <div class="text-md-end">
-                {% if periodo %}
-                <span
-                    class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-semibold">
-                    <i class="bi bi-calendar3 me-1"></i>
-                    Periodo: {{ "%02d"|format(periodo.mes) }} / {{ periodo.anio }} {% if periodo.cerrado %}
-                    <span class="badge bg-danger semibold">Cerrado</span>{%else%} <span
-                        class="badge bg-info semibold">Abierto</span>
-                    {%endif%}
-                </span>
-                {% else %}
-                <span
-                    class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-2 fw-semibold">
-                    <i class="bi bi-exclamation-triangle me-1"></i> Sin período vigente
-                </span>
+                {% if current_user.rol.nombre in ["Tesorero", "Administrador"] %}
+                <div class="flex-shrink-0">
+                    <a href="{{ url_for('socios.index') }}"
+                        class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1.5 py-1.5 fw-semibold shadow-sm"
+                        title="Ir a Socios">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Ir a Socios</span>
+                    </a>
+                </div>
                 {% endif %}
             </div>
         </div>
 
+        <!-- LADO DERECHO: Período Vigente (Alineación perfecta al extremo derecho) -->
+        <div class="col-md-5 col-lg-6 text-md-end">
+            <div class="d-inline-flex align-items-center">
+                {% if periodo %}
+                <div
+                    class="bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1.5 d-inline-flex align-items-center gap-2 shadow-sm">
+                    <span class="fw-semibold small">
+                        <i class="bi bi-calendar3 me-1 text-primary-emphasis"></i>
+                        Periodo: {{ "%02d"|format(periodo.mes) }} / {{ periodo.anio }}
+                    </span>
 
+                    {% if periodo.cerrado %}
+                    <span class="badge bg-danger rounded-pill fw-bold text-uppercase px-2"
+                        style="font-size: 0.65rem; letter-spacing: 0.3px;">Cerrado</span>
+                    {% else %}
+                    <span class="badge bg-success rounded-pill fw-bold text-uppercase px-2"
+                        style="font-size: 0.65rem; letter-spacing: 0.3px;">Abierto</span>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div
+                    class="bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-sm fw-semibold small">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <span>Sin período vigente</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
+
 
 
     <!-- DATOS DEL SOCIO -->
@@ -66,6 +87,7 @@
                                 <i class="bi bi-card-text me-1"></i>Doc: {{ socio.documento }}
                             </div>
                         </div>
+
                         <div>
                             {% if socio.estado %}
                             <span
@@ -76,13 +98,7 @@
                             {% endif %}
                         </div>
                     </div>
-                    <div>
-                        <a href="{{url_for('socios.nuevo')}}" class="btn btn-info" title="Registrar Nuevo Socio">
 
-                            <i class="bi bi-person-plus"></i>
-
-                        </a>
-                    </div>
                 </div>
 
                 <!-- Cuerpo / Información Financiera -->
@@ -106,8 +122,12 @@
                             <i class="bi bi-cash-coin fs-4 animate-pulse"></i>
                         </div>
                         {% endif %}
+
                     </div>
+
                 </div>
+
+
             </div>
         </div>
 
