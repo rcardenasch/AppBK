@@ -443,13 +443,10 @@ class CierreService:
             # =====================================================
 
             saldo_final = (
-                saldo_anterior
-                + total_aportes
-                + total_intereses
-                + total_amortizacion
-                + total_multas
-                + total_sobres
-                - prestamos_entregados
+            saldo_anterior
+            + total_cuotas
+            + total_sobres
+            - prestamos_entregados
             )
 
             if saldo_final == Decimal("-0.00"):

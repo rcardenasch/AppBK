@@ -675,14 +675,14 @@ select * from movimientos_caja_chica
 select * from solicitudes_prestamo order by id asc;
 select * from acciones where socio_id=15 order by id asc
 SELECT * FROM socios
-select * from prestamos where socio_id=24
+select * from prestamos where socio_id=12
 SELECT * FROM movimientos m
-where m.socio_id=4 order by m.socio_id, m.periodo_id;
+where m.socio_id=1 order by m.socio_id, m.periodo_id;
 where m.id=489 --and m.periodo_id=14 
 
 select * from solicitudes_prestamo
 select * from prestamos where socio_id=13  order by saldo_actual desc;
-select * from asistencias;
+select * from asistencias where periodo_id=5 order by multa desc;
 select * from transferencias;
 
 select socios.nombres,movimientos.sobre FROM movimientos 
@@ -693,8 +693,7 @@ where sobre>0 order by movimientos.socio_id;
 -- capacida prestamo BK sum(cuota_pagada)
 select movimientos.periodo_id,
 sum(aporte)aporte,sum(amortizacion)amortizacion
-,sum(interes)interes,sum(sobre) sobre
-,(sum(cuota_pagada)+sum(sobre)) capacidad
+,sum(interes)interes,(sum(cuota_pagada)+sum(sobre)) capacidad
 ,sum(cuota_pagada)cuota_pagada
 ,sum(sobre)sobre,sum(saldo_prestamo) saldo_prestamo
 ,sum(multa)multa,(sum(cuota_pagada)+sum(sobre))Cancelar_periodo
@@ -703,3 +702,149 @@ inner join socios on socios.id=movimientos.socio_id
 group by movimientos.periodo_id order by 1  
 ;
 
+BEGIN;
+
+-- ============================================================
+-- 1. CALCULAR SALDOS DE ENERO, FEBRERO Y MARZO 2026
+-- ============================================================
+
+WITH movimientos_periodo AS (
+    SELECT
+        p.id AS periodo_id,
+        p.anio,
+        p.mes,
+
+        COALESCE(SUM(m.cuota_pagada), 0) AS total_cuotas,
+        COALESCE(SUM(m.aporte), 0) AS total_aportes,
+        COALESCE(SUM(m.sobre), 0) AS total_sobres
+
+    FROM periodos p
+    LEFT JOIN movimientos m
+        ON m.periodo_id = p.id
+
+    WHERE p.anio = 2026
+      AND p.mes IN (1, 2, 3)
+
+    GROUP BY
+        p.id,
+        p.anio,
+        p.mes
+),
+
+prestamos_periodo AS (
+    SELECT
+        p.id AS periodo_id,
+        COALESCE(SUM(pr.monto), 0) AS total_prestamos
+
+    FROM periodos p
+    LEFT JOIN prestamos pr
+        ON pr.periodo_id = p.id
+
+    WHERE p.anio = 2026
+      AND p.mes IN (1, 2, 3)
+
+    GROUP BY p.id
+),
+
+datos AS (
+    SELECT
+        m.periodo_id,
+        m.anio,
+        m.mes,
+        m.total_cuotas,
+        m.total_aportes,
+        m.total_sobres,
+        COALESCE(pr.total_prestamos, 0) AS total_prestamos
+
+    FROM movimientos_periodo m
+
+    LEFT JOIN prestamos_periodo pr
+        ON pr.periodo_id = m.periodo_id
+),
+
+saldos AS (
+    SELECT
+        *,
+        SUM(
+            total_cuotas
+            + total_aportes
+            + total_sobres
+            - total_prestamos
+        ) OVER (
+            ORDER BY anio, mes
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) AS saldo_calculado
+
+    FROM datos
+)
+
+UPDATE periodos p
+SET saldo_caja = ROUND(s.saldo_calculado, 2)
+FROM saldos s
+WHERE p.id = s.periodo_id;
+
+
+-- ============================================================
+-- 2. VERIFICAR RESULTADO
+-- ============================================================
+
+SELECT
+    id,
+    anio,
+    mes,
+    saldo_caja
+FROM periodos
+WHERE anio = 2026
+  AND mes IN (1, 2, 3)
+ORDER BY anio, mes;
+
+/*
+1	2026	1	28114.10	6900.00	1380.00	39493.50	-3099.40
+2	2026	2	19673.00	8160.00	1380.00	21053.00	8160.00
+3	2026	3	18983.40	8160.00	1380.00	20363.40	8160.00
+*/
+-- ============================================================
+-- 3. SI LOS RESULTADOS SON CORRECTOS:
+-- ============================================================
+-- COMMIT;
+
+-- Si NO son correctos:
+ROLLBACK;
+
+SELECT
+    p.id,
+    p.anio,
+    p.mes,
+
+    COALESCE(SUM(m.cuota_pagada), 0) AS cuotas,
+    COALESCE(SUM(m.aporte), 0) AS aportes,
+    COALESCE(SUM(m.sobre), 0) AS sobres,
+
+    (
+        SELECT COALESCE(SUM(pr.monto), 0)
+        FROM prestamos pr
+        WHERE pr.periodo_id = p.id
+    ) AS prestamos,
+
+    COALESCE(SUM(m.cuota_pagada), 0)
+    + COALESCE(SUM(m.aporte), 0)
+    + COALESCE(SUM(m.sobre), 0)
+    -
+    (
+        SELECT COALESCE(SUM(pr.monto), 0)
+        FROM prestamos pr
+        WHERE pr.periodo_id = p.id
+    ) AS movimiento_neto
+
+FROM periodos p
+LEFT JOIN movimientos m
+    ON m.periodo_id = p.id
+WHERE p.anio = 2026
+  AND p.mes IN (1, 2, 3)
+GROUP BY
+    p.id,
+    p.anio,
+    p.mes
+ORDER BY
+    p.anio,
+    p.mes;
