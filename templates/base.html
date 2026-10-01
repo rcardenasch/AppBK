@@ -142,9 +142,7 @@
     class="d-none position-fixed top-50 start-50 translate-middle"
     style="z-index:9999;">
 
-    <div class="spinner-border text-primary">
-
-    </div>
+    <div class="spinner-border text-primary"></div>
 
 </div>
 
@@ -175,18 +173,32 @@ $(function(){
 });
 
 
-// Spinner Global
+// ==========================================================
+// SPINNER GLOBAL
+// ==========================================================
 
-$(document).ajaxStart(function(){
-
+function mostrarLoading() {
     $("#loading").removeClass("d-none");
+}
+
+function ocultarLoading() {
+    $("#loading").addClass("d-none");
+}
+
+//para reutilizar clase spinner para los botones
+$(document).on("click", ".btn-procesando", function () {
+
+    mostrarLoading();
 
 });
 
-$(document).ajaxStop(function(){
+// AJAX de jQuery
+$(document).ajaxStart(function () {
+    mostrarLoading();
+});
 
-    $("#loading").addClass("d-none");
-
+$(document).ajaxStop(function () {
+    ocultarLoading();
 });
 
 </script>

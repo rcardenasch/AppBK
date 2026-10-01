@@ -44,8 +44,7 @@
 
             <!-- Botones de Acción -->
             <div class="d-flex gap-2 mt-4 pt-3 border-top">
-                <button type="submit" class="btn btn-primary px-4 shadow-sm" 
-                onsubmit="mostrarProcesando(this.querySelector('button[type=submit]'), 'Guardando...');">
+                <button type="submit" class="btn btn-primary px-4 shadow-sm btn-procesando">
                     <i class="bi bi-check-circle me-1"></i> Guardar
                 </button>
                 <a href="{{ url_for('socios.index') }}" class="btn btn-outline-secondary px-4">
@@ -56,5 +55,13 @@
     </div>
 </div>
 
+<script>
+        //Spinner
+    $(document).on("submit", "form", function () {
+
+    mostrarLoading();
+
+    });
+</script>
 
 {% endblock %}
