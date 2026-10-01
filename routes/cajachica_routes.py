@@ -96,7 +96,7 @@ def guardar():
 
         data = request.get_json()
 
-        periodo_id = data["periodo_id"]
+        periodo_id = int(data["periodo_id"])
         cajachica = data["cajachica"]
 
         periodo = (

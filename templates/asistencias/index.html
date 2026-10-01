@@ -184,7 +184,8 @@
             <button id="btnCancelarGuardar" class="btn btn-secondary">
                 Cancelar
             </button>
-            <button id="btnConfirmarGuardar" class="btn btn-success">
+            <button id="btnConfirmarGuardar" class="btn btn-success" 
+            onsubmit="mostrarProcesando(this.querySelector('button[type=submit]'), 'Guardando...');">
                 <i class="bi bi-check-circle"></i>
                 Guardar
             </button>

@@ -53,7 +53,9 @@
                             <div class="d-flex align-items-center justify-content-center gap-1">
                                 <!-- Generar Movimientos Automáticos -->
                                 <form method="post" action="{{url_for('movimientos.generar',periodo_id=p.id)}}"
-                                    class="m-0">
+                                    class="m-0"
+                                    onsubmit="mostrarProcesando(this.querySelector('button[type=submit]'), 'Guardando...');">
+                                    >
                                     <button class="btn btn-primary btn-sm" title="Generar movimientos masivos">
                                         <i class="bi bi-lightning-charge"></i>
                                     </button>
@@ -61,7 +63,8 @@
 
                                 <!-- Cierre de Periodo -->
                                 <form method="post" id="formCierre-{{ p.id }}"
-                                    action="{{ url_for('periodos.cerrar', periodo_id=p.id) }}" class="m-0">
+                                    action="{{ url_for('periodos.cerrar', periodo_id=p.id) }}" class="m-0" 
+                                    onsubmit="mostrarProcesando(this.querySelector('button[type=submit]'), 'Guardando...');">
                                     <button type="button" title="Generar cierre de periodo"
                                         class="btn btn-outline-warning btn-sm text-dark btn-abrir-confirmacion-cierre"
                                         data-form-id="formCierre-{{ p.id }}">
@@ -82,7 +85,8 @@
 
                                 <!-- Editar Periodo -->
                                 <a title="Editar Periodo" href="{{url_for('periodos.editar',id=p.id)}}"
-                                    class="btn btn-sm btn-warning">
+                                    class="btn btn-sm btn-warning" 
+                                    onsubmit="mostrarProcesando(this.querySelector('button[type=submit]'), 'Guardando...');">
                                     <i class="bi bi-pencil"></i>
                                 </a>
 
