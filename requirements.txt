@@ -6,3 +6,4 @@ Werkzeug
 gunicorn
 psycopg
 Flask-SQLAlchemy
+openpyxl
