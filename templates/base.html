@@ -116,19 +116,22 @@
                          <!-- ==========================================================
                     SPINNER GLOBAL
                     ========================================================== -->
-                <div
-                    id="loading"
-                    class="d-none position-fixed top-50 start-50 translate-middle loading-overlay"
-                    style="z-index:9999;">
-                    <div
-                        class="spinner-border text-primary"
-                        style="width: 3rem; height: 3rem;"
-                        role="status">
-                        <span class="visually-hidden">
-                            Procesando...
-                        </span>
+                <!-- Se reestructuró el contenedor para abarcar toda la pantalla y oscurecer el fondo -->
+                <div id="loading" 
+                    class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
+                    style="z-index: 9999; background-color: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);">
+                    
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" style="width: 3.5rem; height: 3.5rem; border-width: 0.25em;" role="status">
+                            <span class="visually-hidden">Procesando...</span>
+                        </div>
+                        <!-- Opcional: Un texto elegante debajo del spinner que guíe al usuario -->
+                        <div class="text-white fw-semibold mt-3 tracking-wide" style="font-size: 0.9rem;">
+                            Procesando solicitud...
+                        </div>
                     </div>
                 </div>
+
 
 
     <!-- Bootstrap -->
