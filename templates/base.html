@@ -103,11 +103,25 @@
                 {% block content %}
                 {% endblock %}
 
-                <!-- Spinner Global -->
+                     <!-- ==========================================================
+                    SPINNER GLOBAL
+                    ========================================================== -->
 
-                <div id="loading" class="d-none position-fixed top-50 start-50 translate-middle" style="z-index:9999;">
+                <div
+                    id="loading"
+                    class="d-none position-fixed top-50 start-50 translate-middle"
+                    style="z-index:9999;">
 
-                    <div class="spinner-border text-primary"></div>
+                    <div
+                        class="spinner-border text-primary"
+                        style="width: 3rem; height: 3rem;"
+                        role="status">
+
+                        <span class="visually-hidden">
+                            Procesando...
+                        </span>
+
+                    </div>
 
                 </div>
             </main>
@@ -160,20 +174,41 @@
             $("#loading").addClass("d-none");
         }
 
-        //para reutilizar clase spinner para los botones
+        // ==========================================================
+        // AJAX JQUERY
+        // ==========================================================
+
+        $(document).ajaxStart(function () {
+
+            mostrarLoading();
+
+        });
+
+        $(document).ajaxStop(function () {
+
+            ocultarLoading();
+
+        });
+
+        // ==========================================================
+        // FORMULARIOS
+        // ==========================================================
+
+        $(document).on("submit", "form", function () {
+
+            mostrarLoading();
+
+        });
+
+
+        // ==========================================================
+        // BOTONES/LINKS QUE EJECUTAN PROCESOS
+        // ==========================================================
+
         $(document).on("click", ".btn-procesando", function () {
 
             mostrarLoading();
 
-        });
-
-        // AJAX de jQuery
-        $(document).ajaxStart(function () {
-            mostrarLoading();
-        });
-
-        $(document).ajaxStop(function () {
-            ocultarLoading();
         });
 
     </script>
