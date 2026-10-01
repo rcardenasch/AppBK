@@ -103,26 +103,19 @@
                 {% block content %}
                 {% endblock %}
 
-                     <!-- ==========================================================
-                    SPINNER GLOBAL
-                    ========================================================== -->
+                <!-- Spinner Global -->
+                <div id="loading" class="d-none loading-overlay">
+                    <div class="loading-content">
+                        <div class="spinner-border text-primary"
+                            style="width: 3rem; height: 3rem;"
+                            role="status">
+                            <span class="visually-hidden">Procesando...</span>
+                        </div>
 
-                <div
-                    id="loading"
-                    class="d-none position-fixed top-50 start-50 translate-middle"
-                    style="z-index:9999;">
-
-                    <div
-                        class="spinner-border text-primary"
-                        style="width: 3rem; height: 3rem;"
-                        role="status">
-
-                        <span class="visually-hidden">
+                        <div class="mt-3 text-white fw-semibold">
                             Procesando...
-                        </span>
-
+                        </div>
                     </div>
-
                 </div>
             </main>
 
