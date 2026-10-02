@@ -63,6 +63,7 @@ class AdquisicionAccionService:
 
     @staticmethod
     def calcular_interes(
+        db,
         saldo
     ):
 
@@ -169,7 +170,7 @@ class AdquisicionAccionService:
 
             interes = (
                 AdquisicionAccionService
-                .calcular_interes(
+                .calcular_interes(db,
                     saldo_anterior
                 )
             )

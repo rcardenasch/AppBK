@@ -88,6 +88,7 @@ def nuevo():
             socio_id = int(request.form["socio_id"])
             accion_id = int(request.form["accion_id"])
             prioridad = int(request.form.get("prioridad", 1))
+            periodo_id=int(request.form["periodo_id"])
             monto_solicitado = float(request.form["monto"])
 
             socio = db.query(Socio).get(socio_id)
@@ -103,7 +104,7 @@ def nuevo():
 
             solicitud = SolicitudPrestamo(
 
-                periodo_id=request.form["periodo_id"],
+                periodo_id=periodo_id,
                 socio_id=socio_id,
                 accion_id=accion_id,
                 monto_solicitado=monto_solicitado,
@@ -263,11 +264,11 @@ def editar(id):
 
         if request.method == "POST":
 
-            solicitud.periodo_id = request.form["periodo_id"]
-            solicitud.socio_id = request.form["socio_id"]
-            solicitud.accion_id = request.form["accion_id"]
-            solicitud.prioridad=request.form["prioridad"]
-            solicitud.monto_solicitado = request.form["monto"]
+            solicitud.periodo_id = int(request.form["periodo_id"])
+            solicitud.socio_id = int(request.form["socio_id"])
+            solicitud.accion_id = int(request.form["accion_id"])
+            solicitud.prioridad=int(request.form["prioridad"])
+            solicitud.monto_solicitado = float(request.form["monto"])
 
             db.commit()
 

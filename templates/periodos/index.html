@@ -54,7 +54,7 @@
                                 <!-- Generar Movimientos Automáticos -->
                                 <form method="post" action="{{url_for('movimientos.generar',periodo_id=p.id)}}"
                                     class="m-0">
-                                    <button class="btn btn-primary btn-sm" title="Generar movimientos masivos">
+                                    <button class="btn btn-primary btn-sm btn-procesando" title="Generar movimientos masivos">
                                         <i class="bi bi-lightning-charge"></i>
                                     </button>
                                 </form>
@@ -322,6 +322,13 @@
 
         }
     );
+
+    //Spinner
+    $(document).on("submit", "form", function () {
+
+    mostrarLoading();
+
+    });
 </script>
 
 {% endif %}

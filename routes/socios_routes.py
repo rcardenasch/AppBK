@@ -275,65 +275,79 @@ def detalle(id):
 # ==============================================
 # Ruta de previsualización Adquirir Nueva accion
 # ==============================================
-@socios_bp.route("/adquirir-accion/<int:socio_id>",methods=["GET"])
+@socios_bp.route(
+    "/adquirir-accion/<int:socio_id>",
+    methods=["GET"]
+)
 @login_required
 def adquirir_accion(socio_id):
 
     db = SessionLocal()
-    socio = (
-        db.query(Socio)
-        .filter(
-            Socio.id == socio_id
-        )
-        .first()
-    )
 
-    if not socio:
-        flash(
-            "No se encontró el socio.",
-            "danger"
-        )
+    try:
 
-        return redirect(
-            url_for("socios.index")
-        )
-
-    periodo = (
-        db.query(Periodo)
-        .filter(
-            Periodo.cerrado == False
-        )
-        .order_by(
-            Periodo.anio.desc(),
-            Periodo.mes.desc()
-        )
-        .first()
-    )
-
-    if not periodo:
-        flash(
-            "No existe un período abierto.",
-            "warning"
-        )
-
-        return redirect(
-            url_for(
-                "socios.detalle",
-                id=socio.id
+        socio = (
+            db.query(Socio)
+            .filter(
+                Socio.id == socio_id
             )
+            .first()
         )
 
-    resultado_proceso_nueva_accion = session.pop(
-            "resultado_proceso_nueva_accion", 
+        if not socio:
+
+            flash(
+                "No se encontró el socio.",
+                "danger"
+            )
+
+            return redirect(
+                url_for("socios.index")
+            )
+
+        periodo = (
+            db.query(Periodo)
+            .filter(
+                Periodo.cerrado == False
+            )
+            .order_by(
+                Periodo.anio.desc(),
+                Periodo.mes.desc()
+            )
+            .first()
+        )
+
+        if not periodo:
+
+            flash(
+                "No existe un período abierto.",
+                "warning"
+            )
+
+            return redirect(
+                url_for(
+                    "socios.detalle",
+                    id=socio.id
+                )
+            )
+
+        resultado_proceso_nueva_accion = session.pop(
+            "resultado_proceso_nueva_accion",
             None
         )
 
-    return render_template(
-        "socios/adquirir_accion.html",
-        socio=socio,
-        periodo=periodo,
-        resultado_proceso_nueva_accion=resultado_proceso_nueva_accion
-    )
+        return render_template(
+            "socios/adquirir_accion.html",
+            socio=socio,
+            periodo=periodo,
+            resultado_proceso_nueva_accion=(
+                resultado_proceso_nueva_accion
+            )
+        )
+
+    finally:
+
+        db.close()
 
 @socios_bp.route("/adquirir-accion/calcular/<int:socio_id>", methods=["POST"])
 @login_required
@@ -407,6 +421,8 @@ def calcular_adquisicion_accion(socio_id):
             "mensaje": str(e)
         }), 400
 
+    finally:
+        db.close()
 
 
 # ==========================================================

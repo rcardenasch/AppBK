@@ -28,6 +28,7 @@ CREATE TABLE fondo_utilidades(
     total NUMERIC(12,2),
     fecha_registro TIMESTAMP DEFAULT NOW()
 );
+
 --
 CREATE TABLE socios (
     id SERIAL PRIMARY KEY,
@@ -84,16 +85,7 @@ CREATE INDEX ix_solicitudes_prestamo_id ON solicitudes_prestamo(id);
     metodo_distribucion VARCHAR(20)
 );
 
-CREATE TABLE fondo_utilidades(
 
-    id SERIAL PRIMARY KEY,
-    periodo_id INT REFERENCES periodos(id),
-    intereses NUMERIC(12,2),
-    multas NUMERIC(12,2),
-    sobres NUMERIC(12,2),
-    total NUMERIC(12,2),
-    fecha_registro TIMESTAMP DEFAULT NOW()
-);
 
 ALTER TABLE solicitudes_prestamo
 ADD COLUMN acciones INT DEFAULT 0;
@@ -117,16 +109,12 @@ CREATE TABLE roles (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL UNIQUE,
     descripcion VARCHAR(200),
-    nombre VARCHAR(50) NOT NULL UNIQUE,
-    descripcion VARCHAR(200),
     estado BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE permisos (
 
     id SERIAL PRIMARY KEY,
-    modulo VARCHAR(50),
-    accion VARCHAR(50),
     modulo VARCHAR(50),
     accion VARCHAR(50),
     descripcion VARCHAR(150)
@@ -142,13 +130,6 @@ CREATE TABLE roles_permisos(
 CREATE TABLE usuarios(
 
     id SERIAL PRIMARY KEY,
-    rol_id INT REFERENCES roles(id),
-    nombres VARCHAR(150) NOT NULL,
-    usuario VARCHAR(50) UNIQUE NOT NULL,
-    correo VARCHAR(120),
-    password_hash VARCHAR(255) NOT NULL,
-    ultimo_acceso TIMESTAMP,
-
     rol_id INT REFERENCES roles(id),
     nombres VARCHAR(150) NOT NULL,
     usuario VARCHAR(50) UNIQUE NOT NULL,
@@ -182,7 +163,9 @@ CREATE TABLE prestamos (
 -- Índices optimizados
 CREATE INDEX ix_prestamos_id ON prestamos(id);
 
-
+-- 
+ALTER TABLE prestamos
+ALTER COLUMN periodo_id DROP NOT NULL;
 
 --
 CREATE TABLE asistencias (
@@ -255,34 +238,12 @@ ADD CONSTRAINT fk_solicitud_accion
 FOREIGN KEY (accion_id)
 REFERENCES acciones(id);
 --
-ALTER TABLE solicitudes_prestamo
-    ADD COLUMN monto_aprobado NUMERIC(12,2)
+
 --
 ALTER TABLE solicitudes_prestamo 
     ALTER COLUMN prioridad TYPE integer USING prioridad::integer;	
 
---
-ALTER TABLE prestamos
 
-ADD COLUMN saldo_interes NUMERIC(12,2);
-
-ADD COLUMN cuota_minima NUMERIC(12,2);
-
---
-ALTER TABLE prestamos
-ADD COLUMN saldo_interes NUMERIC(12,2);
-
---
-ALTER TABLE periodos
-ADD COLUMN saldo_caja NUMERIC(12,2);
-
---
-ALTER TABLE prestamos
-ADD COLUMN periodo_id int;
-
--- 
-ALTER TABLE prestamos
-ALTER COLUMN periodo_id DROP NOT NULL;
 
 -- estado de solicitudes_prestamo
 PENDIENTE
@@ -297,50 +258,6 @@ ATENDIDA
 
 -- AGREGAMOS NUEVA TABLA DE ASISTENCIAS
 
-CREATE TABLE asistencias
-(
-    id                  SERIAL PRIMARY KEY,
-
-    periodo_id          INTEGER NOT NULL,
-    socio_id            INTEGER NOT NULL,
-    usuario_id          INTEGER NOT NULL,
-
-    estado              VARCHAR(20) NOT NULL,
-
-    acciones            INTEGER NOT NULL,
-
-    multa               NUMERIC(12,2) NOT NULL DEFAULT 0,
-
-    observacion         VARCHAR(100),
-
-    fecha_registro      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_asistencia_periodo
-        FOREIGN KEY (periodo_id)
-        REFERENCES periodos(id),
-
-    CONSTRAINT fk_asistencia_socio
-        FOREIGN KEY (socio_id)
-        REFERENCES socios(id),
-
-    CONSTRAINT fk_asistencia_usuario
-        FOREIGN KEY (usuario_id)
-        REFERENCES usuarios(id),
-
-    CONSTRAINT uq_asistencia_periodo_socio
-        UNIQUE(periodo_id, socio_id),
-
-    CONSTRAINT ck_estado_asistencia
-        CHECK (
-            estado IN (
-                'ASISTIO',
-                'TARDANZA',
-                'FALTA',
-                'PERMISO'
-            )
-        )
-);
-
 -- agregar columnas a configuracion:
 ALTER TABLE configuracion
 ADD COLUMN multa_tardanza NUMERIC(12,2);
@@ -352,8 +269,6 @@ ALTER TABLE configuracion
 ADD COLUMN estado BOOLEAN;
 
 -- agregar columna a movimientos:
-ALTER TABLE movimientos
-ADD COLUMN asistencia_id int REFERENCES asistencias(id);
 
 
 -- Fujo de trabajo BK
@@ -516,18 +431,15 @@ select * from fondo_utilidades;
 
 select * from configuracion;
 select * from prestamos where socio_id=2  order by 1 desc; 
-select * from movimientos where id=121 order by 1 desc; 
+select * from movimientos where socio_id=4 order by 1 desc; 
 
 select * from prestamos order by 1 desc;
 
 select * from solicitudes_prestamo; 
 select * from transferencias;
 
-select * from acciones WHERE SOCIO_ID=20;
-select * from prestamos where socio_id=19
-SELECT * FROM movimientos WHERE SOCIO_ID=20;
-
--- Periodo 2026-01, cerrado correctamente. Movimientos: 48. Saldo de caja: S/ -9819.40. Utilidad: S/ 3851.00.
+select * from acciones WHERE SOCIO_ID=15;
+SELECT * FROM movimientos WHERE SOCIO_ID=15;
 
 SELECT * FROM prestamos where prestamos.accion_id=27;
 select * from acciones;
@@ -617,12 +529,12 @@ add column multa_no_transferir NUMERIC(12,2);
 
 --
 INSERT INTO periodos (anio, mes, fecha_inicio, fecha_fin, saldo_caja, cerrado) 
-VALUES (2026, 1, '2026-01-01', '2026-01-31', NULL, FALSE);
+VALUES (2026, 1, '2026-01-01', '2026-01-31', 0, FALSE);
 
 --
 INSERT INTO configuracion (aporte_minimo, sobre_por_accion, interes_mensual, metodo_distribucion
 ,multa_tardanza,multa_falta,estado,multa_no_transferir) 
-VALUES (170,30,0.01,1,5.00,10.00,true,50.00);
+VALUES (170,30,0.01,1,5.00,20.00,true,50.00);
 
 --
 insert into caja_chica (nombre,saldo_inicial,saldo_actual,activo)
@@ -677,7 +589,11 @@ select * from acciones where socio_id=15 order by id asc
 SELECT * FROM socios
 select * from prestamos where socio_id=12
 SELECT * FROM movimientos m
+<<<<<<< HEAD
 where m.socio_id=1 order by m.socio_id, m.periodo_id;
+=======
+where m.socio_id=24 order by m.socio_id, m.periodo_id;
+>>>>>>> 2cbd08be1842f76cbfd5740045dccc7f04175449
 where m.id=489 --and m.periodo_id=14 
 
 select * from solicitudes_prestamo

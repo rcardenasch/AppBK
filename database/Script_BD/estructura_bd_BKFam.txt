@@ -1,0 +1,297 @@
+CREATE SCHEMA "public";
+CREATE TABLE "acciones" (
+	"id" serial PRIMARY KEY,
+	"socio_id" integer NOT NULL,
+	"numero_accion" varchar(20) NOT NULL,
+	"valor" numeric(12, 2) NOT NULL,
+	"estado" varchar(20) DEFAULT 'ACTIVO',
+	"fecha_registro" date DEFAULT CURRENT_DATE
+);
+CREATE TABLE "asistencias" (
+	"id" serial PRIMARY KEY,
+	"periodo_id" integer NOT NULL,
+	"socio_id" integer NOT NULL,
+	"usuario_id" integer NOT NULL,
+	"estado" varchar(20) NOT NULL,
+	"acciones" integer NOT NULL,
+	"multa" numeric(12, 2) DEFAULT '0.00' NOT NULL,
+	"observacion" varchar(100),
+	"fecha_registro" timestamp DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT "uq_asistencia_periodo_socio" UNIQUE("periodo_id","socio_id"),
+	CONSTRAINT "ck_estado_asistencia" CHECK (((estado)::text = ANY ((ARRAY['ASISTIO'::character varying, 'TARDANZA'::character varying, 'FALTA'::character varying, 'PERMISO'::character varying])::text[])))
+);
+CREATE TABLE "caja_chica" (
+	"id" serial PRIMARY KEY,
+	"nombre" varchar(100) DEFAULT 'Caja chica',
+	"saldo_inicial" numeric(12, 2) DEFAULT '0.00',
+	"saldo_actual" numeric(12, 2) DEFAULT '0.00',
+	"activo" boolean DEFAULT true
+);
+CREATE TABLE "configuracion" (
+	"id" serial PRIMARY KEY,
+	"aporte_minimo" numeric(12, 2),
+	"sobre_por_accion" numeric(12, 2),
+	"interes_mensual" numeric(5, 2),
+	"metodo_distribucion" varchar(20),
+	"multa_tardanza" numeric(12, 2),
+	"multa_falta" numeric(12, 2),
+	"estado" boolean,
+	"multa_no_transferir" numeric(12, 2)
+);
+CREATE TABLE "fondo_utilidades" (
+	"id" serial PRIMARY KEY,
+	"periodo_id" integer CONSTRAINT "uk_fondo_periodo" UNIQUE,
+	"intereses" numeric(12, 2),
+	"multas" numeric(12, 2),
+	"sobres" numeric(12, 2),
+	"total" numeric(12, 2),
+	"fecha_registro" timestamp DEFAULT now()
+);
+CREATE TABLE "movimientos" (
+	"id" serial PRIMARY KEY,
+	"socio_id" integer NOT NULL,
+	"periodo_id" integer NOT NULL,
+	"prestamo_id" integer,
+	"accion_id" integer,
+	"asistencia_id" integer,
+	"aporte" numeric(12, 2) DEFAULT '0.00',
+	"cuota_pagada" numeric(12, 2) DEFAULT '0.00',
+	"interes" numeric(12, 2) DEFAULT '0.00',
+	"amortizacion" numeric(12, 2) DEFAULT '0.00',
+	"saldo_prestamo" numeric(12, 2) DEFAULT '0.00',
+	"multa" numeric(12, 2) DEFAULT '0.00',
+	"sobre" numeric(12, 2) DEFAULT '0.00',
+	"observacion" text,
+	"fecha_registro" timestamp DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE "movimientos_caja_chica" (
+	"id" serial PRIMARY KEY,
+	"caja_id" integer NOT NULL,
+	"periodo_id" integer NOT NULL,
+	"tipo" varchar(20) NOT NULL,
+	"concepto" varchar(200),
+	"monto" numeric(12, 2) NOT NULL,
+	"fecha" timestamp DEFAULT CURRENT_TIMESTAMP,
+	"observacion" text
+);
+CREATE TABLE "periodos" (
+	"id" serial PRIMARY KEY,
+	"anio" integer NOT NULL,
+	"mes" integer NOT NULL,
+	"fecha_inicio" date NOT NULL,
+	"fecha_fin" date NOT NULL,
+	"saldo_caja" numeric(12, 2) DEFAULT '0.00',
+	"cerrado" boolean DEFAULT false NOT NULL
+);
+CREATE TABLE "permisos" (
+	"id" serial PRIMARY KEY,
+	"modulo" varchar(50),
+	"accion" varchar(50),
+	"descripcion" varchar(150)
+);
+CREATE TABLE "prestamos" (
+	"id" serial PRIMARY KEY,
+	"socio_id" integer NOT NULL,
+	"periodo_id" integer,
+	"accion_id" integer NOT NULL,
+	"fecha_prestamo" date DEFAULT CURRENT_DATE,
+	"cuota_minima" numeric(12, 2) NOT NULL,
+	"monto" numeric(12, 2) NOT NULL,
+	"saldo_interes" numeric(12, 2) DEFAULT '0.00',
+	"saldo_actual" numeric(12, 2) DEFAULT '0.00',
+	"tasa_interes" numeric(5, 2) NOT NULL,
+	"estado" varchar(20) DEFAULT 'ACTIVO'
+);
+CREATE TABLE "roles" (
+	"id" serial PRIMARY KEY,
+	"nombre" varchar(50) NOT NULL CONSTRAINT "roles_nombre_key" UNIQUE,
+	"descripcion" varchar(200),
+	"estado" boolean DEFAULT true
+);
+CREATE TABLE "roles_permisos" (
+	"rol_id" integer,
+	"permiso_id" integer,
+	CONSTRAINT "roles_permisos_pkey" PRIMARY KEY("rol_id","permiso_id")
+);
+CREATE TABLE "socios" (
+	"id" serial PRIMARY KEY,
+	"nombres" varchar(200) NOT NULL,
+	"documento" varchar(20),
+	"telefono" varchar(20),
+	"fecha_ingreso" date DEFAULT CURRENT_DATE,
+	"estado" boolean DEFAULT true
+);
+CREATE TABLE "solicitudes_prestamo" (
+	"id" serial PRIMARY KEY,
+	"socio_id" integer NOT NULL,
+	"periodo_id" integer NOT NULL,
+	"accion_id" integer NOT NULL,
+	"fecha_solicitud" date DEFAULT CURRENT_DATE,
+	"monto_solicitado" numeric(12, 2) NOT NULL,
+	"monto_aprobado" numeric(12, 2) DEFAULT '0.00',
+	"prioridad" integer DEFAULT 0,
+	"score" numeric(10, 2) DEFAULT '0.00',
+	"estado" varchar(20) DEFAULT 'PENDIENTE' NOT NULL,
+	"acciones" integer DEFAULT 0,
+	"aportes_acumulados" numeric(12, 2) DEFAULT '0',
+	"antiguedad_meses" integer DEFAULT 0,
+	"observacion" text
+);
+CREATE TABLE "transferencias" (
+	"id" serial PRIMARY KEY,
+	"periodo_id" integer NOT NULL,
+	"socio_origen_id" integer NOT NULL,
+	"socio_destino_id" integer NOT NULL,
+	"monto" numeric(12, 2) NOT NULL,
+	"estado" varchar(20) DEFAULT 'CONFIRMADA' NOT NULL,
+	"fecha_transferencia" timestamp DEFAULT now() NOT NULL,
+	"usuario_id" integer NOT NULL,
+	"observacion" varchar(500)
+);
+CREATE TABLE "usuarios" (
+	"id" serial PRIMARY KEY,
+	"rol_id" integer,
+	"nombres" varchar(150) NOT NULL,
+	"usuario" varchar(50) NOT NULL CONSTRAINT "usuarios_usuario_key" UNIQUE,
+	"correo" varchar(120),
+	"password_hash" varchar(255) NOT NULL,
+	"ultimo_acceso" timestamp,
+	"estado" boolean DEFAULT true,
+	"fecha_registro" timestamp DEFAULT now(),
+	"socio_id" integer CONSTRAINT "uq_usuarios_socio_id" UNIQUE,
+	"debe_cambiar_password" boolean DEFAULT true NOT NULL
+);
+CREATE UNIQUE INDEX "acciones_pkey" ON "acciones" ("id");
+CREATE UNIQUE INDEX "asistencias_pkey" ON "asistencias" ("id");
+CREATE UNIQUE INDEX "uq_asistencia_periodo_socio" ON "asistencias" ("periodo_id","socio_id");
+CREATE UNIQUE INDEX "caja_chica_pkey" ON "caja_chica" ("id");
+CREATE UNIQUE INDEX "configuracion_pkey" ON "configuracion" ("id");
+CREATE UNIQUE INDEX "fondo_utilidades_pkey" ON "fondo_utilidades" ("id");
+CREATE UNIQUE INDEX "uk_fondo_periodo" ON "fondo_utilidades" ("periodo_id");
+CREATE INDEX "ix_movimientos_id" ON "movimientos" ("id");
+CREATE UNIQUE INDEX "movimientos_pkey" ON "movimientos" ("id");
+CREATE UNIQUE INDEX "movimientos_caja_chica_pkey" ON "movimientos_caja_chica" ("id");
+CREATE INDEX "ix_periodos_id" ON "periodos" ("id");
+CREATE UNIQUE INDEX "periodos_pkey" ON "periodos" ("id");
+CREATE UNIQUE INDEX "permisos_pkey" ON "permisos" ("id");
+CREATE INDEX "ix_prestamos_id" ON "prestamos" ("id");
+CREATE UNIQUE INDEX "prestamos_pkey" ON "prestamos" ("id");
+CREATE UNIQUE INDEX "roles_nombre_key" ON "roles" ("nombre");
+CREATE UNIQUE INDEX "roles_pkey" ON "roles" ("id");
+CREATE UNIQUE INDEX "roles_permisos_pkey" ON "roles_permisos" ("rol_id","permiso_id");
+CREATE INDEX "ix_socios_id" ON "socios" ("id");
+CREATE UNIQUE INDEX "socios_pkey" ON "socios" ("id");
+CREATE INDEX "ix_solicitudes_prestamo_id" ON "solicitudes_prestamo" ("id");
+CREATE UNIQUE INDEX "solicitudes_prestamo_pkey" ON "solicitudes_prestamo" ("id");
+CREATE INDEX "idx_transferencias_periodo_id" ON "transferencias" ("periodo_id");
+CREATE INDEX "idx_transferencias_socio_destino_id" ON "transferencias" ("socio_destino_id");
+CREATE INDEX "idx_transferencias_socio_origen_id" ON "transferencias" ("socio_origen_id");
+CREATE UNIQUE INDEX "transferencias_pkey" ON "transferencias" ("id");
+CREATE UNIQUE INDEX "uq_usuarios_socio_id" ON "usuarios" ("socio_id");
+CREATE UNIQUE INDEX "usuarios_pkey" ON "usuarios" ("id");
+CREATE UNIQUE INDEX "usuarios_usuario_key" ON "usuarios" ("usuario");
+CREATE UNIQUE INDEX "ux_usuarios_socio_id" ON "usuarios" ("socio_id");
+ALTER TABLE "acciones" ADD CONSTRAINT "fk_acciones_socio" FOREIGN KEY ("socio_id") REFERENCES "socios"("id");
+ALTER TABLE "asistencias" ADD CONSTRAINT "fk_asistencias_periodo" FOREIGN KEY ("periodo_id") REFERENCES "periodos"("id");
+ALTER TABLE "asistencias" ADD CONSTRAINT "fk_asistencias_socio" FOREIGN KEY ("socio_id") REFERENCES "socios"("id");
+ALTER TABLE "asistencias" ADD CONSTRAINT "fk_asistencias_usuario" FOREIGN KEY ("usuario_id") REFERENCES "usuarios"("id");
+ALTER TABLE "fondo_utilidades" ADD CONSTRAINT "fondo_utilidades_periodo_id_fkey" FOREIGN KEY ("periodo_id") REFERENCES "periodos"("id");
+ALTER TABLE "movimientos" ADD CONSTRAINT "fk_movimientos_accion" FOREIGN KEY ("accion_id") REFERENCES "acciones"("id");
+ALTER TABLE "movimientos" ADD CONSTRAINT "fk_movimientos_asistencia" FOREIGN KEY ("asistencia_id") REFERENCES "asistencias"("id");
+ALTER TABLE "movimientos" ADD CONSTRAINT "fk_movimientos_periodo" FOREIGN KEY ("periodo_id") REFERENCES "periodos"("id");
+ALTER TABLE "movimientos" ADD CONSTRAINT "fk_movimientos_prestamo" FOREIGN KEY ("prestamo_id") REFERENCES "prestamos"("id");
+ALTER TABLE "movimientos" ADD CONSTRAINT "fk_movimientos_socio" FOREIGN KEY ("socio_id") REFERENCES "socios"("id");
+ALTER TABLE "movimientos_caja_chica" ADD CONSTRAINT "fk_movimientos_caja_chica_caja" FOREIGN KEY ("caja_id") REFERENCES "caja_chica"("id") ON DELETE CASCADE;
+ALTER TABLE "movimientos_caja_chica" ADD CONSTRAINT "fk_movimientos_caja_chica_periodo" FOREIGN KEY ("periodo_id") REFERENCES "periodos"("id");
+ALTER TABLE "prestamos" ADD CONSTRAINT "fk_prestamos_accion" FOREIGN KEY ("accion_id") REFERENCES "acciones"("id");
+ALTER TABLE "prestamos" ADD CONSTRAINT "fk_prestamos_periodo" FOREIGN KEY ("periodo_id") REFERENCES "periodos"("id");
+ALTER TABLE "prestamos" ADD CONSTRAINT "fk_prestamos_socio" FOREIGN KEY ("socio_id") REFERENCES "socios"("id");
+ALTER TABLE "roles_permisos" ADD CONSTRAINT "roles_permisos_permiso_id_fkey" FOREIGN KEY ("permiso_id") REFERENCES "permisos"("id");
+ALTER TABLE "roles_permisos" ADD CONSTRAINT "roles_permisos_rol_id_fkey" FOREIGN KEY ("rol_id") REFERENCES "roles"("id");
+ALTER TABLE "solicitudes_prestamo" ADD CONSTRAINT "fk_accion" FOREIGN KEY ("accion_id") REFERENCES "acciones"("id");
+ALTER TABLE "solicitudes_prestamo" ADD CONSTRAINT "fk_periodo" FOREIGN KEY ("periodo_id") REFERENCES "periodos"("id");
+ALTER TABLE "solicitudes_prestamo" ADD CONSTRAINT "fk_solicitud_accion" FOREIGN KEY ("accion_id") REFERENCES "acciones"("id");
+ALTER TABLE "solicitudes_prestamo" ADD CONSTRAINT "fk_solicitudes_accion" FOREIGN KEY ("accion_id") REFERENCES "acciones"("id");
+ALTER TABLE "solicitudes_prestamo" ADD CONSTRAINT "fk_solicitudes_periodo" FOREIGN KEY ("periodo_id") REFERENCES "periodos"("id");
+ALTER TABLE "solicitudes_prestamo" ADD CONSTRAINT "fk_solicitudes_socio" FOREIGN KEY ("socio_id") REFERENCES "socios"("id");
+ALTER TABLE "transferencias" ADD CONSTRAINT "fk_periodos" FOREIGN KEY ("periodo_id") REFERENCES "periodos"("id");
+ALTER TABLE "transferencias" ADD CONSTRAINT "fk_socio_destino" FOREIGN KEY ("socio_destino_id") REFERENCES "socios"("id");
+ALTER TABLE "transferencias" ADD CONSTRAINT "fk_socio_origen" FOREIGN KEY ("socio_origen_id") REFERENCES "socios"("id");
+ALTER TABLE "transferencias" ADD CONSTRAINT "fk_usuario" FOREIGN KEY ("usuario_id") REFERENCES "usuarios"("id");
+ALTER TABLE "usuarios" ADD CONSTRAINT "fk_usuarios_socios" FOREIGN KEY ("socio_id") REFERENCES "socios"("id") ON DELETE SET NULL;
+ALTER TABLE "usuarios" ADD CONSTRAINT "usuarios_rol_id_fkey" FOREIGN KEY ("rol_id") REFERENCES "roles"("id");
+
+-- sincronizar bd con secuencia postgress neon:
+
+DO $$
+DECLARE
+    r RECORD;
+    max_id BIGINT;
+    seq_name TEXT;
+BEGIN
+
+    FOR r IN
+        SELECT
+            n.nspname AS schema_name,
+            c.relname AS table_name,
+            a.attname AS column_name,
+            pg_get_serial_sequence(
+                format('%I.%I', n.nspname, c.relname),
+                a.attname
+            ) AS sequence_name
+        FROM pg_class c
+        JOIN pg_namespace n
+            ON n.oid = c.relnamespace
+        JOIN pg_attribute a
+            ON a.attrelid = c.oid
+        WHERE c.relkind = 'r'
+          AND a.attname = 'id'
+          AND a.attnum > 0
+          AND NOT a.attisdropped
+          AND pg_get_serial_sequence(
+                format('%I.%I', n.nspname, c.relname),
+                a.attname
+              ) IS NOT NULL
+          AND n.nspname = 'public'
+    LOOP
+
+        EXECUTE format(
+            'SELECT MAX(id) FROM %I.%I',
+            r.schema_name,
+            r.table_name
+        )
+        INTO max_id;
+
+        seq_name := r.sequence_name;
+
+        IF max_id IS NULL THEN
+
+            EXECUTE format(
+                'SELECT setval(%L, 1, false)',
+                seq_name
+            );
+
+            RAISE NOTICE
+                'Tabla: %.% | Vacía | Secuencia reiniciada en 1',
+                r.schema_name,
+                r.table_name;
+
+        ELSE
+
+            EXECUTE format(
+                'SELECT setval(%L, %s, true)',
+                seq_name,
+                max_id
+            );
+
+            RAISE NOTICE
+                'Tabla: %.% | MAX(id)=% | Secuencia sincronizada',
+                r.schema_name,
+                r.table_name,
+                max_id;
+
+        END IF;
+
+    END LOOP;
+
+END $$;

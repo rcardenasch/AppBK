@@ -16,7 +16,7 @@
                 {{ "%02d"|format(periodo.mes) }}
             </small>
         </div>
-        <button id="btnGuardar" class="btn btn-success" data-periodo="{{ periodo.id }}">
+        <button id="btnGuardar" class="btn btn-success btn-procesando" data-periodo="{{ periodo.id }}">
 
             <i class="bi bi-save"></i>
             Guardar Asistencia
@@ -184,7 +184,7 @@
             <button id="btnCancelarGuardar" class="btn btn-secondary">
                 Cancelar
             </button>
-            <button id="btnConfirmarGuardar" class="btn btn-success">
+            <button id="btnConfirmarGuardar" class="btn btn-success btn-procesando">
                 <i class="bi bi-check-circle"></i>
                 Guardar
             </button>
@@ -221,6 +221,13 @@
 <script>
     const MULTA_TARDANZA = {{ config.multa_tardanza }};
     const MULTA_FALTA = {{ config.multa_falta }};
+
+   // Spinner
+    $(document).on("submit", "form", function () {
+
+    mostrarLoading();
+
+    });
 </script>
 
 
