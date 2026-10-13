@@ -28,7 +28,7 @@
                 <div class="card-body">
                     <small class="text-muted">FONDO DISPONIBLE</small>
                     <h3 class="text-success fw-bold">
-                        S/ {{ "%.2f"|format(fondo|float) }}
+                        S/ {{ "{:,.2f}".format(fondo) }}
                     </h3>
                 </div>
             </div>
@@ -39,7 +39,7 @@
                 <div class="card-body">
                     <small class="text-muted">PRÉSTAMOS APROBADOS</small>
                     <h3 class="fw-bold">
-                        S/ {{ "%.2f"|format(total_aprobado|float) }}
+                        S/ {{ "{:,.2f}".format(total_aprobado) }}
                     </h3>
                 </div>
             </div>

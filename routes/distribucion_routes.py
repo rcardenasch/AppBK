@@ -122,7 +122,7 @@ def index(periodo_id):
         )
 
         return render_template(
-
+ 
             "distribucion/index.html",
             periodo=periodo,
             config=config,
