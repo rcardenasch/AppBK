@@ -334,85 +334,118 @@
             <!-- BOTÓN PAGAR TODO -->
             <!-- =============================================== -->
 
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h6 class="mb-1">
-                        <i class="bi bi-cash-stack text-success"></i>
-                        Cancelación de deuda
-                    </h6>
-                    <small class="text-muted">
-                        Calcula automáticamente la cuota necesaria
-                        para dejar el saldo en cero.
-                    </small>
-                </div>
 
-                <button type="button" class="btn btn-success" id="btnPagarTodaDeuda">
-                    <i class="bi bi-check2-circle"></i>
-                    Pagar toda la deuda
+            <!-- =============================================== -->
+            <!-- BOTÓN PARA MOSTRAR / OCULTAR CÁLCULO DE DEUDA -->
+            <!-- =============================================== -->
+
+            <div class="d-flex justify-content-end mb-3">
+                <button type="button" class="btn btn-outline-success" id="btnMostrarCalculoDeuda" aria-expanded="false"
+                    aria-controls="panelCalculoDeuda">
+
+                    <i class="bi bi-calculator me-1"></i>
+                    Calcular pago / cancelar deuda
+                    <i class="bi bi-chevron-down ms-1" id="iconoCalculoDeuda"></i>
                 </button>
             </div>
 
-
             <!-- =============================================== -->
-            <!-- RESUMEN DINÁMICO -->
+            <!-- PANEL OCULTO: CANCELACIÓN Y RESUMEN DE DEUDA -->
             <!-- =============================================== -->
 
-            <div class="card bg-light border-0">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="small text-muted">
-                                Saldo préstamo
+            <div id="panelCalculoDeuda" class="d-none">
+
+                <div class="card border-success border-opacity-25 mb-3">
+
+                    <div class="card-body">
+
+                        <div class="d-flex flex-wrap justify-content-between
+                                    align-items-center gap-3 mb-3">
+
+                            <div>
+                                <h6 class="mb-1">
+                                    <i class="bi bi-cash-stack text-success me-1"></i>
+                                    Cancelación de deuda
+                                </h6>
+
+                                <small class="text-muted">
+                                    Calcula automáticamente la cuota necesaria
+                                    para dejar el saldo en cero.
+                                </small>
                             </div>
-                            <div class="fs-5 fw-bold" id="editSaldoApertura">
-                                S/ 0.00
+
+                            <button type="button" class="btn btn-success" id="btnPagarTodaDeuda">
+
+                                <i class="bi bi-check2-circle me-1"></i>
+                                Pagar toda la deuda
+                            </button>
+
+                        </div>
+
+                        <!-- RESUMEN DINÁMICO -->
+
+                        <div class="card bg-light border-0">
+                            <div class="card-body">
+
+                                <div class="row g-3">
+
+                                    <div class="col-md-4">
+                                        <div class="small text-muted">Saldo préstamo</div>
+                                        <div class="fs-5 fw-bold" id="editSaldoApertura">
+                                            S/ 0.00
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="small text-muted">Multa anterior</div>
+                                        <div class="fs-5 fw-bold text-warning" id="editMultaAnterior">
+                                            S/ 0.00
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="small text-muted">Deuda total</div>
+                                        <div class="fs-5 fw-bold text-danger" id="editDeudaTotal">
+                                            S/ 0.00
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="small text-muted">Interés</div>
+                                        <div class="fs-5 fw-bold" id="editInteres">
+                                            S/ 0.00
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="small text-muted">Amortización</div>
+                                        <div class="fs-5 fw-bold text-primary" id="editAmortizacion">
+                                            S/ 0.00
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="small text-muted">Nuevo saldo</div>
+                                        <div class="fs-5 fw-bold text-success" id="editSaldoNuevo">
+                                            S/ 0.00
+                                        </div>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
 
-                        <div class="col-md-4">
-                            <div class="small text-muted">
-                                Multa anterior
-                            </div>
-                            <div class="fs-5 fw-bold text-warning" id="editMultaAnterior">
-                                S/ 0.00
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="small text-muted">
-                                Deuda total
-                            </div>
-                            <div class="fs-5 fw-bold text-danger" id="editDeudaTotal">
-                                S/ 0.00
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="small text-muted">
-                                Interés
-                            </div>
-                            <div class="fs-5 fw-bold" id="editInteres">
-                                S/ 0.00
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="small text-muted">
-                                Amortización
-                            </div>
-                            <div class="fs-5 fw-bold text-primary" id="editAmortizacion">
-                                S/ 0.00
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="small text-muted">
-                                Nuevo saldo
-                            </div>
-                            <div class="fs-5 fw-bold text-success" id="editSaldoNuevo">
-                                S/ 0.00
-                            </div>
-                        </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- OBSERVACIÓN: se mantiene inmediatamente después del panel -->
+
+            <div class="mt-3">
+                <label class="form-label" for="editObservacion">
+                    Observación
+                </label>
+                <textarea id="editObservacion" class="form-control" rows="3"></textarea>
             </div>
 
             <!-- =============================================== -->
@@ -435,10 +468,10 @@
             <button type="button" class="btn btn-primary" id="btnGuardarEdicionMovimiento">
                 <i class="bi bi-save"></i>
                 Guardar cambios
-            
+
             </button>
             <span id="editEstadoDeuda" class="badge bg-light text-dark">
-                    Calculando...
+                Calculando...
             </span>
         </div>
     </div>
@@ -450,9 +483,43 @@
         // Contenedor del Modal nativo (<dialog>)
         const $modal = $("#modalEditarMovimiento");
 
+        const $panelCalculoDeuda = $("#panelCalculoDeuda");
+        const $btnMostrarCalculo = $("#btnMostrarCalculoDeuda");
+
+        // Mostrar / ocultar el cálculo de deuda
+        $btnMostrarCalculo.on("click", function () {
+
+            const estaOculto = $panelCalculoDeuda.hasClass("d-none");
+
+            $panelCalculoDeuda.toggleClass("d-none", !estaOculto);
+
+            $(this).attr("aria-expanded", String(estaOculto));
+
+            $(this).html(
+                estaOculto
+                    ? '<i class="bi bi-calculator me-1"></i>' +
+                    'Ocultar cálculo de deuda ' +
+                    '<i class="bi bi-chevron-up ms-1"></i>'
+                    : '<i class="bi bi-calculator me-1"></i>' +
+                    'Calcular pago / cancelar deuda ' +
+                    '<i class="bi bi-chevron-down ms-1"></i>'
+            );
+        });
+
         $(document).on("click", ".btn-editar-movimiento", function () {
 
             const id = $(this).data("id");
+
+            // Ocultar el cálculo cada vez que se abre un movimiento
+            $panelCalculoDeuda.addClass("d-none");
+
+            $btnMostrarCalculo
+                .attr("aria-expanded", "false")
+                .html(
+                    '<i class="bi bi-calculator me-1"></i>' +
+                    'Calcular pago / cancelar deuda ' +
+                    '<i class="bi bi-chevron-down ms-1"></i>'
+                );
 
             $.get(`/movimientos/editar_movimiento/${id}`, function (resp) {
 
@@ -779,8 +846,22 @@
         // =====================================================
         // 3. GUARDAR EDICION DE MOVIMIENTO (AJAX POST)
         // =====================================================
+
         $("#btnGuardarEdicionMovimiento").on("click", function () {
+
+            const boton = $(this);
+
+            // Evitar envíos duplicados
+            if (boton.prop("disabled")) {
+                return;
+            }
+
             const id = $("#editMovimientoId").val();
+
+            if (!id) {
+                alert("Movimiento no identificado.");
+                return;
+            }
 
             const datos = {
                 aporte: $("#editAporte").val(),
@@ -790,52 +871,80 @@
                 observacion: $("#editObservacion").val()
             };
 
+            // Guardar estado original del botón
+            const textoOriginal = boton.html();
+
+            // Mostrar spinner
+            boton
+                .prop("disabled", true)
+                .html(
+                    '<span class="spinner-border spinner-border-sm me-2" ' +
+                    'role="status" aria-hidden="true"></span>' +
+                    'Guardando...'
+                );
+
             $.ajax({
                 url: `/movimientos/editar_movimiento/${id}`,
                 method: "POST",
                 data: datos,
+
                 success: function (resp) {
+
                     if (!resp.ok) {
-                        alert(resp.mensaje);
+                        const mensaje = resp.mensaje || "No se pudo actualizar el movimiento.";
+
+                        if (typeof mostrarMensaje === "function") {
+                            mostrarMensaje(mensaje, "danger");
+                        } else {
+                            alert(mensaje);
+                        }
+
                         return;
                     }
+
+                    // Actualizar la fila
+                    actualizarFilaMovimiento(id, resp);
+
+                    const accionId = resp.accion_id;
 
                     // Cerrar modal
                     if ($modal[0]) {
                         $modal[0].close();
                     }
 
-                    // Actualizar la fila en la interfaz usando la respuesta del servidor
-                    actualizarFilaMovimiento(id, resp);
-
-                    // Obtener el ID de la acción (prioriza la respuesta del servidor, o una variable global)
-                    // Nota: Asegúrate de que tu backend en Flask devuelva 'accion_id' en el JSON
-                    const accionId = resp.accion_id;
-
                     if (typeof mostrarMensaje === "function") {
-                        mostrarMensaje("Movimiento actualizado correctamente.", "success");
 
-                        // Esperar 1.5 segundos para que el usuario vea el mensaje verde antes de redirigir
+                        mostrarMensaje(
+                            "Movimiento actualizado correctamente.",
+                            "success"
+                        );
+
                         setTimeout(function () {
                             if (accionId) {
-                                window.location.href = `/acciones/detalle/${accionId}`;
+                                window.location.href =
+                                    `/acciones/detalle/${accionId}`;
                             } else {
-                                // Alternativa por si no tienes el ID a la mano (recarga la página actual)
                                 window.location.reload();
                             }
                         }, 1500);
 
                     } else {
+
                         alert("Movimiento actualizado correctamente.");
+
                         if (accionId) {
-                            window.location.href = `/acciones/detalle/${accionId}`;
+                            window.location.href =
+                                `/acciones/detalle/${accionId}`;
                         } else {
                             window.location.reload();
                         }
                     }
                 },
+
                 error: function (xhr) {
+
                     let mensaje = "Error al actualizar el movimiento.";
+
                     if (xhr.responseJSON && xhr.responseJSON.mensaje) {
                         mensaje = xhr.responseJSON.mensaje;
                     }
@@ -845,6 +954,14 @@
                     } else {
                         alert(mensaje);
                     }
+                },
+
+                complete: function () {
+
+                    // Restaurar el botón al terminar la petición
+                    boton
+                        .prop("disabled", false)
+                        .html(textoOriginal);
                 }
             });
         });
