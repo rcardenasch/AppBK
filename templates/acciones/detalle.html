@@ -1158,7 +1158,7 @@
                 }
             });
         });
-    });
+    
 
     // =====================================================
     // FUNCION GLOBAL: ACTUALIZAR FILA DINÁMICAMENTE
@@ -1231,15 +1231,9 @@
     }
 
 
-
-
-
-
-
-
-    // =====================================================
-    // SIMULADOR FINANCIERO
-    // =====================================================
+// =====================================================
+// SIMULADOR FINANCIERO
+// =====================================================
 
     const modalSimulador =
         document.getElementById("modalSimulador");
@@ -1302,658 +1296,1125 @@
         deuda = dinero(deuda);
 
         if (deuda <= 0) return 0;
-
         if (deuda <= 3000) return 417;
-
         if (deuda <= 7500) return 504;
-
         if (deuda <= 12500) return 566;
-
         if (deuda <= 15000) return 590;
-
         if (deuda <= 17500) return 611;
-
         if (deuda <= 20000) return 677;
-
         if (deuda <= 22500) return 743;
-
         if (deuda <= 25000) return 809;
-
         if (deuda <= 27500) return 875;
 
         return 941;
 
     }
 
+        // =====================================================
+        // DATOS DEL SIMULADOR
+        // =====================================================
 
-    // =====================================================
-    // ORDENAR MOVIMIENTOS
-    // =====================================================
+        window.SIMULADOR = {
+            accionId: {{ accion.id }},
 
-    function obtenerMovimientosOrdenados() {
+            movimientos: [
+                {% for m in accion.movimientos|sort(attribute='periodo_id') %}
+                {
+                    id: {{ m.id }},
+                    periodo_id: {{ m.periodo_id if m.periodo_id is not none else 'null' }},
 
-        return [
-            ...SIMULADOR.movimientos
-        ].sort(function (a, b) {
+                    anio: {{ m.periodo.anio if m.periodo else 'null' }},
+                    mes: {{ m.periodo.mes if m.periodo else 'null' }},
 
-            if (a.anio !== b.anio) {
+                    aporte: {{ m.aporte or 0 }},
+                    amortizacion: {{ m.amortizacion or 0 }},
+                    interes: {{ m.interes or 0 }},
+                    saldo_prestamo: {{ m.saldo_prestamo or 0 }},
 
-                return a.anio - b.anio;
+                    multa: {{ m.multa or 0 }},
+                    sobre: {{ m.sobre or 0 }},
+                    cuota_pagada: {{ m.cuota_pagada or 0 }},
 
-            }
+                    prestamo_id: {{ m.prestamo_id if m.prestamo_id is not none else 'null' }}
+                }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
 
-            return a.mes - b.mes;
+            prestamos: [
+                {% for p in accion.prestamos %}
+                {
+                    id: {{ p.id }},
+                    monto: {{ p.monto or 0 }},
 
-        });
+                    periodo_id: {{ p.periodo_id if p.periodo_id is not none else 'null' }},
 
-    }
+                    anio: {{ p.periodo.anio if p.periodo else 'null' }},
+                    mes: {{ p.periodo.mes if p.periodo else 'null' }}
+                }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ]
+        };
 
+        // =====================================================
+        // ORDENAR MOVIMIENTOS
+        // =====================================================
 
-    // =====================================================
-    // OBTENER PRÉSTAMOS DEL PERÍODO
-    // =====================================================
+        function obtenerMovimientosOrdenados() {
 
-    function obtenerPrestamosPeriodo(anio, mes) {
+            return [
+                ...(window.SIMULADOR?.movimientos || [])
+            ].sort(function (a, b) {
 
-        return SIMULADOR.prestamos
-            .filter(function (p) {
+                // Los movimientos con periodo_id NULL
+                // corresponden al saldo inicial.
+                if (a.periodo_id === null && b.periodo_id !== null) {
+                    return -1;
+                }
 
-                return (
-                    p.anio === anio &&
-                    p.mes === mes
-                );
+                if (a.periodo_id !== null && b.periodo_id === null) {
+                    return 1;
+                }
 
+                if (a.anio === null && b.anio !== null) {
+                    return -1;
+                }
+
+                if (a.anio !== null && b.anio === null) {
+                    return 1;
+                }
+
+                if ((a.anio || 0) !== (b.anio || 0)) {
+                    return (a.anio || 0) - (b.anio || 0);
+                }
+
+                return (a.mes || 0) - (b.mes || 0);
             });
+        }
 
-    }
 
+        // =====================================================
+        // OBTENER PRÉSTAMOS DEL PERÍODO
+        // =====================================================
 
-    // =====================================================
-    // SALDO INICIAL
-    //
-    // préstamos con periodo_id = NULL
-    // =====================================================
+        function obtenerPrestamosPeriodo(anio, mes) {
 
-    function obtenerSaldoInicial() {
-
-        return dinero(
-
-            SIMULADOR.prestamos
+            return (window.SIMULADOR?.prestamos || [])
                 .filter(function (p) {
 
                     return (
-                        p.anio === null &&
-                        p.mes === null
+                        p.anio === anio &&
+                        p.mes === mes
                     );
 
-                })
-                .reduce(function (total, p) {
-
-                    return total +
-                        dinero(p.monto);
-
-                }, 0)
-
-        );
-
-    }
+                });
+        }
 
 
-    // =====================================================
-    // SIMULAR
-    // =====================================================
+        // =====================================================
+        // SALDO INICIAL
+        // =====================================================
 
-    function simular() {
+        function obtenerSaldoInicial() {
 
-        const movimientos =
-            obtenerMovimientosOrdenados();
+            return dinero(
+                (window.SIMULADOR?.prestamos || [])
+                    .filter(function (p) {
 
-        const tasa =
-            Number(
-                document.getElementById("simTasa").value
-            ) / 100;
+                        return (
+                            p.periodo_id === null
+                        );
 
-        const aporteMinimo =
-            dinero(
-                document.getElementById("simAporte").value
+                    })
+                    .reduce(function (total, p) {
+
+                        return total + dinero(p.monto);
+
+                    }, 0)
             );
-
-
-        tbodySimulador.innerHTML = "";
-
-
-        // =================================================
-        // CAPITAL INICIAL
-        // =================================================
-
-        let capital =
-            obtenerSaldoInicial();
-
-
-        // =================================================
-        // FILA SALDO INICIAL
-        // =================================================
-
-        if (capital > 0) {
-
-            agregarFilaInicio(capital);
-
         }
 
 
-        // =================================================
-        // MULTA DEL PERÍODO ANTERIOR
-        // =================================================
-
-        let multaAnterior = 0;
-
-
-        // =================================================
-        // RECORRER PERÍODOS
-        // =================================================
-
-        movimientos.forEach(function (m) {
-
-            const prestamosPeriodo =
-                obtenerPrestamosPeriodo(
-                    m.anio,
-                    m.mes
-                );
-
-
-            // ---------------------------------------------
-            // PRÉSTAMOS NUEVOS
-            // ---------------------------------------------
-
-            const prestamosNuevos =
-                prestamosPeriodo.reduce(
-                    function (total, p) {
-
-                        return total +
-                            dinero(p.monto);
-
-                    },
-                    0
-                );
-
-
-            // ---------------------------------------------
-            // SALDO APERTURA CAPITAL
-            // ---------------------------------------------
-
-            const saldoApertura =
-                dinero(capital);
-
-
-            // ---------------------------------------------
-            // BASE INTERÉS
-            //
-            // IMPORTANTE:
-            //
-            // multa anterior sí genera interés.
-            //
-            // préstamo nuevo NO genera interés
-            // durante el mismo período.
-            // ---------------------------------------------
-
-            const baseInteres =
-                dinero(
-                    saldoApertura +
-                    multaAnterior
-                );
-
-
-            // ---------------------------------------------
-            // INTERÉS
-            // ---------------------------------------------
-
-            const interes =
-                calcularInteres(
-                    baseInteres,
-                    tasa
-                );
-
-
-            // ---------------------------------------------
-            // DEUDA TOTAL
-            // ---------------------------------------------
-
-            const deuda =
-                dinero(
-                    saldoApertura +
-                    multaAnterior +
-                    prestamosNuevos
-                );
-
-            // ---------------------------------------------
-            // CUOTA REAL REGISTRADA
-            // ---------------------------------------------
-
-            const cuota =
-                dinero(m.cuota);
-
-            // ---------------------------------------------
-            // AMORTIZACIÓN
-            // ---------------------------------------------
-
-            let amortizacion =
-                dinero(
-                    cuota -
-                    dinero(m.aporte) -
-                    interes
-                );
-
-            if (amortizacion < 0) {
-
-                amortizacion = 0;
-
-            }
-
-            if (amortizacion > deuda) {
-
-                amortizacion = deuda;
-
-            }
-            // ---------------------------------------------
-            // MULTA PAGADA
-            // ---------------------------------------------
-            const multaPagada =
-                Math.min(
-                    amortizacion,
-                    multaAnterior
-                );
-
-            // ---------------------------------------------
-            // CAPITAL AMORTIZADO
-            // ---------------------------------------------
-
-            const capitalAmortizado =
-                dinero(
-                    amortizacion -
-                    multaPagada
-                );
-
-            // ---------------------------------------------
-            // NUEVO CAPITAL
-            // ---------------------------------------------
-
-            const nuevoCapital =
-                Math.max(
-                    0,
-                    dinero(
-                        saldoApertura +
-                        prestamosNuevos -
-                        capitalAmortizado
-                    )
-                );
-
-            // ---------------------------------------------
-            // NUEVO SALDO TOTAL
-            // ---------------------------------------------
-
-            const nuevoSaldo =
-                Math.max(
-                    0,
-                    dinero(
-                        deuda -
-                        amortizacion
-                    )
-                );
-
-
-            // ---------------------------------------------
-            // CUOTA MÍNIMA
-            // ---------------------------------------------
-
-            let cuotaMinima = 0;
-
-            if (deuda > 0) {
-
-                const cuotaTabla =
-                    calcularCuotaMinima(deuda);
-
-                const cuotaCancelacion =
-                    dinero(
-                        m.aporte +
-                        interes +
-                        deuda
-                    );
-
-                cuotaMinima =
-                    Math.min(
-                        cuotaTabla,
-                        cuotaCancelacion
-                    );
-
-            } else {
-
-                cuotaMinima =
-                    dinero(m.aporte);
-
-            }
-
-
-            // ---------------------------------------------
-            // CONTROL
-            // ---------------------------------------------
-
-            const diferenciaInteres =
-                dinero(
-                    m.interes -
-                    interes
-                );
-
-            const diferenciaAmortizacion =
-                dinero(
-                    m.amortizacion -
-                    amortizacion
-                );
-
-            const diferenciaSaldo =
-                dinero(
-                    m.saldo -
-                    nuevoSaldo
-                );
-
-
-            const correcto =
-                Math.abs(diferenciaInteres) <= 0.01 &&
-                Math.abs(diferenciaAmortizacion) <= 0.01 &&
-                Math.abs(diferenciaSaldo) <= 0.01;
-
-
-            // ---------------------------------------------
-            // AGREGAR FILA
-            // ---------------------------------------------
-
-            agregarFila({
-
-                periodo: `${m.anio}-${String(m.mes).padStart(2, "0")}`,
-                aporte: m.aporte,
-                cuota: cuota,
-                cuotaMinima: cuotaMinima,
-                amortizacion: amortizacion,
-                interes: interes,
-                saldo: nuevoSaldo,
-                prestamos: prestamosNuevos,
-                multa: m.multa,
-                sobre: m.sobre,
-                correcto: correcto
-
-            });
-
-            // ---------------------------------------------
-            // AVANZAR AL SIGUIENTE PERÍODO
-            // ---------------------------------------------
-            capital =
-                nuevoCapital;
-
-            multaAnterior =
-                dinero(m.multa);
-
-        });
-
-    }
-
-    // =====================================================
-    // FILA INICIAL
-    // =====================================================
-
-    function agregarFilaInicio(capital) {
-
-        const tr =
-            document.createElement("tr");
-
-        tr.innerHTML = `
-
-            <td>
-                <span class="badge bg-info">
-                    Inicio
-                </span>
-            </td>
-
-            <td>—</td>
-
-            <td>—</td>
-
-            <td>—</td>
-
-            <td>—</td>
-
-            <td>—</td>
-
-            <td class="fw-bold text-danger">
-                S/ ${dinero(capital).toFixed(2)}
-            </td>
-
-            <td class="fw-bold">
-                S/ ${dinero(capital).toFixed(2)}
-            </td>
-
-            <td>—</td>
-
-            <td>—</td>
-
-            <td>
-                <span class="badge bg-info">
-                    APERTURA
-                </span>
-            </td>
-
-        `;
-
-        tbodySimulador.appendChild(tr);
-
-    }
-
-
-    // =====================================================
-    // AGREGAR FILA
-    // =====================================================
-
-    function agregarFila(data) {
-
-        const tr =
-            document.createElement("tr");
-
-
-        const claseControl =
-            data.correcto
-                ? "bg-success"
-                : "bg-danger";
-
-
-        const textoControl =
-            data.correcto
-                ? "OK"
-                : "REVISAR";
-
-
-        tr.innerHTML = `
-
-            <td>
-
-                <span class="badge bg-primary">
-
-                    ${data.periodo}
-
-                </span>
-
-            </td>
-
-
-            <td>
-
-                S/ ${dinero(data.aporte).toFixed(2)}
-
-            </td>
-
-
-            <td>
-
-                <input
-                    type="number"
-                    step="0.01"
-                    class="form-control form-control-sm sim-cuota"
-                    value="${dinero(data.cuota).toFixed(2)}">
-
-            </td>
-
-
-            <td class="text-primary fw-bold">
-
-                S/ ${dinero(data.cuotaMinima).toFixed(2)}
-
-            </td>
-
-
-            <td class="text-primary fw-bold">
-
-                S/ ${dinero(data.amortizacion).toFixed(2)}
-
-            </td>
-
-
-            <td class="text-success fw-bold">
-
-                S/ ${dinero(data.interes).toFixed(2)}
-
-            </td>
-
-
-            <td class="text-danger fw-bold">
-
-                S/ ${dinero(data.saldo).toFixed(2)}
-
-            </td>
-
-
-            <td>
-
-                S/ ${dinero(data.prestamos).toFixed(2)}
-
-            </td>
-
-
-            <td>
-
-                S/ ${dinero(data.multa).toFixed(2)}
-
-            </td>
-
-
-            <td>
-
-                S/ ${dinero(data.sobre).toFixed(2)}
-
-            </td>
-
-
-            <td>
-
-                <span class="badge ${claseControl}">
-
-                    ${textoControl}
-
-                </span>
-
-            </td>
-
-        `;
-
-
-        tbodySimulador.appendChild(tr);
-
-    }
-
-
-    // =====================================================
-    // ABRIR
-    // =====================================================
-
-    $("#btnAbrirSimulador").on("click", function () {
-
-        simular();
-
-        if (modalSimulador) {
-
-            modalSimulador.showModal();
-
-        }
-
-    });
-
-
-    // =====================================================
-    // CERRAR
-    // =====================================================
-
-    $("#btnCerrarSimulador, #btnCerrarSimulador2")
-        .on("click", function () {
-
-            if (modalSimulador) {
-
-                modalSimulador.close();
-
-            }
-
-        });
-
-
-    // =====================================================
-    // RECALCULAR
-    // =====================================================
-
-    $("#btnRecalcularSimulador").on(
-        "click",
-        function () {
-
-            simular();
-
-        }
-    );
-
-
-    // =====================================================
-    // CAMBIAR CUOTA
-    // =====================================================
-    //
-    // IMPORTANTE:
-    //
-    // Al cambiar una cuota se debe reconstruir TODA
-    // la secuencia porque el saldo de un período
-    // afecta al siguiente.
-    //
-    // =====================================================
-
-    $(document).on(
-        "input",
-        "#tablaSimulador .sim-cuota",
-        function () {
-
-            const fila =
-                $(this).closest("tr");
-
-            const indice =
-                fila.index();
+        // =====================================================
+        // SIMULAR
+        // =====================================================
+
+        function simular() {
 
             const movimientos =
                 obtenerMovimientosOrdenados();
 
-            if (
-                indice >= 0 &&
-                indice < movimientos.length
-            ) {
+            const tasa =
+                Number(
+                    document.getElementById("simTasa").value
+                ) / 100;
 
-                movimientos[indice].cuota =
-                    Number($(this).val());
+            const aporteMinimo =
+                dinero(
+                    document.getElementById("simAporte").value
+                );
+
+
+            tbodySimulador.innerHTML = "";
+
+
+            // =================================================
+            // CAPITAL INICIAL
+            // =================================================
+
+            let capital =
+                obtenerSaldoInicial();
+
+
+            // =================================================
+            // FILA SALDO INICIAL
+            // =================================================
+
+            if (capital > 0) {
+
+                agregarFilaInicio(capital);
 
             }
 
-            simular();
+
+            // =================================================
+            // MULTA DEL PERÍODO ANTERIOR
+            // =================================================
+
+            let multaAnterior = 0;
+
+
+            // =================================================
+            // RECORRER PERÍODOS
+            // =================================================
+
+            movimientos.forEach(function (m) {
+
+                const prestamosPeriodo =
+                    obtenerPrestamosPeriodo(
+                        m.anio,
+                        m.mes
+                    );
+
+
+                // ---------------------------------------------
+                // PRÉSTAMOS NUEVOS
+                // ---------------------------------------------
+
+                const prestamosNuevos =
+                    prestamosPeriodo.reduce(
+                        function (total, p) {
+
+                            return total +
+                                dinero(p.monto);
+
+                        },
+                        0
+                    );
+
+
+                // ---------------------------------------------
+                // SALDO APERTURA CAPITAL
+                // ---------------------------------------------
+
+                const saldoApertura =
+                    dinero(capital);
+
+
+                // ---------------------------------------------
+                // BASE INTERÉS
+                //
+                // IMPORTANTE:
+                //
+                // multa anterior sí genera interés.
+                //
+                // préstamo nuevo NO genera interés
+                // durante el mismo período.
+                // ---------------------------------------------
+
+                const baseInteres =
+                    dinero(
+                        saldoApertura +
+                        multaAnterior
+                    );
+
+
+                // ---------------------------------------------
+                // INTERÉS
+                // ---------------------------------------------
+
+                const interes =
+                    calcularInteres(
+                        baseInteres,
+                        tasa
+                    );
+
+
+                // ---------------------------------------------
+                // DEUDA TOTAL
+                // ---------------------------------------------
+
+                const deuda =
+                    dinero(
+                        saldoApertura +
+                        multaAnterior +
+                        prestamosNuevos
+                    );
+
+                // ---------------------------------------------
+                // CUOTA REAL REGISTRADA
+                // ---------------------------------------------
+
+                const cuota =
+                    dinero(m.cuota);
+
+                // ---------------------------------------------
+                // AMORTIZACIÓN
+                // ---------------------------------------------
+
+                let amortizacion =
+                    dinero(
+                        cuota -
+                        dinero(m.aporte) -
+                        interes
+                    );
+
+                if (amortizacion < 0) {
+
+                    amortizacion = 0;
+
+                }
+
+                if (amortizacion > deuda) {
+
+                    amortizacion = deuda;
+
+                }
+                // ---------------------------------------------
+                // MULTA PAGADA
+                // ---------------------------------------------
+                const multaPagada =
+                    Math.min(
+                        amortizacion,
+                        multaAnterior
+                    );
+
+                // ---------------------------------------------
+                // CAPITAL AMORTIZADO
+                // ---------------------------------------------
+
+                const capitalAmortizado =
+                    dinero(
+                        amortizacion -
+                        multaPagada
+                    );
+
+                // ---------------------------------------------
+                // NUEVO CAPITAL
+                // ---------------------------------------------
+
+                const nuevoCapital =
+                    Math.max(
+                        0,
+                        dinero(
+                            saldoApertura +
+                            prestamosNuevos -
+                            capitalAmortizado
+                        )
+                    );
+
+                // ---------------------------------------------
+                // NUEVO SALDO TOTAL
+                // ---------------------------------------------
+
+                const nuevoSaldo =
+                    Math.max(
+                        0,
+                        dinero(
+                            deuda -
+                            amortizacion
+                        )
+                    );
+
+
+                // ---------------------------------------------
+                // CUOTA MÍNIMA
+                // ---------------------------------------------
+
+                let cuotaMinima = 0;
+
+                if (deuda > 0) {
+
+                    const cuotaTabla =
+                        calcularCuotaMinima(deuda);
+
+                    const cuotaCancelacion =
+                        dinero(
+                            m.aporte +
+                            interes +
+                            deuda
+                        );
+
+                    cuotaMinima =
+                        Math.min(
+                            cuotaTabla,
+                            cuotaCancelacion
+                        );
+
+                } else {
+
+                    cuotaMinima =
+                        dinero(m.aporte);
+
+                }
+
+
+                // ---------------------------------------------
+                // CONTROL
+                // ---------------------------------------------
+
+                const diferenciaInteres =
+                    dinero(
+                        m.interes -
+                        interes
+                    );
+
+                const diferenciaAmortizacion =
+                    dinero(
+                        m.amortizacion -
+                        amortizacion
+                    );
+
+                const diferenciaSaldo =
+                    dinero(
+                        m.saldo_prestamo -
+                        nuevoSaldo
+                    );
+
+
+                const correcto =
+                    Math.abs(diferenciaInteres) <= 0.01 &&
+                    Math.abs(diferenciaAmortizacion) <= 0.01 &&
+                    Math.abs(diferenciaSaldo) <= 0.01;
+
+
+                // ---------------------------------------------
+                // AGREGAR FILA
+                // ---------------------------------------------
+
+                agregarFila({
+
+                    periodo: `${m.anio}-${String(m.mes).padStart(2, "0")}`,
+                    aporte: m.aporte,
+                    cuota: cuota,
+                    cuotaMinima: cuotaMinima,
+                    amortizacion: amortizacion,
+                    multaPagada: multaPagada,
+                    capitalAmortizado: capitalAmortizado,
+                    interes: interes,
+                    saldo: nuevoSaldo,
+                    prestamos: prestamosNuevos,
+                    multa: m.multa,
+                    sobre: m.sobre,
+                    correcto: correcto
+
+                });
+
+                // ---------------------------------------------
+                // AVANZAR AL SIGUIENTE PERÍODO
+                // ---------------------------------------------
+                capital =
+                    nuevoCapital;
+
+                multaAnterior =
+                    Math.max(
+                        0,
+                        dinero(
+                            multaAnterior - multaPagada
+                        )
+                    );
+
+                multaAnterior =
+                    dinero(
+                        multaAnterior + dinero(m.multa)
+                    );
+
+            });
 
         }
-    );
+
+        // =====================================================
+        // FILA INICIAL
+        // =====================================================
+
+        function agregarFilaInicio(capital) {
+
+            const tr =
+                document.createElement("tr");
+
+            tr.innerHTML = `
+
+                <td>
+                    <span class="badge bg-info">
+                        Inicio
+                    </span>
+                </td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td class="fw-bold text-danger">
+                    S/ ${dinero(capital).toFixed(2)}
+                </td>
+                <td class="fw-bold">
+                    S/ ${dinero(capital).toFixed(2)}
+                </td>
+                <td>—</td>
+                <td>—</td>
+                <td>
+                    <span class="badge bg-info">
+                        APERTURA
+                    </span>
+                </td>
+            `;
+
+            tbodySimulador.appendChild(tr);
+
+        }
+
+
+        // =====================================================
+        // AGREGAR FILA
+        // =====================================================
+
+        function agregarFila(data) {
+
+            const tr = document.createElement("tr");
+
+            const claseControl = data.correcto
+                ? "bg-success"
+                : "bg-danger";
+
+            const textoControl = data.correcto
+                ? "OK"
+                : "REVISAR";
+
+            // =====================================================
+            // IMPORTANTE:
+            // El input debe recibir un número puro.
+            // NO usar dinero() ni toFixed() aquí.
+            // =====================================================
+
+            const cuota = Number(data.cuota || 0);
+
+            tr.innerHTML = `
+
+                <td>
+                    <span class="badge bg-primary">
+                        ${data.periodo}
+                    </span>
+                </td>
+                <td>
+                    S/ ${dinero(data.aporte).toFixed(2)}
+                </td>
+                <td>
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        class="form-control form-control-sm sim-cuota"
+                        value="${cuota}"
+                        data-periodo="${data.periodo}"
+                    >
+                </td>
+                <td class="sim-cuota-minima text-primary fw-bold">
+                    S/ ${dinero(data.cuotaMinima).toFixed(2)}
+                </td>
+                <td class="sim-amortizacion text-primary fw-bold">
+                    S/ ${dinero(data.amortizacion).toFixed(2)}
+                </td>
+                <td class="sim-interes text-success fw-bold">
+                    S/ ${dinero(data.interes).toFixed(2)}
+                </td>
+                <td class="sim-saldo text-danger fw-bold">
+                    S/ ${dinero(data.saldo).toFixed(2)}
+                </td>
+                <td class="sim-prestamo">
+                    S/ ${dinero(data.prestamos).toFixed(2)}
+                </td>
+                <td class="sim-multa">
+                    S/ ${dinero(data.multa).toFixed(2)}
+                </td>
+                <td class="sim-sobre">
+                    S/ ${dinero(data.sobre).toFixed(2)}
+                </td>
+
+                <td class="sim-control">
+
+                    <span class="badge ${claseControl}">
+                        ${textoControl}
+                    </span>
+                </td>
+
+            `;
+            tbodySimulador.appendChild(tr);
+        }
+
+        // =====================================================
+        // EDICIÓN MANUAL DE CUOTA DEL SIMULADOR
+        // =====================================================
+        //
+        // Permite modificar la cuota directamente en la tabla.
+        //
+        // IMPORTANTE:
+        // - No modifica la BD.
+        // - No llama a editar_movimiento.
+        // - No modifica el movimiento real.
+        // - Recalcula el período editado.
+        // - Recalcula todos los períodos posteriores.
+        // =====================================================
+
+        function editarCuotaSimulador(input) {
+
+            const fila = input.closest("tr");
+
+            if (!fila) {
+                return;
+            }
+
+            const filas = Array.from(
+                tbodySimulador.querySelectorAll("tr")
+            );
+
+            const indice = filas.indexOf(fila);
+
+            if (indice < 0) {
+                return;
+            }
+
+            // =====================================================
+            // OBTENER CUOTA MANUAL
+            // =====================================================
+
+            let cuotaManual = parseFloat(input.value);
+
+            if (isNaN(cuotaManual)) {
+                cuotaManual = 0;
+            }
+
+            cuotaManual = dinero(cuotaManual);
+
+            // =====================================================
+            // OBTENER MOVIMIENTOS
+            // =====================================================
+
+            const movimientos =
+                obtenerMovimientosOrdenados();
+
+            if (!movimientos.length) {
+                return;
+            }
+
+            // =====================================================
+            // DETERMINAR QUÉ PERÍODO ESTAMOS EDITANDO
+            // =====================================================
+
+            // La primera fila puede ser "Inicio".
+            // Por eso buscamos el índice real del período.
+
+            const filasPeriodo = filas.filter(function (tr) {
+
+                return tr.querySelector(".sim-cuota");
+
+            });
+
+            const indicePeriodo =
+                filasPeriodo.indexOf(fila);
+
+            if (indicePeriodo < 0) {
+                return;
+            }
+
+            // =====================================================
+            // RECALCULAR DESDE EL PERÍODO EDITADO
+            // =====================================================
+
+            recalcularDesdePeriodo(indicePeriodo, cuotaManual);
+
+        }
+        
+            // =====================================================
+            // RECALCULAR DESDE UN PERÍODO
+            // =====================================================
+
+            function recalcularDesdePeriodo(indiceInicio, cuotaManual) {
+
+                const movimientos =
+                    obtenerMovimientosOrdenados();
+
+                if (!movimientos.length) {
+                    return;
+                }
+
+                const tasa =
+                    Number(
+                        document.getElementById("simTasa").value
+                    ) / 100;
+
+                const aporteMinimo =
+                    dinero(
+                        document.getElementById("simAporte").value
+                    );
+
+                // =====================================================
+                // RECONSTRUIR EL CAPITAL DESDE EL INICIO
+                // =====================================================
+
+                let capital =
+                    obtenerSaldoInicial();
+
+                let multaAnterior = 0;
+
+                // =====================================================
+                // RECORRER TODOS LOS PERÍODOS
+                // =====================================================
+
+                movimientos.forEach(function (m, index) {
+
+                    const prestamosPeriodo =
+                        obtenerPrestamosPeriodo(
+                            m.anio,
+                            m.mes
+                        );
+
+                    const prestamosNuevos =
+                        prestamosPeriodo.reduce(
+                            function (total, p) {
+
+                                return total +
+                                    dinero(p.monto);
+
+                            },
+                            0
+                        );
+
+                    // =================================================
+                    // SALDO DE APERTURA
+                    // =================================================
+
+                    const saldoApertura =
+                        dinero(capital);
+
+                    // =================================================
+                    // BASE DE INTERÉS
+                    //
+                    // La multa del período anterior forma parte
+                    // de la base de interés.
+                    // =================================================
+
+                    const baseInteres =
+                        dinero(
+                            saldoApertura +
+                            multaAnterior
+                        );
+
+                    // =================================================
+                    // INTERÉS
+                    // =================================================
+
+                    const interes =
+                        calcularInteres(
+                            baseInteres,
+                            tasa
+                        );
+
+                    // =================================================
+                    // DEUDA TOTAL
+                    // =================================================
+
+                    const deuda =
+                        dinero(
+                            saldoApertura +
+                            multaAnterior +
+                            prestamosNuevos
+                        );
+
+                    // =================================================
+                    // CUOTA
+                    // =================================================
+
+                    let cuota;
+
+                    if (index === indiceInicio) {
+
+                        // La cuota introducida manualmente
+                        cuota = dinero(cuotaManual);
+
+                    } else {
+
+                        // Para los siguientes períodos conservamos
+                        // la cuota que originalmente tenía el movimiento.
+
+                        cuota =
+                            dinero(m.cuota);
+
+                    }
+
+                    // =================================================
+                    // AMORTIZACIÓN TOTAL
+                    // =================================================
+
+                    let amortizacion =
+                        dinero(
+                            cuota -
+                            dinero(m.aporte) -
+                            interes
+                        );
+
+                    if (amortizacion < 0) {
+                        amortizacion = 0;
+                    }
+
+                    if (amortizacion > deuda) {
+                        amortizacion = deuda;
+                    }
+
+                    // =================================================
+                    // MULTA PAGADA
+                    // =================================================
+
+                    const multaPagada =
+                        dinero(
+                            Math.min(
+                                amortizacion,
+                                multaAnterior
+                            )
+                        );
+
+                    // =================================================
+                    // CAPITAL AMORTIZADO
+                    // =================================================
+
+                    const capitalAmortizado =
+                        dinero(
+                            amortizacion -
+                            multaPagada
+                        );
+
+                    // =================================================
+                    // NUEVO CAPITAL
+                    // =================================================
+
+                    const nuevoCapital =
+                        Math.max(
+                            0,
+                            dinero(
+                                saldoApertura +
+                                prestamosNuevos -
+                                capitalAmortizado
+                            )
+                        );
+
+                    // =================================================
+                    // NUEVO SALDO TOTAL
+                    // =================================================
+
+                    const nuevoSaldo =
+                        Math.max(
+                            0,
+                            dinero(
+                                deuda -
+                                amortizacion
+                            )
+                        );
+
+                    // =================================================
+                    // CUOTA MÍNIMA
+                    // =================================================
+
+                    let cuotaMinima = 0;
+
+                    if (deuda > 0) {
+
+                        const cuotaTabla =
+                            calcularCuotaMinima(deuda);
+
+                        const cuotaCancelacion =
+                            dinero(
+                                m.aporte +
+                                interes +
+                                deuda
+                            );
+
+                        cuotaMinima =
+                            Math.min(
+                                cuotaTabla,
+                                cuotaCancelacion
+                            );
+
+                    } else {
+
+                        cuotaMinima =
+                            dinero(m.aporte);
+
+                    }
+
+                    // =================================================
+                    // CONTROL
+                    // =================================================
+
+                    const diferenciaInteres =
+                        dinero(
+                            m.interes -
+                            interes
+                        );
+
+                    const diferenciaAmortizacion =
+                        dinero(
+                            m.amortizacion -
+                            amortizacion
+                        );
+
+                    const diferenciaSaldo =
+                        dinero(
+                            m.saldo -
+                            nuevoSaldo
+                        );
+
+                    const correcto =
+                        Math.abs(diferenciaInteres) <= 0.01 &&
+                        Math.abs(diferenciaAmortizacion) <= 0.01 &&
+                        Math.abs(diferenciaSaldo) <= 0.01;
+
+                    // =================================================
+                    // ACTUALIZAR FILA
+                    // =================================================
+
+                    if (index >= indiceInicio) {
+
+                        const fila =
+                            filasSimuladorPeriodo(index);
+
+                        if (fila) {
+
+                            const input =
+                                fila.querySelector(".sim-cuota");
+
+                            if (index === indiceInicio) {
+
+                                // Solo aquí escribimos la cuota manual.
+                                input.value = cuota;
+
+                            }
+
+                            fila.querySelector(
+                                ".sim-cuota-minima"
+                            ).innerHTML =
+                                `S/ ${cuotaMinima.toFixed(2)}`;
+
+                            fila.querySelector(
+                                ".sim-amortizacion"
+                            ).innerHTML =
+                                `S/ ${amortizacion.toFixed(2)}`;
+
+                            fila.querySelector(
+                                ".sim-interes"
+                            ).innerHTML =
+                                `S/ ${interes.toFixed(2)}`;
+
+                            fila.querySelector(
+                                ".sim-saldo"
+                            ).innerHTML =
+                                `S/ ${nuevoSaldo.toFixed(2)}`;
+
+                            fila.querySelector(
+                                ".sim-prestamo"
+                            ).innerHTML =
+                                `S/ ${prestamosNuevos.toFixed(2)}`;
+
+                            fila.querySelector(
+                                ".sim-multa"
+                            ).innerHTML =
+                                `S/ ${dinero(m.multa).toFixed(2)}`;
+
+                            fila.querySelector(
+                                ".sim-sobre"
+                            ).innerHTML =
+                                `S/ ${dinero(m.sobre).toFixed(2)}`;
+
+                            const control =
+                                fila.querySelector(
+                                    ".sim-control"
+                                );
+
+                            if (correcto) {
+
+                                control.innerHTML =
+                                    `<span class="badge bg-success">
+                                        OK
+                                    </span>`;
+
+                            } else {
+
+                                control.innerHTML =
+                                    `<span class="badge bg-danger">
+                                        REVISAR
+                                    </span>`;
+
+                            }
+
+                        }
+
+                    }
+
+                    // =================================================
+                    // AVANZAR
+                    // =================================================
+
+                    capital =
+                        nuevoCapital;
+
+                    multaAnterior =
+                        dinero(m.multa);
+
+                });
+
+            }
+
+            
+            function filasSimuladorPeriodo(indice) {
+
+        const filas =
+            Array.from(
+                tbodySimulador.querySelectorAll(
+                    "tr"
+                )
+            ).filter(function (tr) {
+
+                return tr.querySelector(
+                    ".sim-cuota"
+                );
+
+            });
+
+        return filas[indice] || null;
+    }
+
+        // =====================================================
+        // EVENTO EDICIÓN MANUAL DE CUOTA
+        // =====================================================
+
+        $(document).on(
+            "input",
+            "#tbodySimulador .sim-cuota",
+            function () {
+
+                const input = this;
+
+                // No modificar el contenido del input mientras
+                // el usuario está escribiendo.
+
+                clearTimeout(
+                    input._timerSimulador
+                );
+
+                input._timerSimulador =
+                    setTimeout(function () {
+
+                        editarCuotaSimulador(
+                            input
+                        );
+
+                    }, 350);
+
+            }
+        );
+        
+        // =====================================================
+        // ABRIR
+        // =====================================================
+
+        $("#btnAbrirSimulador").on("click", function () {
+
+            simular();
+
+            if (modalSimulador) {
+
+                modalSimulador.showModal();
+
+            }
+
+        });
+
+
+        // =====================================================
+        // CERRAR
+        // =====================================================
+
+        $("#btnCerrarSimulador, #btnCerrarSimulador2")
+            .on("click", function () {
+
+                if (modalSimulador) {
+
+                    modalSimulador.close();
+
+                }
+
+            });
+
+
+        // =====================================================
+        // RECALCULAR
+        // =====================================================
+
+        $("#btnRecalcularSimulador").on(
+            "click",
+            function () {
+
+                simular();
+
+            }
+        );
+
+
+        // =====================================================
+        // CAMBIAR CUOTA
+        // =====================================================
+        //
+        // IMPORTANTE:
+        //
+        // Al cambiar una cuota se debe reconstruir TODA
+        // la secuencia porque el saldo de un período
+        // afecta al siguiente.
+        //
+        // =====================================================
+
+        $(document).on(
+            "input",
+            "#tablaSimulador .sim-cuota",
+            function () {
+
+                const fila = $(this).closest("tr");
+                const indice = fila.index();
+                
+                const movimientos =
+                    obtenerMovimientosOrdenados();
+
+                if (
+                    indice >= 0 &&
+                    indice < movimientos.length
+                ) {
+
+                    movimientos[indice].cuota =
+                        Number($(this).val());
+
+                }
+
+                simular();
+
+            }
+        );
+});
 
 </script>
 
