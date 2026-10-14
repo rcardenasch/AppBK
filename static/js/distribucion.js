@@ -458,14 +458,21 @@ document
     // EDICIÓN MANUAL
     // =====================================================
 
-    // 1. Mientras escribe: Solo controlamos los topes (máximo y mínimo), sin formatear decimales
     $('.datatable tbody').on('input', '.asignado', function () {
         const max = parseFloat(this.max) || 0;
+        
+        // Si el usuario borró todo el texto, lo dejamos vacío para que pueda escribir de cero
+        if (this.value === '') {
+            actualizarSaldo(); // Actualiza el saldo considerando que este campo ahora vale 0
+            return;
+        }
+
         let valor = parseFloat(this.value);
 
-        // Si está vacío o es inválido temporalmente (como escribir un punto), no hacemos nada todavía
+        // Si el valor no es un número válido todavía (ej. escribió solo un punto "."), no hacemos nada
         if (isNaN(valor)) return; 
 
+        // Controlamos los topes
         if (valor > max) {
             this.value = max;
         }
@@ -476,13 +483,12 @@ document
         actualizarSaldo();
     });
 
-    // 2. Al salir del input (Blur): Formateamos a 2 decimales fijos
+    // Al salir del input, si quedó vacío, le devolvemos el formato 0.00
     $('.datatable tbody').on('blur', '.asignado', function () {
         let valor = parseFloat(this.value) || 0;
-        
-        // Aquí sí aseguramos los dos decimales visuales (.00)
         this.value = valor.toFixed(2); 
     });
+
 
 
 //---------------------------------------------------

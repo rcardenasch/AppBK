@@ -171,7 +171,7 @@
                                 {% elif s.prioridad == 3 or s.prioridad == '3' %} Muy urgente ({{ s.prioridad }})
                                 {% elif s.prioridad == 2 or s.prioridad == '2' %} Urgente ({{ s.prioridad }})
                                 {% else %} Normal ({{ s.prioridad }}) {% endif %}
-                                </span>
+                                </span> 
                             </td>
                             <td class="solicitado" data-solicitado="{{ s.monto_solicitado }}">
                                 {{ "{:,.2f}".format(s.monto_solicitado) }}
