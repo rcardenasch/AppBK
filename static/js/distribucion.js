@@ -453,42 +453,37 @@ document
 
 };
 
+
     // =====================================================
     // EDICIÓN MANUAL
     // =====================================================
 
-    $('.datatable tbody').on(
-        'input',
-        '.asignado',
-        function () {
+    // 1. Mientras escribe: Solo controlamos los topes (máximo y mínimo), sin formatear decimales
+    $('.datatable tbody').on('input', '.asignado', function () {
+        const max = parseFloat(this.max) || 0;
+        let valor = parseFloat(this.value);
 
-            const max =
-                parseFloat(
-                    this.max
-                );
+        // Si está vacío o es inválido temporalmente (como escribir un punto), no hacemos nada todavía
+        if (isNaN(valor)) return; 
 
-            let valor =
-                Number(this.value) || 0;
-
-            if (valor > max) {
-
-                valor = max;
-
-            }
-
-            if (valor < 0) {
-
-                valor = 0;
-
-            }
-
-            this.value =
-                valor.toFixed(2);
-
-            actualizarSaldo();
-
+        if (valor > max) {
+            this.value = max;
         }
-    );
+        if (valor < 0) {
+            this.value = 0;
+        }
+
+        actualizarSaldo();
+    });
+
+    // 2. Al salir del input (Blur): Formateamos a 2 decimales fijos
+    $('.datatable tbody').on('blur', '.asignado', function () {
+        let valor = parseFloat(this.value) || 0;
+        
+        // Aquí sí aseguramos los dos decimales visuales (.00)
+        this.value = valor.toFixed(2); 
+    });
+
 
 //---------------------------------------------------
 // Generar préstamos
