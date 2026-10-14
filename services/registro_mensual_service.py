@@ -176,173 +176,189 @@ class RegistroMensualService:
                 # DETERMINAR CUOTA POR SOCIO + ACCIÓN
                 # =========================================================
                 #
-                # REGLAS DEFINITIVAS
+                # REGLA:
                 #
-                # CASO 1:
-                # La acción tiene préstamo pendiente:
+                # La cuota mínima proviene de la tabla.
                 #
-                #     saldo_apertura > 0
+                # PERO si la deuda total puede cancelarse con una
+                # cuota menor, se utiliza la cuota exacta de cancelación.
                 #
-                #     Si multa anterior = 0:
-                #         base cuota = saldo_apertura
+                # cuota_cancelacion =
+                #       aporte
+                #     + interes
+                #     + deuda
                 #
-                #     Si multa anterior > 0:
-                #         base cuota = saldo_apertura + multa_anterior
+                # cuota_aplicada =
+                #       MIN(cuota_minima_tabla, cuota_cancelacion)
                 #
-                #     La tabla calcular_cuota_minima() devuelve la CUOTA TOTAL.
+                # Esto aplica para:
                 #
+                #   1. Préstamo pendiente
+                #   2. Multa pendiente
+                #   3. Múltiples préstamos
+                #   4. Préstamo + multa
+                #   5. Préstamo nuevo del período
+                #   6. Deuda cercana a cero
                 #
-                # CASO 2:
-                # No hay préstamo pendiente pero existe multa anterior:
+                # =========================================================
+
+                CENTAVOS = Decimal("0.01")
+
+                # ---------------------------------------------------------
+                # 1. CALCULAR LA DEUDA REAL DEL PERÍODO
+                # ---------------------------------------------------------
                 #
-                #     cuota =
-                #         aporte
-                #         + multa_anterior
-                #         + interés
-                #
-                #
-                # CASO 3:
-                # No hay préstamo pendiente ni multa:
-                #
-                #     cuota = aporte
-                #
+                # Utilizamos el MOTOR FINANCIERO CENTRAL.
                 #
                 # IMPORTANTE:
-                # NO utilizar Prestamo.monto.
-                # NO buscar el préstamo de mayor monto.
-                # La deuda de la acción se obtiene de saldo_apertura.
-                # =========================================================
+                # Aquí NO estamos registrando ningún movimiento.
+                # Solo estamos haciendo una simulación para conocer:
+                #
+                #   - interés
+                #   - deuda total
+                #   - préstamos nuevos
+                #
+                # La cuota provisional es solamente el aporte.
+                #
+                # ---------------------------------------------------------
 
-                monto_base_cuota = Decimal("0.00")
-
-
-                # =========================================================
-                # CASO 1
-                # LA ACCIÓN TIENE DEUDA DE PRÉSTAMO
-                # =========================================================
-
-                if saldo_apertura > Decimal("0.00"):
-
-                    # -----------------------------------------------------
-                    # BASE PARA DETERMINAR LA CUOTA
-                    # -----------------------------------------------------
-                    #
-                    # Si existe multa anterior, forma parte de la deuda
-                    # sobre la cual se determina la cuota.
-                    #
-                    # Ejemplo:
-                    #
-                    # saldo préstamo = 1008.90
-                    # multa anterior =   40.00
-                    #
-                    # base = 1048.90
-                    #
-                    # -----------------------------------------------------
-
-                    monto_base_cuota = (
-                        saldo_apertura +
-                        multa_anterior
-                    ).quantize(
-                        Decimal("0.01")
+                resultado_base = (
+                    MovimientoService
+                    .calcular_movimiento_accion(
+                        db=db,
+                        accion_id=accion.id,
+                        periodo_id=periodo_id,
+                        aporte=aporte,
+                        cuota_pagada=aporte,
+                        multa_periodo_anterior_override=multa_anterior,
+                        saldo_apertura_override=saldo_apertura
                     )
+                )
+
+                interes_base = Decimal(
+                    str(
+                        resultado_base["interes"] or 0
+                    )
+                ).quantize(CENTAVOS)
+
+                deuda_total = Decimal(
+                    str(
+                        resultado_base["saldo_deuda"] or 0
+                    )
+                ).quantize(CENTAVOS)
+
+                saldo_nuevos = Decimal(
+                    str(
+                        resultado_base["saldo_prestamos_nuevos"] or 0
+                    )
+                ).quantize(CENTAVOS)
+
+
+                # =========================================================
+                # CASO SIN DEUDA
+                # =========================================================
+
+                if deuda_total <= Decimal("0.00"):
+
+                    monto_base_cuota = Decimal("0.00")
+
+                    cuota_pagada = aporte
+
+                    print("CASO                  : SIN DEUDA")
+
+                else:
+
+                    # =====================================================
+                    # EXISTE DEUDA
+                    # =====================================================
+
+                    monto_base_cuota = deuda_total
 
                     # -----------------------------------------------------
-                    # LA TABLA DEVUELVE LA CUOTA TOTAL
+                    # CUOTA MÍNIMA SEGÚN TABLA
                     # -----------------------------------------------------
 
-                    cuota_pagada = (
+                    cuota_minima_tabla = (
                         PrestamoService
                         .calcular_cuota_minima(
                             monto_base_cuota
                         )
                     )
 
-                    cuota_pagada = Decimal(
+                    cuota_minima_tabla = Decimal(
                         str(
-                            cuota_pagada or 0
+                            cuota_minima_tabla or 0
                         )
-                    ).quantize(
-                        Decimal("0.01")
-                    )
-
-
-                # =========================================================
-                # CASO 2
-                # NO HAY PRÉSTAMO PENDIENTE
-                # PERO EXISTE MULTA DEL PERÍODO ANTERIOR
-                # =========================================================
-
-                elif multa_anterior > Decimal("0.00"):
+                    ).quantize(CENTAVOS)
 
                     # -----------------------------------------------------
-                    # La deuda corresponde solamente a la multa anterior.
+                    # CUOTA EXACTA PARA CANCELAR LA DEUDA
+                    # -----------------------------------------------------
                     #
-                    # No debemos considerar préstamos históricos
-                    # que ya fueron cancelados.
+                    # La deuda ya contiene:
                     #
-                    # La cuota debe cubrir:
-                    #
-                    #     aporte
+                    #   saldo préstamo
                     #   + multa anterior
-                    #   + interés
+                    #   + préstamos nuevos
+                    #
+                    # El interés se calculó sobre:
+                    #
+                    #   saldo apertura
+                    #   + multa anterior
+                    #
+                    # Los préstamos nuevos NO generan interés
+                    # durante el mismo período.
                     #
                     # -----------------------------------------------------
 
-                    monto_base_cuota = multa_anterior
+                    cuota_cancelacion = (
+                        aporte
+                        + interes_base
+                        + deuda_total
+                    ).quantize(CENTAVOS)
 
                     # -----------------------------------------------------
-                    # Usamos el MOTOR FINANCIERO para obtener el interés.
-                    #
-                    # La cuota provisional permite calcular el interés
-                    # sobre la multa anterior.
+                    # REGLA DEFINITIVA
                     # -----------------------------------------------------
 
-                    resultado_multa = (
-                        MovimientoService
-                        .calcular_movimiento_accion(
-                            db=db,
-                            accion_id=accion.id,
-                            periodo_id=periodo_id,
-                            aporte=aporte,
-                            cuota_pagada=(
-                                aporte +
-                                multa_anterior
-                            ).quantize(
-                                Decimal("0.01")
-                            ),
-                            multa_periodo_anterior_override=multa_anterior,
-                            saldo_apertura_override=saldo_apertura #Decimal("0.00")
+                    cuota_pagada = min(
+                        cuota_minima_tabla,
+                        cuota_cancelacion
+                    ).quantize(CENTAVOS)
+
+                    # -----------------------------------------------------
+                    # DEBUG
+                    # -----------------------------------------------------
+
+                    print("\n==============================================")
+                    print("CÁLCULO CUOTA MÍNIMA / CANCELACIÓN")
+                    print("==============================================")
+
+                    print(f"Saldo apertura       : {saldo_apertura}")
+                    print(f"Multa anterior       : {multa_anterior}")
+                    print(f"Préstamos nuevos     : {saldo_nuevos}")
+                    print(f"Deuda total          : {deuda_total}")
+                    print(f"Interés              : {interes_base}")
+                    print(f"Aporte               : {aporte}")
+                    print(f"Cuota tabla           : {cuota_minima_tabla}")
+                    print(f"Cuota cancelación    : {cuota_cancelacion}")
+                    print(f"Cuota aplicada       : {cuota_pagada}")
+
+                    if cuota_cancelacion < cuota_minima_tabla:
+
+                        print(
+                            "REGLA APLICADA       : "
+                            "CANCELACIÓN ANTICIPADA"
                         )
-                    )
 
-                    interes_multa = Decimal(
-                        str(
-                            resultado_multa["interes"] or 0
+                    else:
+
+                        print(
+                            "REGLA APLICADA       : "
+                            "CUOTA MÍNIMA"
                         )
-                    ).quantize(
-                        Decimal("0.01")
-                    )
 
-                    # -----------------------------------------------------
-                    # CUOTA TOTAL
-                    # -----------------------------------------------------
-                    cuota_pagada = (
-                        aporte +
-                        multa_anterior +
-                        interes_multa
-                    ).quantize(
-                        Decimal("0.01")
-                    )
-
-                # =========================================================
-                # CASO 3
-                # SIN PRÉSTAMO PENDIENTE
-                # SIN MULTA ANTERIOR
-                # =========================================================
-                else:
-
-                    monto_base_cuota = Decimal("0.00")
-                    cuota_pagada = aporte
+                    print("==============================================\n")
 
                 # =========================================================
                 # DEBUG

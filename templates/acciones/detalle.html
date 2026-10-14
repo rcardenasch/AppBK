@@ -9,6 +9,7 @@
         </a>
 
     </div>
+
     <!-- RESUMEN -->
     <div class="row g-4">
 
@@ -210,6 +211,13 @@
             <h5>
                 Historial de movimientos
             </h5>
+        </div>
+        <div class="d-flex justify-content-end mb-2">
+            <button type="button" class="btn btn-outline-primary" id="btnAbrirSimulador">
+
+                <i class="bi bi-calculator me-1"></i>
+                Simulador financiero
+            </button>
         </div>
 
         <div class="card-body p-0">
@@ -448,20 +456,196 @@
                 <textarea id="editObservacion" class="form-control" rows="3"></textarea>
             </div>
 
+            <!-- FOOTER -->
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" id="btnCancelarEditarMovimiento">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGuardarEdicionMovimiento">
+                    <i class="bi bi-save"></i>
+                    Guardar cambios
+
+                </button>
+
+            </div>
+        </div>
+</dialog>
+
+<dialog
+    id="modalSimulador"
+    class="rounded-4 border-0 shadow-lg"
+    style="width: 98%; max-width: 1500px;">
+
+    <div class="card border-0">
+
+        <!-- HEADER -->
+
+        <div class="card-header bg-primary text-white">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <div>
+                    <h5 class="mb-0">
+
+                        <i class="bi bi-calculator me-2"></i>
+
+                        Simulador financiero
+
+                    </h5>
+
+                    <small>
+                        Acción {{ accion.numero_accion }}
+                        —
+                        {{ accion.socio.nombres }}
+                    </small>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn btn-light btn-sm"
+                    id="btnCerrarSimulador">
+
+                    <i class="bi bi-x-lg"></i>
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- BODY -->
+
+        <div class="card-body">
+
+            <!-- INFORMACIÓN -->
+
+            <div class="alert alert-info">
+
+                <i class="bi bi-info-circle me-1"></i>
+
+                Este simulador es de
+                <strong>solo lectura</strong>.
+                No modifica ningún movimiento ni saldo de la base de datos.
+
+            </div>
+            <!-- CONTROLES -->
+            <div class="row g-3 mb-3">
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Tasa de interés
+                    </label>
+
+                    <div class="input-group">
+
+                        <input
+                            type="number"
+                            step="0.01"
+                            id="simTasa"
+                            class="form-control"
+                            value="{{ (tasa_interes * 100)|round(4) }}">
+
+                        <span class="input-group-text">
+                            %
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Aporte mínimo
+                    </label>
+
+                    <input
+                        type="number"
+                        step="0.01"
+                        id="simAporte"
+                        class="form-control"
+                        value="{{ aporte_minimo }}">
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+                        Acción
+                    </label>
+
+                    <input
+                        class="form-control bg-light"
+                        readonly
+                        value="{{ accion.numero_accion }}">
+
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button
+                        type="button"
+                        class="btn btn-primary w-100"
+                        id="btnRecalcularSimulador">
+                        <i class="bi bi-arrow-repeat me-1"></i>
+                        Recalcular
+                    </button>
+
+                </div>
+            </div>
+            <!-- TABLA -->
+            <div class="table-responsive">
+                <table
+                    class="table table-sm table-bordered table-hover align-middle"
+                    id="tablaSimulador">
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>Período</th>
+                            <th>Aporte</th>
+                            <th>Cuota simulada</th>
+                            <th>Cuota mínima</th>
+                            <th>Amortización</th>
+                            <th>Interés</th>
+                            <th>Saldo préstamo</th>
+                            <th>Préstamo</th>
+                            <th>Multa</th>
+                            <th>Sobre</th>
+                            <th>Control</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="tbodySimulador">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
         <!-- FOOTER -->
-        <div class="card-footer d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-secondary" id="btnCancelarEditarMovimiento">
-                Cancelar
-            </button>
-            <button type="button" class="btn btn-primary" id="btnGuardarEdicionMovimiento">
-                <i class="bi bi-save"></i>
-                Guardar cambios
 
-            </button>
+        <div class="card-footer d-flex justify-content-between">
 
+            <small class="text-muted">
+
+                La simulación utiliza la misma regla financiera
+                implementada en el sistema.
+
+            </small>
+
+            <button
+                type="button"
+                class="btn btn-secondary"
+                id="btnCerrarSimulador2">
+                Cerrar
+            </button>
         </div>
     </div>
 </dialog>
+
 <script>
 
     $(document).ready(function () {
@@ -1048,6 +1232,728 @@
 
 
 
+
+
+
+
+
+    // =====================================================
+    // SIMULADOR FINANCIERO
+    // =====================================================
+
+    const modalSimulador =
+        document.getElementById("modalSimulador");
+
+    const tbodySimulador =
+        document.getElementById("tbodySimulador");
+
+
+    // =====================================================
+    // REDONDEO A CENTAVOS
+    // =====================================================
+
+    function dinero(valor) {
+
+        return Number(
+            Number(valor || 0).toFixed(2)
+        );
+
+    }
+
+
+    // =====================================================
+    // INTERÉS
+    //
+    // MISMA REGLA DE InteresService:
+    //
+    // redondeo hacia arriba a múltiplos de 0.50
+    // =====================================================
+
+    function calcularInteres(saldo, tasa) {
+
+        saldo = dinero(saldo);
+
+        if (saldo <= 0) {
+
+            return 0;
+
+        }
+
+        const interesBase =
+            saldo * tasa;
+
+        return dinero(
+            Math.ceil(
+                interesBase * 2
+            ) / 2
+        );
+
+    }
+
+
+    // =====================================================
+    // CUOTA MÍNIMA
+    //
+    // MISMA TABLA DE PrestamoService
+    // =====================================================
+
+    function calcularCuotaMinima(deuda) {
+
+        deuda = dinero(deuda);
+
+        if (deuda <= 0) return 0;
+
+        if (deuda <= 3000) return 417;
+
+        if (deuda <= 7500) return 504;
+
+        if (deuda <= 12500) return 566;
+
+        if (deuda <= 15000) return 590;
+
+        if (deuda <= 17500) return 611;
+
+        if (deuda <= 20000) return 677;
+
+        if (deuda <= 22500) return 743;
+
+        if (deuda <= 25000) return 809;
+
+        if (deuda <= 27500) return 875;
+
+        return 941;
+
+    }
+
+
+    // =====================================================
+    // ORDENAR MOVIMIENTOS
+    // =====================================================
+
+    function obtenerMovimientosOrdenados() {
+
+        return [
+            ...SIMULADOR.movimientos
+        ].sort(function (a, b) {
+
+            if (a.anio !== b.anio) {
+
+                return a.anio - b.anio;
+
+            }
+
+            return a.mes - b.mes;
+
+        });
+
+    }
+
+
+    // =====================================================
+    // OBTENER PRÉSTAMOS DEL PERÍODO
+    // =====================================================
+
+    function obtenerPrestamosPeriodo(anio, mes) {
+
+        return SIMULADOR.prestamos
+            .filter(function (p) {
+
+                return (
+                    p.anio === anio &&
+                    p.mes === mes
+                );
+
+            });
+
+    }
+
+
+    // =====================================================
+    // SALDO INICIAL
+    //
+    // préstamos con periodo_id = NULL
+    // =====================================================
+
+    function obtenerSaldoInicial() {
+
+        return dinero(
+
+            SIMULADOR.prestamos
+                .filter(function (p) {
+
+                    return (
+                        p.anio === null &&
+                        p.mes === null
+                    );
+
+                })
+                .reduce(function (total, p) {
+
+                    return total +
+                        dinero(p.monto);
+
+                }, 0)
+
+        );
+
+    }
+
+
+    // =====================================================
+    // SIMULAR
+    // =====================================================
+
+    function simular() {
+
+        const movimientos =
+            obtenerMovimientosOrdenados();
+
+        const tasa =
+            Number(
+                document.getElementById("simTasa").value
+            ) / 100;
+
+        const aporteMinimo =
+            dinero(
+                document.getElementById("simAporte").value
+            );
+
+
+        tbodySimulador.innerHTML = "";
+
+
+        // =================================================
+        // CAPITAL INICIAL
+        // =================================================
+
+        let capital =
+            obtenerSaldoInicial();
+
+
+        // =================================================
+        // FILA SALDO INICIAL
+        // =================================================
+
+        if (capital > 0) {
+
+            agregarFilaInicio(capital);
+
+        }
+
+
+        // =================================================
+        // MULTA DEL PERÍODO ANTERIOR
+        // =================================================
+
+        let multaAnterior = 0;
+
+
+        // =================================================
+        // RECORRER PERÍODOS
+        // =================================================
+
+        movimientos.forEach(function (m) {
+
+            const prestamosPeriodo =
+                obtenerPrestamosPeriodo(
+                    m.anio,
+                    m.mes
+                );
+
+
+            // ---------------------------------------------
+            // PRÉSTAMOS NUEVOS
+            // ---------------------------------------------
+
+            const prestamosNuevos =
+                prestamosPeriodo.reduce(
+                    function (total, p) {
+
+                        return total +
+                            dinero(p.monto);
+
+                    },
+                    0
+                );
+
+
+            // ---------------------------------------------
+            // SALDO APERTURA CAPITAL
+            // ---------------------------------------------
+
+            const saldoApertura =
+                dinero(capital);
+
+
+            // ---------------------------------------------
+            // BASE INTERÉS
+            //
+            // IMPORTANTE:
+            //
+            // multa anterior sí genera interés.
+            //
+            // préstamo nuevo NO genera interés
+            // durante el mismo período.
+            // ---------------------------------------------
+
+            const baseInteres =
+                dinero(
+                    saldoApertura +
+                    multaAnterior
+                );
+
+
+            // ---------------------------------------------
+            // INTERÉS
+            // ---------------------------------------------
+
+            const interes =
+                calcularInteres(
+                    baseInteres,
+                    tasa
+                );
+
+
+            // ---------------------------------------------
+            // DEUDA TOTAL
+            // ---------------------------------------------
+
+            const deuda =
+                dinero(
+                    saldoApertura +
+                    multaAnterior +
+                    prestamosNuevos
+                );
+
+            // ---------------------------------------------
+            // CUOTA REAL REGISTRADA
+            // ---------------------------------------------
+
+            const cuota =
+                dinero(m.cuota);
+
+            // ---------------------------------------------
+            // AMORTIZACIÓN
+            // ---------------------------------------------
+
+            let amortizacion =
+                dinero(
+                    cuota -
+                    dinero(m.aporte) -
+                    interes
+                );
+
+            if (amortizacion < 0) {
+
+                amortizacion = 0;
+
+            }
+
+            if (amortizacion > deuda) {
+
+                amortizacion = deuda;
+
+            }
+            // ---------------------------------------------
+            // MULTA PAGADA
+            // ---------------------------------------------
+            const multaPagada =
+                Math.min(
+                    amortizacion,
+                    multaAnterior
+                );
+
+            // ---------------------------------------------
+            // CAPITAL AMORTIZADO
+            // ---------------------------------------------
+
+            const capitalAmortizado =
+                dinero(
+                    amortizacion -
+                    multaPagada
+                );
+
+            // ---------------------------------------------
+            // NUEVO CAPITAL
+            // ---------------------------------------------
+
+            const nuevoCapital =
+                Math.max(
+                    0,
+                    dinero(
+                        saldoApertura +
+                        prestamosNuevos -
+                        capitalAmortizado
+                    )
+                );
+
+            // ---------------------------------------------
+            // NUEVO SALDO TOTAL
+            // ---------------------------------------------
+
+            const nuevoSaldo =
+                Math.max(
+                    0,
+                    dinero(
+                        deuda -
+                        amortizacion
+                    )
+                );
+
+
+            // ---------------------------------------------
+            // CUOTA MÍNIMA
+            // ---------------------------------------------
+
+            let cuotaMinima = 0;
+
+            if (deuda > 0) {
+
+                const cuotaTabla =
+                    calcularCuotaMinima(deuda);
+
+                const cuotaCancelacion =
+                    dinero(
+                        m.aporte +
+                        interes +
+                        deuda
+                    );
+
+                cuotaMinima =
+                    Math.min(
+                        cuotaTabla,
+                        cuotaCancelacion
+                    );
+
+            } else {
+
+                cuotaMinima =
+                    dinero(m.aporte);
+
+            }
+
+
+            // ---------------------------------------------
+            // CONTROL
+            // ---------------------------------------------
+
+            const diferenciaInteres =
+                dinero(
+                    m.interes -
+                    interes
+                );
+
+            const diferenciaAmortizacion =
+                dinero(
+                    m.amortizacion -
+                    amortizacion
+                );
+
+            const diferenciaSaldo =
+                dinero(
+                    m.saldo -
+                    nuevoSaldo
+                );
+
+
+            const correcto =
+                Math.abs(diferenciaInteres) <= 0.01 &&
+                Math.abs(diferenciaAmortizacion) <= 0.01 &&
+                Math.abs(diferenciaSaldo) <= 0.01;
+
+
+            // ---------------------------------------------
+            // AGREGAR FILA
+            // ---------------------------------------------
+
+            agregarFila({
+
+                periodo: `${m.anio}-${String(m.mes).padStart(2, "0")}`,
+                aporte: m.aporte,
+                cuota: cuota,
+                cuotaMinima: cuotaMinima,
+                amortizacion: amortizacion,
+                interes: interes,
+                saldo: nuevoSaldo,
+                prestamos: prestamosNuevos,
+                multa: m.multa,
+                sobre: m.sobre,
+                correcto: correcto
+
+            });
+
+            // ---------------------------------------------
+            // AVANZAR AL SIGUIENTE PERÍODO
+            // ---------------------------------------------
+            capital =
+                nuevoCapital;
+
+            multaAnterior =
+                dinero(m.multa);
+
+        });
+
+    }
+
+    // =====================================================
+    // FILA INICIAL
+    // =====================================================
+
+    function agregarFilaInicio(capital) {
+
+        const tr =
+            document.createElement("tr");
+
+        tr.innerHTML = `
+
+            <td>
+                <span class="badge bg-info">
+                    Inicio
+                </span>
+            </td>
+
+            <td>—</td>
+
+            <td>—</td>
+
+            <td>—</td>
+
+            <td>—</td>
+
+            <td>—</td>
+
+            <td class="fw-bold text-danger">
+                S/ ${dinero(capital).toFixed(2)}
+            </td>
+
+            <td class="fw-bold">
+                S/ ${dinero(capital).toFixed(2)}
+            </td>
+
+            <td>—</td>
+
+            <td>—</td>
+
+            <td>
+                <span class="badge bg-info">
+                    APERTURA
+                </span>
+            </td>
+
+        `;
+
+        tbodySimulador.appendChild(tr);
+
+    }
+
+
+    // =====================================================
+    // AGREGAR FILA
+    // =====================================================
+
+    function agregarFila(data) {
+
+        const tr =
+            document.createElement("tr");
+
+
+        const claseControl =
+            data.correcto
+                ? "bg-success"
+                : "bg-danger";
+
+
+        const textoControl =
+            data.correcto
+                ? "OK"
+                : "REVISAR";
+
+
+        tr.innerHTML = `
+
+            <td>
+
+                <span class="badge bg-primary">
+
+                    ${data.periodo}
+
+                </span>
+
+            </td>
+
+
+            <td>
+
+                S/ ${dinero(data.aporte).toFixed(2)}
+
+            </td>
+
+
+            <td>
+
+                <input
+                    type="number"
+                    step="0.01"
+                    class="form-control form-control-sm sim-cuota"
+                    value="${dinero(data.cuota).toFixed(2)}">
+
+            </td>
+
+
+            <td class="text-primary fw-bold">
+
+                S/ ${dinero(data.cuotaMinima).toFixed(2)}
+
+            </td>
+
+
+            <td class="text-primary fw-bold">
+
+                S/ ${dinero(data.amortizacion).toFixed(2)}
+
+            </td>
+
+
+            <td class="text-success fw-bold">
+
+                S/ ${dinero(data.interes).toFixed(2)}
+
+            </td>
+
+
+            <td class="text-danger fw-bold">
+
+                S/ ${dinero(data.saldo).toFixed(2)}
+
+            </td>
+
+
+            <td>
+
+                S/ ${dinero(data.prestamos).toFixed(2)}
+
+            </td>
+
+
+            <td>
+
+                S/ ${dinero(data.multa).toFixed(2)}
+
+            </td>
+
+
+            <td>
+
+                S/ ${dinero(data.sobre).toFixed(2)}
+
+            </td>
+
+
+            <td>
+
+                <span class="badge ${claseControl}">
+
+                    ${textoControl}
+
+                </span>
+
+            </td>
+
+        `;
+
+
+        tbodySimulador.appendChild(tr);
+
+    }
+
+
+    // =====================================================
+    // ABRIR
+    // =====================================================
+
+    $("#btnAbrirSimulador").on("click", function () {
+
+        simular();
+
+        if (modalSimulador) {
+
+            modalSimulador.showModal();
+
+        }
+
+    });
+
+
+    // =====================================================
+    // CERRAR
+    // =====================================================
+
+    $("#btnCerrarSimulador, #btnCerrarSimulador2")
+        .on("click", function () {
+
+            if (modalSimulador) {
+
+                modalSimulador.close();
+
+            }
+
+        });
+
+
+    // =====================================================
+    // RECALCULAR
+    // =====================================================
+
+    $("#btnRecalcularSimulador").on(
+        "click",
+        function () {
+
+            simular();
+
+        }
+    );
+
+
+    // =====================================================
+    // CAMBIAR CUOTA
+    // =====================================================
+    //
+    // IMPORTANTE:
+    //
+    // Al cambiar una cuota se debe reconstruir TODA
+    // la secuencia porque el saldo de un período
+    // afecta al siguiente.
+    //
+    // =====================================================
+
+    $(document).on(
+        "input",
+        "#tablaSimulador .sim-cuota",
+        function () {
+
+            const fila =
+                $(this).closest("tr");
+
+            const indice =
+                fila.index();
+
+            const movimientos =
+                obtenerMovimientosOrdenados();
+
+            if (
+                indice >= 0 &&
+                indice < movimientos.length
+            ) {
+
+                movimientos[indice].cuota =
+                    Number($(this).val());
+
+            }
+
+            simular();
+
+        }
+    );
 
 </script>
 

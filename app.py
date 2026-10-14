@@ -40,7 +40,7 @@ from routes.socio_portal_routes import socio_portal_bp
 
 
 
-
+ 
 from flask_login import LoginManager
 
 app = Flask(__name__)

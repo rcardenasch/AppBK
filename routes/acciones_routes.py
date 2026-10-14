@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from database.connection import SessionLocal
@@ -7,6 +9,7 @@ from models.accion import Accion
 from models.socio import Socio
 from models.prestamo import Prestamo
 from models.movimiento import Movimiento
+from models.configuracion import Configuracion
 
 
 acciones_bp = Blueprint("acciones", __name__, url_prefix="/acciones")
@@ -284,6 +287,30 @@ def detalle(id):
         )
         print(saldo_prestamos)
 
+        configuracion = (
+            db.query(Configuracion)
+            .filter(
+                Configuracion.estado == True
+            )
+            .first()
+        )
+
+        tasa_interes = Decimal(
+            str(
+                configuracion.interes_mensual
+                if configuracion
+                else 0.01
+            )
+        )
+
+        aporte_minimo = Decimal(
+            str(
+                configuracion.aporte_minimo
+                if configuracion
+                else 0
+            )
+        )
+
         return render_template(
 
             "acciones/detalle.html",
@@ -291,7 +318,9 @@ def detalle(id):
             socio=socio,
             prestamos_activos=prestamos_activos,
             saldo_prestamos=saldo_prestamos,
-            movimientos=movimientos
+            movimientos=movimientos,
+            tasa_interes=float(tasa_interes),
+            aporte_minimo=float(aporte_minimo)
 
         )
 
