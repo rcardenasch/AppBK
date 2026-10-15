@@ -705,13 +705,11 @@
             ======================================================== */
 
             const SIMULADOR = {
-
                 movimientos: [
                     {% for m in movimientos|sort(attribute='periodo_id') %}
-
                     {
                         id: {{ m.id }},
-                        periodo_id:{{ m.periodo_id if m.periodo_id is not none else 'null' }},
+                        periodo_id: {{ m.periodo_id if m.periodo_id is not none else 'null' }},
                         periodo: "{{ m.periodo.anio }}-{{ '%02d'|format(m.periodo.mes) }}",
                         anio: {{ m.periodo.anio }},
                         mes: {{ m.periodo.mes }},
@@ -722,14 +720,11 @@
                         saldo: {{ (m.saldo_prestamo or 0)|float }},
                         multa: {{ (m.multa or 0)|float }},
                         sobre: {{ (m.sobre or 0)|float }}
-
-                        {% if not loop.last %},{% endif %}
-                    }
-
+                    }{% if loop.revindex0 %},{% endif %}
                     {% endfor %}
                 ]
-
             };
+
 
 
             /* ========================================================
