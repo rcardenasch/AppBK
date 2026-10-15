@@ -90,13 +90,6 @@ body{
 }
 
 
-.login-icon{
-
-    font-size:70px;
-
-    color:#2563eb;
-
-}
 
 .form-control{
 
@@ -126,4 +119,30 @@ body{
 
     background:#1d4ed8;
 
+}
+
+/* Contenedor opcional para centrar el ícono arriba de la tarjeta o dentro de ella */
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-icon {
+  /* Tamaño y Proporciones */
+  font-size: 4.5rem;          /* Tamaño prominente y legible */
+  display: inline-block;
+  
+  /* Color e Identidad (Recuperando tu color azul original) */
+  color: #7ce1fa;             /* Tu azul original en formato HEX */
+  
+  /* Efecto Visual Moderno */
+  filter: drop-shadow(0 4px 12px rgba(124, 225, 250, 0.4)); /* Brillo suave */
+  
+  /* Animación Sutil al cargar o interactuar */
+  transition: transform 0.3s ease;
+}
+
+/* Efecto interactivo cuando el usuario pasa el cursor */
+.login-icon:hover {
+  transform: scale(1.05);
 }
