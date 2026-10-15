@@ -14,7 +14,7 @@ body{
 
     position:relative;
 
-    background:linear-gradient(135deg,#0f172a,#2563eb);
+    background:linear-gradient(135deg,#0f172a,#7ce1fa);
 
     color:white;
 
@@ -105,7 +105,7 @@ body{
 
 .btn-primary{
 
-    background:#2563eb;
+    color: #7ce1fa; 
 
     border:none;
 
