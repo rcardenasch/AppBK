@@ -646,4 +646,47 @@
 
 <script src="{{url_for('static',filename='js/detalle_acciones.js')}}"></script>
 
+<!-- Agrega esto en tu HTML para pasar los datos de Python a JS de forma segura -->
+<script>
+    window.SIMULADOR = {
+        accionId: {{ accion.id }},
+
+        movimientos: [
+            {% for m in movimientos|sort(attribute='periodo_id') %}
+            {
+                id: {{ m.id }},
+                periodo_id: {{ m.periodo_id if m.periodo_id is not none else 'null' }},
+
+                periodo: "{{ m.periodo.anio }}-{{ '%02d'|format(m.periodo.mes) }}",
+
+                anio: {{ m.periodo.anio }},
+                mes: {{ m.periodo.mes }},
+
+                aporte: {{ (m.aporte or 0)|float }},
+                cuota: {{ (m.cuota_pagada or 0)|float }},
+                amortizacion: {{ (m.amortizacion or 0)|float }},
+                interes: {{ (m.interes or 0)|float }},
+                saldo: {{ (m.saldo_prestamo or 0)|float }},
+                multa: {{ (m.multa or 0)|float }},
+                sobre: {{ (m.sobre or 0)|float }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+
+        prestamos: [
+            {% for p in accion.prestamos %}
+            {
+                id: {{ p.id }},
+                monto: {{ (p.monto or 0)|float }},
+                periodo_id: {{ p.periodo_id if p.periodo_id is not none else 'null' }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    };
+
+    console.log("SIMULADOR cargado:", window.SIMULADOR);
+</script>
+
+
+
 {% endblock %}
