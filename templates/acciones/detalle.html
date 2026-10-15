@@ -1308,50 +1308,6 @@
 
     }
 
-        // =====================================================
-        // DATOS DEL SIMULADOR
-        // =====================================================
-
-        window.SIMULADOR = {
-            accionId: {{ accion.id }},
-
-            movimientos: [
-                {% for m in accion.movimientos|sort(attribute='periodo_id') %}
-                {
-                    id: {{ m.id }},
-                    periodo_id: {{ m.periodo_id if m.periodo_id is not none else 'null' }},
-
-                    anio: {{ m.periodo.anio if m.periodo else 'null' }},
-                    mes: {{ m.periodo.mes if m.periodo else 'null' }},
-
-                    aporte: {{ m.aporte or 0 }},
-                    amortizacion: {{ m.amortizacion or 0}},
-                    interes: {{ m.interes or 0 }},
-                    saldo_prestamo: {{ m.saldo_prestamo or 0}},
-
-                    multa: {{m.multa or 0}},
-                    sobre: {{m.sobre or 0}},
-                    cuota_pagada: {{m.cuota_pagada or 0}},
-
-                    prestamo_id: {{m.prestamo_id if m.prestamo_id is not none else 'null'}}
-                }{% if not loop.last %},{% endif %}
-                {% endfor %}
-            ],
-
-            prestamos: [
-                {% for p in accion.prestamos %}
-                {
-                    id: {{p.id}},
-                    monto: {{p.monto or 0}},
-
-                    periodo_id: {{ p.periodo_id if p.periodo_id is not none else 'null' }},
-
-                    anio: {{p.periodo.anio if p.periodo else 'null'}},
-                    mes: {{p.periodo.mes if p.periodo else 'null'}}
-                }{% if not loop.last %},{% endif %}
-                {% endfor %}
-            ]
-        };
 
         /* ============================================================
         SIMULADOR FINANCIERO DE LA ACCIÓN
@@ -1403,7 +1359,7 @@
                     {
                         id: {{ m.id }},
 
-                        periodo_id: {{ m.periodo_id }},
+                        periodo_id:{{ m.periodo_id if m.periodo_id is not none else 'null' }},
 
                         periodo:
                             "{{ m.periodo.anio }}-{{ '%02d'|format(m.periodo.mes) }}",
@@ -1525,22 +1481,19 @@
             /* ========================================================
             SALDO DE APERTURA
             ======================================================== */
-
             function obtenerSaldoApertura(
                 movimientos,
-                indice
+                indice,
+                resultados
             ) {
 
                 if (indice <= 0) {
-
                     return 0;
-
                 }
 
                 return redondear(
-                    movimientos[indice - 1].saldo
+                    resultados[indice - 1].saldo
                 );
-
             }
 
 
@@ -1557,7 +1510,7 @@
             function obtenerPrestamosPeriodo(movimiento) {
 
                 const prestamos =
-                    PRESTAMOS_SIMULADOR.filter(
+                    SIMULADOR.prestamos.filter(
                         function (p) {
 
                             return (
@@ -1577,7 +1530,6 @@
                         0
                     )
                 );
-
             }
 
 
@@ -1587,7 +1539,8 @@
 
             function calcularPeriodo(
                 movimientos,
-                indice
+                indice,
+                saldoAnteriorCalculado
             ) {
 
                 const m = movimientos[indice];
@@ -1607,9 +1560,8 @@
                     );
 
                 const saldoAnterior =
-                    obtenerSaldoApertura(
-                        movimientos,
-                        indice
+                    redondear(
+                        saldoAnteriorCalculado
                     );
 
                 const prestamos =
@@ -1793,17 +1745,9 @@
                 const movimientos =
                     obtenerMovimientosOrdenados();
 
-
-                /*
-                * IMPORTANTE:
-                *
-                * NO modificamos el DOM todavía.
-                *
-                * Primero calculamos toda la cadena.
-                */
-
                 const resultados = [];
 
+                let saldoAnterior = 0;
 
                 for (
                     let i = 0;
@@ -1814,39 +1758,19 @@
                     const resultado =
                         calcularPeriodo(
                             movimientos,
-                            i
+                            i,
+                            saldoAnterior
                         );
 
-                    resultados.push(
-                        resultado
-                    );
+                    resultados.push(resultado);
 
-                    /*
-                    * El saldo calculado se convierte
-                    * automáticamente en el saldo de
-                    * apertura del siguiente período.
-                    */
-
-                    if (i + 1 < movimientos.length) {
-
-                        movimientos[i + 1].saldoAnterior =
-                            resultado.saldo;
-
-                    }
-
+                    saldoAnterior =
+                        resultado.saldo;
                 }
-
-
-                /*
-                * Ahora sí actualizamos las filas.
-                *
-                * NO reconstruimos los inputs.
-                */
 
                 resultados.forEach(
                     actualizarFila
                 );
-
             }
 
 
@@ -2317,7 +2241,7 @@
             }
 
 
-        });
+        })();
 
 });
 
