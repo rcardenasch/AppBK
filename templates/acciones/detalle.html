@@ -644,8 +644,6 @@
     </div>
 </dialog>
 
-<script src="{{url_for('static',filename='js/detalle_acciones.js')}}"></script>
-
 <!-- Agrega esto en tu HTML para pasar los datos de Python a JS de forma segura -->
 <script>
     window.SIMULADOR = {
@@ -687,6 +685,6 @@
     console.log("SIMULADOR cargado:", window.SIMULADOR);
 </script>
 
-
+<script src="{{url_for('static',filename='js/simulador_financiero.js')}}"></script>
 
 {% endblock %}
