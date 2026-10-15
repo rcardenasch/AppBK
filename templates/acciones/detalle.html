@@ -675,12 +675,23 @@
             {% for p in accion.prestamos %}
             {
                 id: {{ p.id }},
-                monto: {{ (p.monto or 0)|float }},
-                periodo_id: {{ p.periodo_id if p.periodo_id is not none else 'null' }}
+
+                monto:
+                    {{ (p.monto or 0)|float }},
+
+                saldo_actual:
+                    {{ (p.saldo_actual or 0)|float }},
+
+                periodo_id:
+                    {{ p.periodo_id if p.periodo_id is not none else 'null' }},
+
+                fecha_prestamo:
+                    "{{ p.fecha_prestamo.strftime('%Y-%m-%d') if p.fecha_prestamo else '' }}"
             }{% if not loop.last %},{% endif %}
             {% endfor %}
         ]
     };
+     
 
     console.log("SIMULADOR cargado:", window.SIMULADOR);
 </script>

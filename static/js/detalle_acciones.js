@@ -698,40 +698,6 @@
                 document.getElementById("simAporte");
 
 
-            /* ========================================================
-            DATOS INICIALES
-
-            Estos datos deben ser proporcionados por Flask.
-            ======================================================== */
-            const SIMULADOR = {
-                movimientos: (window.MOVIMIENTOS_SERVIDOR || [])
-                    .sort((a, b) => (a.periodo_id || 0) - (b.periodo_id || 0))
-                    .map(m => {
-                        // Aseguramos que m.periodo exista antes de desestructurar anio y mes
-                        const anio = m.periodo ? m.periodo.anio : null;
-                        const mes = m.periodo ? m.periodo.mes : null;
-                        
-                        // Formateamos el periodo con dos dígitos para el mes (ej: "2026-03")
-                        const periodoFormateado = (anio && mes) 
-                            ? `${anio}-${String(mes).padStart(2, '0')}` 
-                            : "";
-
-                        return {
-                            id: m.id,
-                            periodo_id: m.periodo_id !== undefined ? m.periodo_id : null,
-                            periodo: periodoFormateado,
-                            anio: anio,
-                            mes: mes,
-                            aporte: parseFloat(m.aporte || 0),
-                            cuota: parseFloat(m.cuota_pagada || 0),
-                            amortizacion: parseFloat(m.amortizacion || 0),
-                            interes: parseFloat(m.interes || 0),
-                            saldo: parseFloat(m.saldo_prestamo || 0),
-                            multa: parseFloat(m.multa || 0),
-                            sobre: parseFloat(m.sobre || 0)
-                        };
-                    })
-            };
 
 
             /* ========================================================
