@@ -1325,15 +1325,15 @@
                     mes: {{ m.periodo.mes if m.periodo else 'null' }},
 
                     aporte: {{ m.aporte or 0 }},
-                    amortizacion: {{ m.amortizacion or 0 }},
+                    amortizacion: {{ m.amortizacion or 0}},
                     interes: {{ m.interes or 0 }},
-                    saldo_prestamo: {{ m.saldo_prestamo or 0 }},
+                    saldo_prestamo: {{ m.saldo_prestamo or 0}},
 
-                    multa: {{ m.multa or 0 }},
-                    sobre: {{ m.sobre or 0 }},
-                    cuota_pagada: {{ m.cuota_pagada or 0 }},
+                    multa: {{m.multa or 0}},
+                    sobre: {{m.sobre or 0}},
+                    cuota_pagada: {{m.cuota_pagada or 0}},
 
-                    prestamo_id: {{ m.prestamo_id if m.prestamo_id is not none else 'null' }}
+                    prestamo_id: {{m.prestamo_id if m.prestamo_id is not none else 'null'}}
                 }{% if not loop.last %},{% endif %}
                 {% endfor %}
             ],
@@ -1341,13 +1341,13 @@
             prestamos: [
                 {% for p in accion.prestamos %}
                 {
-                    id: {{ p.id }},
-                    monto: {{ p.monto or 0 }},
+                    id: {{p.id}},
+                    monto: {{p.monto or 0}},
 
                     periodo_id: {{ p.periodo_id if p.periodo_id is not none else 'null' }},
 
-                    anio: {{ p.periodo.anio if p.periodo else 'null' }},
-                    mes: {{ p.periodo.mes if p.periodo else 'null' }}
+                    anio: {{p.periodo.anio if p.periodo else 'null'}},
+                    mes: {{p.periodo.mes if p.periodo else 'null'}}
                 }{% if not loop.last %},{% endif %}
                 {% endfor %}
             ]
