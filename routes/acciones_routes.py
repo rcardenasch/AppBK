@@ -310,6 +310,32 @@ def detalle(id):
                 else 0
             )
         )
+        prestamos_simulador = []
+
+        for p in accion.prestamos:
+
+            if p.periodo_id:
+
+                prestamos_simulador.append({
+                    "id": p.id,
+                    "periodo_id": p.periodo_id,
+                    "anio": p.periodo.anio,
+                    "mes": p.periodo.mes,
+                    "monto": float(p.monto or 0),
+                    "saldo": float(p.saldo_actual or 0)
+                })
+
+            else:
+
+                # Saldo inicial
+                prestamos_simulador.append({
+                    "id": p.id,
+                    "periodo_id": None,
+                    "anio": None,
+                    "mes": None,
+                    "monto": float(p.monto or 0),
+                    "saldo": float(p.saldo_actual or 0)
+                })
 
         return render_template(
 
@@ -320,7 +346,8 @@ def detalle(id):
             saldo_prestamos=saldo_prestamos,
             movimientos=movimientos,
             tasa_interes=float(tasa_interes),
-            aporte_minimo=float(aporte_minimo)
+            aporte_minimo=float(aporte_minimo),
+            prestamos_simulador=prestamos_simulador
 
         )
 
