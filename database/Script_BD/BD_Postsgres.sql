@@ -585,7 +585,7 @@ select * from caja_chica
 
 select * from movimientos_caja_chica
 select * from solicitudes_prestamo order by id asc;
-select * from acciones where socio_id=15 order by id asc
+select * from acciones where socio_id=5 order by id asc
 SELECT * FROM socios
 select * from prestamos where socio_id=24
 SELECT * FROM movimientos m
