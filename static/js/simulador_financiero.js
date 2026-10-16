@@ -811,6 +811,7 @@ $(document).ready(function () {
 
             <td style="font-size: 11px;">
                 S/ ${dinero(data.aporte)}
+
             </td>
 
             <td>
@@ -841,6 +842,7 @@ $(document).ready(function () {
 
             <td class="text-danger fw-bold" style="font-size: 11px;">
                 S/ ${dinero(data.saldo)}
+
             </td>
 
             <td style="font-size: 11px;">
