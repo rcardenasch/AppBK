@@ -671,6 +671,14 @@ def editar_movimiento(id):
         sobre = Decimal(str(request.form.get("sobre","0"))).quantize(Decimal("0.01"))
         observacion = request.form.get("observacion","")
 
+        # ============================================================
+        # PAGAR DEUDA TOTAL
+        # ============================================================
+
+        pagar_deuda_total = (
+            request.form.get("pagar_deuda_total") == "1"
+            or request.form.get("pagar_deuda") == "1"
+        )
         # =====================================================
         # VALIDACIONES
         # =====================================================
@@ -809,6 +817,60 @@ def editar_movimiento(id):
                 Decimal("0.01")
             )
 
+
+        # ============================================================
+        # PAGAR DEUDA TOTAL
+        # ============================================================
+
+        if pagar_deuda_total:
+
+            # --------------------------------------------------------
+            # La deuda existente ya fue restaurada.
+            # --------------------------------------------------------
+
+            deuda_para_cancelar = (
+                saldo_restaurado
+            ).quantize(
+                Decimal("0.01")
+            )
+
+            # --------------------------------------------------------
+            # Interés sobre la deuda restaurada.
+            # --------------------------------------------------------
+
+            interes_deuda = (
+                InteresService.calcular_interes(
+                    db,
+                    deuda_para_cancelar
+                )
+            ).quantize(
+                Decimal("0.01")
+            )
+
+            # --------------------------------------------------------
+            # Cuota exacta para cancelar:
+            #
+            # aporte + interés + capital pendiente
+            # --------------------------------------------------------
+
+            cuota_pagada = (
+                aporte
+                + interes_deuda
+                + deuda_para_cancelar
+            ).quantize(
+                Decimal("0.01")
+            )
+
+            print("\n==============================================")
+            print("PAGAR DEUDA TOTAL")
+            print("==============================================")
+            print(f"Saldo restaurado : S/ {saldo_restaurado}")
+            print(f"Aporte           : S/ {aporte}")
+            print(f"Interés          : S/ {interes_deuda}")
+            print(f"Amortización     : S/ {deuda_para_cancelar}")
+            print(f"Cuota total      : S/ {cuota_pagada}")
+            print("==============================================\n")
+
         # =========================================================
         # 3. CALCULAR NUEVO MOVIMIENTO
         # =========================================================
@@ -895,24 +957,24 @@ def editar_movimiento(id):
         # =========================================================
         # 4. DEBUG
         # =========================================================
-        print("\n==============================================")
-        print("EDITAR MOVIMIENTO - RECÁLCULO")
-        print("==============================================")
-        print(f"Movimiento              : "f"{movimiento.id}" )
-        print(f"Acción                  : "f"{movimiento.accion_id}")
-        print(f"Período                 : "f"{movimiento.periodo_id}")
-        print(f"Saldo anterior          : "f"{saldo_anterior}")
-        print(f"Interés anterior        : "f"{interes_anterior}")
-        print(f"Amortización anterior   : "f"{amortizacion_anterior}")
-        print(f"Saldo restaurado        : "f"{saldo_restaurado}")
-        print(f"Multa NO reaplicada     : "f"S/ 0.00")
-        print(f"Base interés            : "f"{resultado['saldo_base_interes']}")
-        print(f"Interés nuevo           : "f"{resultado['interes']}")
-        print(f"Aporte                  : "f"{aporte}")
-        print(f"Cuota                   : "f"{cuota_pagada}")
-        print(f"Amortización nueva      : "f"{resultado['amortizacion']}")
-        print(f"Saldo final             : "f"{resultado['saldo_prestamo']}")
-        print("==============================================\n")
+        #print("\n==============================================")
+        #print("EDITAR MOVIMIENTO - RECÁLCULO")
+        #print("==============================================")
+        #print(f"Movimiento              : "f"{movimiento.id}" )
+        #print(f"Acción                  : "f"{movimiento.accion_id}")
+        #print(f"Período                 : "f"{movimiento.periodo_id}")
+        #print(f"Saldo anterior          : "f"{saldo_anterior}")
+        #print(f"Interés anterior        : "f"{interes_anterior}")
+        #print(f"Amortización anterior   : "f"{amortizacion_anterior}")
+        #print(f"Saldo restaurado        : "f"{saldo_restaurado}")
+        #print(f"Multa NO reaplicada     : "f"S/ 0.00")
+        #print(f"Base interés            : "f"{resultado['saldo_base_interes']}")
+        #print(f"Interés nuevo           : "f"{resultado['interes']}")
+        #print(f"Aporte                  : "f"{aporte}")
+        #print(f"Cuota                   : "f"{cuota_pagada}")
+        #print(f"Amortización nueva      : "f"{resultado['amortizacion']}")
+        #print(f"Saldo final             : "f"{resultado['saldo_prestamo']}")
+        #print("==============================================\n")
 
         # =========================================================
         # 5. ACTUALIZAR MOVIMIENTO
@@ -1049,14 +1111,14 @@ def editar_movimiento(id):
         # =========================================================
         # DEBUG
         # =========================================================
-        print("\n==============================================")
-        print("VALIDACIÓN SALDOS")
-        print("==============================================")
-        print(f"Saldo préstamos     : "f"S/ {saldo_prestamos}")
-        print(f"Saldo deuda multa   : "f"S/ {saldo_multa}")
-        print(f"Saldo deuda real    : "f"S/ {saldo_deuda_real}")
-        print(f"Saldo movimiento    : "f"S/ {saldo_movimiento}" )
-        print("==============================================\n")
+        #print("\n==============================================")
+        #print("VALIDACIÓN SALDOS")
+        #print("==============================================")
+        #print(f"Saldo préstamos     : "f"S/ {saldo_prestamos}")
+        #print(f"Saldo deuda multa   : "f"S/ {saldo_multa}")
+        #print(f"Saldo deuda real    : "f"S/ {saldo_deuda_real}")
+        #print(f"Saldo movimiento    : "f"S/ {saldo_movimiento}" )
+        #print("==============================================\n")
 
         # =========================================================
         # VALIDAR CONSISTENCIA

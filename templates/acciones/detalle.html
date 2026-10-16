@@ -336,10 +336,6 @@
 
             <hr class="my-4">
 
-            <!-- =============================================== -->
-            <!-- BOTÓN PAGAR TODO -->
-            <!-- =============================================== -->
-
 
             <!-- =============================================== -->
             <!-- BOTÓN PARA MOSTRAR / OCULTAR CÁLCULO DE DEUDA -->
@@ -392,6 +388,12 @@
 
                         <div class="card bg-light border-0">
                             <div class="card-body">
+                                <input
+                                    type="hidden"
+                                    name="pagar_deuda_total"
+                                    id="pagar_deuda_total"
+                                    value="0"
+                                >
 
                                 <div class="row g-3">
 
@@ -1035,9 +1037,17 @@ $(document).ready(function () {
             $icono.removeClass("bi-chevron-up").addClass("bi-chevron-down");
             $(this).attr("aria-expanded", "false");
         }
+        
     });
 
-
+    // Cambiar el valor de pagar_deuda_total entre 1 y 0 al hacer click
+    $("#pagar_deuda_total").on("click", function () {
+        // Si el valor actual es "1", lo cambia a "0". Si no, lo cambia a "1".
+        const nuevoValor = $(this).val() === "1" ? "0" : "1";
+        $(this).val(nuevoValor);
+        
+        console.log("Nuevo valor de pagar_deuda_total:", $(this).val()); // Opcional: para depuración
+    });
 	
 });
 
@@ -1069,7 +1079,7 @@ $(document).ready(function () {
             }{% if not loop.last %},{% endif %}
             {% endfor %}
         ],
-        
+
         interes_mensual: {{ tasa_interes|float }},
 
         prestamos: [
