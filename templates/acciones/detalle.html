@@ -526,68 +526,7 @@
                 No modifica ningún movimiento ni saldo de la base de datos.
 
             </div>
-            <!-- CONTROLES -->
-            <div class="row g-3 mb-3">
-
-                <div class="col-md-3">
-
-                    <label class="form-label">
-                        Tasa de interés
-                    </label>
-
-                    <div class="input-group">
-
-                        <input
-                            type="number"
-                            step="0.01"
-                            id="simTasa"
-                            class="form-control"
-                            value="{{ (tasa_interes * 100)|round(4) }}">
-
-                        <span class="input-group-text">
-                            %
-                        </span>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-
-                    <label class="form-label">
-                        Aporte mínimo
-                    </label>
-
-                    <input
-                        type="number"
-                        step="0.01"
-                        id="simAporte"
-                        class="form-control"
-                        value="{{ aporte_minimo }}">
-
-                </div>
-
-                <div class="col-md-3">
-
-                    <label class="form-label">
-                        Acción
-                    </label>
-
-                    <input
-                        class="form-control bg-light"
-                        readonly
-                        value="{{ accion.numero_accion }}">
-
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button
-                        type="button"
-                        class="btn btn-primary w-100"
-                        id="btnRecalcularSimulador">
-                        <i class="bi bi-arrow-repeat me-1"></i>
-                        Recalcular
-                    </button>
-
-                </div>
-            </div>
+            
             <!-- TABLA -->
             <div class="table-responsive">
                 <table
@@ -597,17 +536,17 @@
 
                         <tr>
 
-                            <th>Período</th>
-                            <th>Aporte</th>
-                            <th>Cuota simulada</th>
-                            <th>Cuota mínima</th>
-                            <th>Amortización</th>
-                            <th>Interés</th>
-                            <th>Saldo préstamo</th>
-                            <th>Préstamo</th>
-                            <th>Multa</th>
-                            <th>Sobre</th>
-                            <th>Control</th>
+                            <th style="font-size: 11px;">Período</th>
+                            <th style="font-size: 11px;">Aporte</th>
+                            <th style="font-size: 11px;">Cuota simulada</th>
+                            <th style="font-size: 11px;">Cuota mínima</th>
+                            <th style="font-size: 11px;">Amortización</th>
+                            <th style="font-size: 11px;">Interés</th>
+                            <th style="font-size: 11px;">Saldo préstamo</th>
+                            <th style="font-size: 11px;">Préstamo</th>
+                            <th style="font-size: 11px;">Multa</th>
+                            <th style="font-size: 11px;">Sobre</th>
+                            <th style="font-size: 11px;">Control</th>
 
                         </tr>
 
@@ -646,6 +585,466 @@
 
 <!-- Agrega esto en tu HTML para pasar los datos de Python a JS de forma segura -->
 <script>
+
+$(document).ready(function () {
+
+    	
+	// =====================================================
+    // EDITAR MOVIMIENTO
+    // =====================================================
+
+    $(document)
+        .off(
+            "click",
+            ".btn-editar-movimiento"
+        )
+        .on(
+            "click",
+            ".btn-editar-movimiento",
+            function () {
+
+                const id =
+                    $(this).data("id");
+
+                if (!id) {
+                    alert(
+                        "No se encontró el movimiento."
+                    );
+                    return;
+                }
+
+                const $modal =
+                    $("#modalEditarMovimiento");
+
+                // Mostrar estado de carga
+                $("#editEstadoDeuda")
+                    .removeClass(
+                        "bg-success bg-danger"
+                    )
+                    .addClass(
+                        "bg-secondary"
+                    )
+                    .text(
+                        "Cargando..."
+                    );
+
+                // Guardar ID
+                $("#editMovimientoId")
+                    .val(id);
+
+                // Abrir modal inmediatamente
+                if (
+                    $modal.length &&
+                    !$modal[0].open
+                ) {
+                    $modal[0].showModal();
+                }
+
+                // =================================================
+                // RECUPERAR MOVIMIENTO
+                // =================================================
+
+                $.ajax({
+
+                    url:
+                        "/movimientos/api/movimiento/"
+                        + id,
+
+                    method: "GET",
+
+                    dataType: "json",
+
+                    success: function (respuesta) {
+
+                        if (
+                            !respuesta ||
+                            !respuesta.ok
+                        ) {
+
+                            alert(
+                                respuesta.mensaje ||
+                                "No se pudo obtener el movimiento."
+                            );
+
+                            return;
+                        }
+
+                        const m =
+                            respuesta.movimiento;
+
+                        // =============================================
+                        // CARGAR FORMULARIO
+                        // =============================================
+
+                        $("#editMovimientoId")
+                            .val(m.id);
+
+                        $("#editAporte")
+                            .val(
+                                Number(
+                                    m.aporte || 0
+                                ).toFixed(2)
+                            );
+
+                        $("#editCuota")
+                            .val(
+                                Number(
+                                    m.cuota_pagada || 0
+                                ).toFixed(2)
+                            );
+
+                        $("#editMulta")
+                            .val(
+                                Number(
+                                    m.multa || 0
+                                ).toFixed(2)
+                            );
+
+                        $("#editSobre")
+                            .val(
+                                Number(
+                                    m.sobre || 0
+                                ).toFixed(2)
+                            );
+
+                        $("#editObservacion")
+                            .val(
+                                m.observacion || ""
+                            );
+
+                        // =============================================
+                        // CALCULAR DEUDA ACTUAL
+                        // =============================================
+
+                        cargarResumenEdicion(
+                            m.accion_id,
+                            m.periodo_id
+                        );
+
+                    },
+
+                    error: function (xhr) {
+
+                        console.error(
+                            "Error API movimiento:",
+                            xhr
+                        );
+
+                        alert(
+                            "No se pudo cargar el movimiento."
+                        );
+
+                    }
+
+                });
+
+            }
+        );
+
+
+    // =====================================================
+    // CANCELAR EDICIÓN
+    // =====================================================
+
+    $("#btnCancelarEditarMovimiento")
+        .off("click")
+        .on(
+            "click",
+            function () {
+
+                const modal =
+                    document.getElementById(
+                        "modalEditarMovimiento"
+                    );
+
+                if (
+                    modal &&
+                    modal.open
+                ) {
+                    modal.close();
+                }
+
+            }
+        );
+
+
+    // =====================================================
+    // RESUMEN DE DEUDA
+    // =====================================================
+
+    function cargarResumenEdicion(
+        accionId,
+        periodoId
+    ) {
+
+        $.ajax({
+
+            url:
+                "/movimientos/api/accion/"
+                + accionId
+                + "?periodo_id="
+                + periodoId,
+
+            method: "GET",
+
+            dataType: "json",
+
+            success: function (r) {
+
+                if (
+                    !r ||
+                    !r.ok
+                ) {
+
+                    return;
+                }
+
+                const saldo =
+                    Number(
+                        r.saldo_apertura || 0
+                    );
+
+                const multa =
+                    Number(
+                        r.multa_periodo_anterior || 0
+                    );
+
+                const deuda =
+                    saldo +
+                    multa;
+
+                $("#editSaldoApertura")
+                    .text(
+                        "S/ " +
+                        saldo.toFixed(2)
+                    );
+
+                $("#editMultaAnterior")
+                    .text(
+                        "S/ " +
+                        multa.toFixed(2)
+                    );
+
+                $("#editDeudaTotal")
+                    .text(
+                        "S/ " +
+                        deuda.toFixed(2)
+                    );
+
+                $("#editEstadoDeuda")
+                    .removeClass(
+                        "bg-secondary bg-danger"
+                    )
+                    .addClass(
+                        deuda > 0
+                            ? "bg-warning text-dark"
+                            : "bg-success"
+                    )
+                    .text(
+                        deuda > 0
+                            ? "Deuda pendiente"
+                            : "Sin deuda"
+                    );
+
+            },
+
+            error: function (xhr) {
+
+                console.error(
+                    "Error obteniendo deuda:",
+                    xhr
+                );
+
+            }
+
+        });
+
+    }
+
+
+    // =====================================================
+    // GUARDAR EDICIÓN
+    // =====================================================
+
+    $("#btnGuardarEdicionMovimiento")
+        .off("click")
+        .on(
+            "click",
+            function () {
+
+                const id =
+                    $("#editMovimientoId")
+                        .val();
+
+                if (!id) {
+
+                    alert(
+                        "No se encontró el movimiento."
+                    );
+
+                    return;
+                }
+
+                const $boton =
+                    $("#btnGuardarEdicionMovimiento");
+
+                // =============================================
+                // EVITAR DOBLE CLICK
+                // =============================================
+
+                if (
+                    $boton.prop("disabled")
+                ) {
+                    return;
+                }
+
+                const textoOriginal =
+                    $boton.html();
+
+                $boton
+                    .prop("disabled", true)
+                    .html(
+                        '<span class="spinner-border spinner-border-sm me-1" role="status"></span>' +
+                        'Guardando...'
+                    );
+
+                // =============================================
+                // DATOS
+                // =============================================
+
+                const datos = {
+
+                    aporte:
+                        $("#editAporte").val(),
+
+                    cuota_pagada:
+                        $("#editCuota").val(),
+
+                    multa:
+                        $("#editMulta").val(),
+
+                    sobre:
+                        $("#editSobre").val(),
+
+                    observacion:
+                        $("#editObservacion").val()
+
+                };
+
+                // =============================================
+                // GUARDAR
+                // =============================================
+
+                $.ajax({
+
+                    url:
+                        "/movimientos/editar_movimiento/"
+                        + id,
+
+                    method: "POST",
+
+                    data: datos,
+
+                    dataType: "json",
+
+                    success: function (respuesta) {
+
+                        if (
+                            respuesta &&
+                            respuesta.ok
+                        ) {
+
+                            const modal =
+                                document.getElementById(
+                                    "modalEditarMovimiento"
+                                );
+
+                            if (
+                                modal &&
+                                modal.open
+                            ) {
+                                modal.close();
+                            }
+
+                            // Recargar para mostrar
+                            // los valores recalculados
+                            window.location.reload();
+
+                        } else {
+
+                            alert(
+                                respuesta.mensaje ||
+                                "No se pudo actualizar el movimiento."
+                            );
+
+                        }
+
+                    },
+
+                    error: function (xhr) {
+
+                        console.error(
+                            "Error guardando movimiento:",
+                            xhr
+                        );
+
+                        let mensaje =
+                            "Error al guardar el movimiento.";
+
+                        if (
+                            xhr.responseJSON &&
+                            xhr.responseJSON.mensaje
+                        ) {
+                            mensaje =
+                                xhr.responseJSON.mensaje;
+                        }
+
+                        alert(mensaje);
+
+                    },
+
+                    complete: function () {
+
+                        $boton
+                            .prop(
+                                "disabled",
+                                false
+                            )
+                            .html(
+                                textoOriginal
+                            );
+
+                    }
+
+                });
+
+            }
+        );
+		
+// ocultar y mostrar panel de calculo de deuda
+    $("#btnMostrarCalculoDeuda").on("click", function () {
+        const $panel = $("#panelCalculoDeuda");
+        const $icono = $("#iconoCalculoDeuda");
+
+        if ($panel.hasClass("d-none")) {
+            $panel.removeClass("d-none");
+            $icono.removeClass("bi-chevron-down").addClass("bi-chevron-up");
+            $(this).attr("aria-expanded", "true");
+        } else {
+            $panel.addClass("d-none");
+            $icono.removeClass("bi-chevron-up").addClass("bi-chevron-down");
+            $(this).attr("aria-expanded", "false");
+        }
+    });
+
+
+	
+});
+
+</script>
+
+<!-- Agrega esto en tu HTML para pasar los datos de Python a JS de forma segura -->
+<script>
     window.SIMULADOR = {
         accionId: {{ accion.id }},
 
@@ -663,13 +1062,15 @@
                 aporte: {{ (m.aporte or 0)|float }},
                 cuota: {{ (m.cuota_pagada or 0)|float }},
                 amortizacion: {{ (m.amortizacion or 0)|float }},
-                interes: {{ (m.interes or 0)|float }},
+                interes: {{ (m.interes or 0)|float }},                
                 saldo: {{ (m.saldo_prestamo or 0)|float }},
                 multa: {{ (m.multa or 0)|float }},
                 sobre: {{ (m.sobre or 0)|float }}
             }{% if not loop.last %},{% endif %}
             {% endfor %}
         ],
+        
+        interes_mensual: {{ tasa_interes|float }},
 
         prestamos: [
             {% for p in accion.prestamos %}

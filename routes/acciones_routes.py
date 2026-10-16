@@ -337,6 +337,7 @@ def detalle(id):
                     "saldo": float(p.saldo_actual or 0)
                 })
 
+
         return render_template(
 
             "acciones/detalle.html",

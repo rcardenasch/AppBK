@@ -11,7 +11,7 @@ $(document).ready(function () {
         return;
     }
 
-    const SIM = window.SIMULADOR;
+    const SIM = window.SIMULADOR;    
 
     const $modal = $("#modalSimulador");
     const $tbody = $("#tbodySimulador");
@@ -70,37 +70,33 @@ $(document).ready(function () {
     //
     // =========================================================
 
-    function calcularInteres(saldo, tasa) {
+    function calcularInteres(saldo) {
 
         saldo = numero(saldo);
-        tasa = numero(tasa);
-
-        if (saldo <= 0 || tasa <= 0) {
-            return 0;
-        }
 
         /*
         * =====================================================
-        * MISMA LÓGICA QUE:
+        * MISMA REGLA DE InteresService.calcular_interes()
+        * =====================================================
         *
-        * services/interes_service.py
+        * interes_porcentaje =
+        *     Configuracion.interes_mensual
         *
-        * interes_base = saldo * interes_porcentaje
+        * interes_base =
+        *     saldo * interes_porcentaje
         *
         * interes_final =
         *     ceil(interes_base * 2) / 2
         *
         * =====================================================
-        *
-        * IMPORTANTE:
-        *
-        * El backend guarda la tasa como:
-        *
-        *     0.01 = 1%
-        *
-        * por lo tanto NO debemos dividir entre 100.
-        *
         */
+
+        const tasa =
+            numero(SIM.interes_mensual);
+
+        if (saldo <= 0 || tasa <= 0) {
+            return 0;
+        }
 
         const interesBase =
             saldo * tasa;
@@ -302,15 +298,6 @@ $(document).ready(function () {
 
 
         // =====================================================
-        // TASA
-        // =====================================================
-
-        const tasaInteres =
-            numero(
-                $("#simTasa").val()
-            );
-
-        // =====================================================
         // CAPITAL DE APERTURA
         // =====================================================
         //
@@ -392,11 +379,9 @@ $(document).ready(function () {
 
         const interes =
             calcularInteres(
-                baseInteres,
-                tasaInteres
+                baseInteres
             );
-
-
+        
         // =====================================================
         // DEUDA TOTAL
         // =====================================================
@@ -438,49 +423,38 @@ $(document).ready(function () {
 
         function cuotaTabla(monto) {
 
-            monto =
-                redondear(monto);
+            monto = redondear(monto);
 
             if (monto <= 3000) {
                 return 417;
             }
-
             if (monto <= 7500) {
                 return 504;
             }
-
             if (monto <= 12500) {
                 return 566;
             }
-
             if (monto <= 15000) {
                 return 590;
             }
-
             if (monto <= 17500) {
                 return 611;
             }
-
             if (monto <= 20000) {
                 return 677;
             }
-
             if (monto <= 22500) {
                 return 743;
             }
-
             if (monto <= 25000) {
                 return 809;
             }
-
             if (monto <= 27500) {
                 return 875;
             }
-
             if (monto <= 30000) {
                 return 941;
             }
-
             return 941;
         }
 
@@ -780,71 +754,28 @@ $(document).ready(function () {
 
         return {
 
-            periodo:
-                m.periodo,
-
-            periodo_id:
-                m.periodo_id,
-
-            anio:
-                m.anio,
-
-            mes:
-                m.mes,
-
-            aporte:
-                aporte,
-
-            cuota:
-                cuota,
-
-            cuotaMinima:
-                cuotaMinima,
-
-            cuotaCancelacion:
-                cuotaCancelacion,
-
-            interes:
-                interes,
-
-            amortizacion:
-                amortizacion,
-
-            amortizacionCapital:
-                amortizacionCapital,
-
-            multa:
-                numero(m.multa),
-
-            multaAnterior:
-                multaAnterior,
-
-            multaPagada:
-                multaPagada,
-
-            multaPendiente:
-                multaPendiente,
-
-            sobre:
-                numero(m.sobre),
-
-            prestamos:
-                prestamosNuevos,
-
-            saldo:
-                saldo,
-
-            saldoApertura:
-                saldoApertura,
-
-            capitalFinal:
-                capitalFinal,
-
-            deudaTotal:
-                deudaTotal,
-
-            correcto:
-                correcto
+            periodo: m.periodo,
+            periodo_id: m.periodo_id,
+            anio: m.anio,
+            mes: m.mes,
+            aporte: aporte,
+            cuota: cuota,
+            cuotaMinima: cuotaMinima,
+            cuotaCancelacion: cuotaCancelacion,
+            interes: interes,
+            amortizacion: amortizacion,
+            amortizacionCapital: amortizacionCapital,
+            multa: numero(m.multa),
+            multaAnterior: multaAnterior,
+            multaPagada: multaPagada,
+            multaPendiente: multaPendiente,
+            sobre: numero(m.sobre),
+            prestamos: prestamosNuevos,
+            saldo: saldo,
+            saldoApertura: saldoApertura,
+            capitalFinal: capitalFinal,
+            deudaTotal: deudaTotal,
+            correcto: correcto
         };
     }
 
@@ -873,12 +804,12 @@ $(document).ready(function () {
         tr.innerHTML = `
 
             <td>
-                <span class="badge bg-primary">
+                <span class="badge bg-primary" style="font-size: 11px;">
                     ${data.periodo}
                 </span>
             </td>
 
-            <td>
+            <td style="font-size: 11px;">
                 S/ ${dinero(data.aporte)}
             </td>
 
@@ -886,6 +817,7 @@ $(document).ready(function () {
 
                 <input
                     type="number"
+                    style="font-size: 11px;"
                     step="0.01"
                     min="0"
                     class="form-control form-control-sm sim-cuota"
@@ -895,37 +827,37 @@ $(document).ready(function () {
 
             </td>
 
-            <td class="text-primary fw-bold">
+            <td class="text-primary fw-bold" style="font-size: 11px;">
                 S/ ${dinero(data.cuotaMinima)}
             </td>
 
-            <td class="text-primary fw-bold">
+            <td class="text-primary fw-bold" style="font-size: 11px;">
                 S/ ${dinero(data.amortizacion)}
             </td>
 
-            <td class="text-success fw-bold">
+            <td class="text-success fw-bold" style="font-size: 11px;">
                 S/ ${dinero(data.interes)}
             </td>
 
-            <td class="text-danger fw-bold">
+            <td class="text-danger fw-bold" style="font-size: 11px;">
                 S/ ${dinero(data.saldo)}
             </td>
 
-            <td>
+            <td style="font-size: 11px;">
                 S/ ${dinero(data.prestamos)}
             </td>
 
-            <td>
+            <td style="font-size: 11px;">
                 S/ ${dinero(data.multa)}
             </td>
 
-            <td>
+            <td style="font-size: 11px;">
                 S/ ${dinero(data.sobre)}
             </td>
 
             <td>
 
-                <span class="badge ${claseControl}">
+                <span class="badge ${claseControl}" style="font-size: 11px;">
                     ${textoControl}
                 </span>
 
@@ -1034,49 +966,28 @@ $(document).ready(function () {
             console.log(
                 resultado.periodo,
                 {
-                    apertura:
-                        resultado.saldoApertura,
-
-                    multaAnterior:
-                        resultado.multaAnterior,
-
-                    prestamosNuevos:
-                        resultado.prestamos,
-
-                    baseInteres:
-                        redondear(
+                    apertura: resultado.saldoApertura,
+                    multaAnterior: resultado.multaAnterior,
+                    prestamosNuevos: resultado.prestamos,
+                    baseInteres: redondear(
                             resultado.saldoApertura +
                             resultado.multaAnterior
                         ),
-
-                    interes:
-                        resultado.interes,
-
-                    cuota:
-                        resultado.cuota,
-
-                    amortizacion:
-                        resultado.amortizacion,
-
-                    amortizacionCapital:
-                        resultado.amortizacionCapital,
-
-                    capitalFinal:
-                        resultado.capitalFinal,
-
-                    saldo:
-                        resultado.saldo
+                    interes: resultado.interes,            
+                    cuota: resultado.cuota,
+                    amortizacion: resultado.amortizacion,
+                    amortizacionCapital: resultado.amortizacionCapital,
+                    capitalFinal: resultado.capitalFinal,
+                    saldo: resultado.saldo
                 }
             );
         }
-
 
         // =====================================================
         // REDIBUJAR
         // =====================================================
 
         $tbody.empty();
-
 
         resultados.forEach(
             function (resultado) {
@@ -1251,24 +1162,6 @@ $(document).ready(function () {
 
             }
         );
-
-
-    // =========================================================
-    // TASA / APORTE
-    // =========================================================
-
-    $("#simTasa, #simAporte")
-        .off("change")
-        .on(
-            "change",
-            function () {
-
-                limpiarSimulacion();
-                recalcularSimulador();
-
-            }
-        );
-
 
     console.log(
         "Simulador financiero inicializado.",
