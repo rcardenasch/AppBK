@@ -861,15 +861,15 @@ def editar_movimiento(id):
                 Decimal("0.01")
             )
 
-            print("\n==============================================")
-            print("PAGAR DEUDA TOTAL")
-            print("==============================================")
-            print(f"Saldo restaurado : S/ {saldo_restaurado}")
-            print(f"Aporte           : S/ {aporte}")
-            print(f"Interés          : S/ {interes_deuda}")
-            print(f"Amortización     : S/ {deuda_para_cancelar}")
-            print(f"Cuota total      : S/ {cuota_pagada}")
-            print("==============================================\n")
+            #print("\n==============================================")
+            #print("PAGAR DEUDA TOTAL")
+            #print("==============================================")
+            #print(f"Saldo restaurado : S/ {saldo_restaurado}")
+            #print(f"Aporte           : S/ {aporte}")
+            #print(f"Interés          : S/ {interes_deuda}")
+            #print(f"Amortización     : S/ {deuda_para_cancelar}")
+            #print(f"Cuota total      : S/ {cuota_pagada}")
+            #print("==============================================\n")
 
         # =========================================================
         # 3. CALCULAR NUEVO MOVIMIENTO

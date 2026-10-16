@@ -1048,6 +1048,324 @@ $(document).ready(function () {
         
         console.log("Nuevo valor de pagar_deuda_total:", $(this).val()); // Opcional: para depuración
     });
+
+
+    // ============================================================
+    // PAGAR TODA LA DEUDA
+    // ============================================================
+
+    const btnPagarTodaDeuda =
+        document.getElementById("btnPagarTodaDeuda");
+
+    if (!btnPagarTodaDeuda) {
+        return;
+    }
+
+    btnPagarTodaDeuda.addEventListener("click", async function () {
+
+        // --------------------------------------------------------
+        // EVITAR DOBLE CLICK
+        // --------------------------------------------------------
+
+        if (btnPagarTodaDeuda.dataset.procesando === "1") {
+            return;
+        }
+
+        btnPagarTodaDeuda.dataset.procesando = "1";
+
+        const htmlOriginal = btnPagarTodaDeuda.innerHTML;
+
+        btnPagarTodaDeuda.disabled = true;
+
+        btnPagarTodaDeuda.innerHTML = `
+            <span
+                class="spinner-border spinner-border-sm me-1"
+                role="status"
+                aria-hidden="true">
+            </span>
+            Calculando...
+        `;
+
+        try {
+
+            // ====================================================
+            // DATOS DEL MOVIMIENTO
+            // ====================================================
+
+            const movimientoId =
+                document.getElementById("editMovimientoId")?.value;
+
+            if (!movimientoId) {
+                throw new Error(
+                    "No se encontró el movimiento que se está editando."
+                );
+            }
+
+            // ====================================================
+            // OBTENER INFORMACIÓN ACTUAL DEL MOVIMIENTO
+            // ====================================================
+
+            const respuesta = await fetch(
+                `/movimientos/api/movimiento/${movimientoId}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    cache: "no-store"
+                }
+            );
+
+            if (!respuesta.ok) {
+                throw new Error(
+                    "No se pudo obtener la información del movimiento."
+                );
+            }
+
+            const resultado = await respuesta.json();
+
+            if (!resultado.ok) {
+                throw new Error(
+                    resultado.mensaje ||
+                    "No se pudo obtener el movimiento."
+                );
+            }
+
+            const movimiento = resultado.movimiento;
+
+            const accionId = movimiento.accion_id;
+            const periodoId = movimiento.periodo_id;
+
+            // ====================================================
+            // OBTENER DEUDA REAL DE LA ACCIÓN
+            // ====================================================
+
+            const respuestaDeuda = await fetch(
+                `/movimientos/api/accion/${accionId}?periodo_id=${periodoId}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    cache: "no-store"
+                }
+            );
+
+            if (!respuestaDeuda.ok) {
+                throw new Error(
+                    "No se pudo calcular la deuda de la acción."
+                );
+            }
+
+            const deuda = await respuestaDeuda.json();
+
+            if (!deuda.ok) {
+                throw new Error(
+                    deuda.error ||
+                    "No se pudo calcular la deuda."
+                );
+            }
+
+            // ====================================================
+            // VALORES DEL BACKEND
+            // ====================================================
+
+            const saldoApertura =
+                Number(deuda.saldo_apertura || 0);
+
+            const multaAnterior =
+                Number(deuda.multa_periodo_anterior || 0);
+
+            const deudaTotal =
+                Number(deuda.saldo || 0);
+
+            const aporte =
+                Number(deuda.aporte || 0);
+
+            const tasa =
+                Number(deuda.interes || 0);
+
+            // ====================================================
+            // BASE DE INTERÉS
+            //
+            // EXACTAMENTE:
+            //
+            // saldo préstamo + multa período anterior
+            // ====================================================
+
+            const baseInteres =
+                saldoApertura + multaAnterior;
+
+            // ====================================================
+            // CALCULAR INTERÉS
+            //
+            // Redondeo a múltiplos de 0.50
+            // igual que InteresService
+            // ====================================================
+
+            let interes = 0;
+
+            if (baseInteres > 0 && tasa > 0) {
+
+                const interesBase =
+                    baseInteres * tasa;
+
+                interes =
+                    Math.ceil(interesBase * 2) / 2;
+            }
+
+            interes =
+                Number(interes.toFixed(2));
+
+            // ====================================================
+            // PAGAR TODA LA DEUDA
+            //
+            // La amortización representa:
+            //
+            // CAPITAL + MULTA
+            //
+            // porque la multa también queda cancelada.
+            // ====================================================
+
+            const amortizacion =
+                deudaTotal;
+
+            // ====================================================
+            // CUOTA TOTAL
+            //
+            // aporte + interés + amortización
+            // ====================================================
+
+            const cuotaTotal =
+                aporte +
+                interes +
+                amortizacion;
+
+            // ====================================================
+            // ACTUALIZAR CAMPOS DEL MODAL
+            // ====================================================
+
+            const editCuota =
+                document.getElementById("editCuota");
+
+            const editSaldoApertura =
+                document.getElementById("editSaldoApertura");
+
+            const editMultaAnterior =
+                document.getElementById("editMultaAnterior");
+
+            const editInteres =
+                document.getElementById("editInteres");
+
+            const editAmortizacion =
+                document.getElementById("editAmortizacion");
+
+            const editSaldoFinal =
+                document.getElementById("editSaldoFinal");
+
+            const pagarDeudaTotal =
+                document.getElementById("pagar_deuda_total");
+
+            // ----------------------------------------------------
+            // CUOTA
+            // ----------------------------------------------------
+
+            if (editCuota) {
+                editCuota.value =
+                    cuotaTotal.toFixed(2);
+            }
+
+            // ----------------------------------------------------
+            // RESUMEN
+            // ----------------------------------------------------
+
+            if (editSaldoApertura) {
+                editSaldoApertura.textContent =
+                    `S/ ${saldoApertura.toLocaleString(
+                        "es-PE",
+                        {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }
+                    )}`;
+            }
+
+            if (editMultaAnterior) {
+                editMultaAnterior.textContent =
+                    `S/ ${multaAnterior.toLocaleString(
+                        "es-PE",
+                        {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }
+                    )}`;
+            }
+
+            if (editInteres) {
+                editInteres.textContent =
+                    `S/ ${interes.toLocaleString(
+                        "es-PE",
+                        {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }
+                    )}`;
+            }
+
+            if (editAmortizacion) {
+                editAmortizacion.textContent =
+                    `S/ ${amortizacion.toLocaleString(
+                        "es-PE",
+                        {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }
+                    )}`;
+            }
+
+            if (editSaldoFinal) {
+                editSaldoFinal.textContent =
+                    `S/ 0.00`;
+            }
+
+            if (pagarDeudaTotal) {
+                pagarDeudaTotal.value =
+                    cuotaTotal.toFixed(2);
+            }
+
+            // ====================================================
+            // MARCAR QUE SE SOLICITÓ CANCELACIÓN TOTAL
+            // ====================================================
+
+            btnPagarTodaDeuda.dataset.cancelacionTotal = "1";
+
+        } catch (error) {
+
+            console.error(
+                "Error al pagar toda la deuda:",
+                error
+            );
+
+            alert(
+                error.message ||
+                "No se pudo calcular el pago total de la deuda."
+            );
+
+        } finally {
+
+            // ====================================================
+            // RESTAURAR BOTÓN
+            // ====================================================
+
+            btnPagarTodaDeuda.disabled = false;
+
+            btnPagarTodaDeuda.innerHTML =
+                htmlOriginal;
+
+            btnPagarTodaDeuda.dataset.procesando = "0";
+        }
+
+    });
 	
 });
 
