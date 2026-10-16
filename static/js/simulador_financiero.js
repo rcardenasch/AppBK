@@ -70,29 +70,48 @@ $(document).ready(function () {
     //
     // =========================================================
 
-    function calcularInteres(saldo, tasaPorcentaje) {
+    function calcularInteres(saldo, tasa) {
 
-        saldo = redondear(saldo);
+        saldo = numero(saldo);
+        tasa = numero(tasa);
 
-        if (saldo <= 0) {
+        if (saldo <= 0 || tasa <= 0) {
             return 0;
         }
 
-        const tasa = numero(tasaPorcentaje) / 100;
+        /*
+        * =====================================================
+        * MISMA LÓGICA QUE:
+        *
+        * services/interes_service.py
+        *
+        * interes_base = saldo * interes_porcentaje
+        *
+        * interes_final =
+        *     ceil(interes_base * 2) / 2
+        *
+        * =====================================================
+        *
+        * IMPORTANTE:
+        *
+        * El backend guarda la tasa como:
+        *
+        *     0.01 = 1%
+        *
+        * por lo tanto NO debemos dividir entre 100.
+        *
+        */
 
         const interesBase =
             saldo * tasa;
 
-        const interesRedondeado =
+        const interesFinal =
             Math.ceil(
-                (interesBase * 2) - 1e-10
+                interesBase * 2
             ) / 2;
 
-        return redondear(
-            interesRedondeado
-        );
+        return redondear(interesFinal);
     }
-
 
     // =========================================================
     // ORDENAR MOVIMIENTOS
@@ -286,11 +305,10 @@ $(document).ready(function () {
         // TASA
         // =====================================================
 
-        const tasaPorcentaje =
+        const tasaInteres =
             numero(
                 $("#simTasa").val()
             );
-
 
         // =====================================================
         // CAPITAL DE APERTURA
@@ -375,7 +393,7 @@ $(document).ready(function () {
         const interes =
             calcularInteres(
                 baseInteres,
-                tasaPorcentaje
+                tasaInteres
             );
 
 
@@ -834,7 +852,6 @@ $(document).ready(function () {
     // =========================================================
     // AGREGAR FILA
     // =========================================================
-
     function agregarFila(data) {
 
         const tr =
@@ -1161,6 +1178,18 @@ $(document).ready(function () {
     }
 
 
+    function limpiarSimulacion() {
+
+    SIM.movimientos.forEach(function (m) {
+
+        delete m._cuotaSimulada;
+
+    });
+
+    $tbody.empty();
+
+    }
+
     // =========================================================
     // ABRIR SIMULADOR
     // =========================================================
@@ -1170,7 +1199,8 @@ $(document).ready(function () {
         .on(
             "click",
             function () {
-
+                
+                limpiarSimulacion();
                 recalcularSimulador();
 
 
@@ -1193,6 +1223,8 @@ $(document).ready(function () {
         .on(
             "click",
             function () {
+                
+                limpiarSimulacion();
 
                 if ($modal.length) {
 
@@ -1214,6 +1246,7 @@ $(document).ready(function () {
             "click",
             function () {
 
+                limpiarSimulacion();
                 recalcularSimulador();
 
             }
@@ -1230,6 +1263,7 @@ $(document).ready(function () {
             "change",
             function () {
 
+                limpiarSimulacion();
                 recalcularSimulador();
 
             }
