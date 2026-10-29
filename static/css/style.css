@@ -664,3 +664,86 @@ body{
     }
 
 }
+
+/* =====================================================
+   WHATSAPP FLOTANTE - PORTAL DE SOCIOS
+===================================================== */
+
+.whatsapp-flotante {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1050;
+
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #25D366;
+    color: #fff;
+
+    font-size: 34px;
+    text-decoration: none;
+
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.22);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.whatsapp-flotante:hover {
+    background-color: #1ebe5d;
+    color: #fff;
+    transform: scale(1.08);
+    box-shadow: 0 7px 22px rgba(0, 0, 0, 0.28);
+}
+
+.whatsapp-flotante:focus-visible {
+    outline: 3px solid #128c7e;
+    outline-offset: 4px;
+}
+
+.whatsapp-tooltip {
+    position: absolute;
+    right: 72px;
+    white-space: nowrap;
+
+    background: #1f2937;
+    color: #fff;
+
+    padding: 8px 12px;
+    border-radius: 8px;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(5px);
+
+    transition: all 0.2s ease;
+}
+
+.whatsapp-flotante:hover .whatsapp-tooltip,
+.whatsapp-flotante:focus-visible .whatsapp-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+/* Ajuste para celulares */
+@media (max-width: 576px) {
+    .whatsapp-flotante {
+        width: 54px;
+        height: 54px;
+        right: 16px;
+        bottom: 18px;
+        font-size: 30px;
+    }
+
+    .whatsapp-tooltip {
+        display: none;
+    }
+}
