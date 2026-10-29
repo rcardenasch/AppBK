@@ -612,7 +612,7 @@
             <div id="simuladorSinDeuda"
                 class="alert alert-success d-none">
                 <i class="bi bi-check-circle me-2"></i>
-                No tienes capital pendiente en tus préstamos activos.
+                No tienes préstamos pendientes.
             </div>
 
             <div id="simuladorContenido">
@@ -633,7 +633,7 @@
                     <div class="col-6 col-xl-3">
                         <div class="border rounded-4 p-3 h-100">
                             <div class="small text-muted mb-1">
-                                Deuda pendiente
+                                Préstamo pendiente
                             </div>
                             <div id="simSaldoInicial"
                                 class="fs-4 fw-bold text-primary">
@@ -687,13 +687,13 @@
                         Evolución de tu deuda
                     </h6>
                     <p class="text-muted small mb-3">
-                        Observa cómo disminuiría el capital pendiente
+                        Observa cómo disminuiría el préstamo pendiente
                         mes a mes.
                     </p>
 
                     <div style="position:relative;height:300px;">
                         <canvas id="graficoProyeccionPrestamo"
-                                aria-label="Gráfico de deuda pendiente proyectada"
+                                aria-label="Gráfico de deuda préstamo proyectada"
                                 role="img"></canvas>
                     </div>
                 </div>
@@ -1333,7 +1333,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const saldoTexto = document.createElement("div");
             saldoTexto.className = "small text-muted mb-3";
-            saldoTexto.textContent = "Capital pendiente: " + dinero(saldo);
+            saldoTexto.textContent = "Préstamo pendiente: " + dinero(saldo);
 
             tarjeta.append(encabezado, saldoTexto);
 
@@ -1455,7 +1455,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 interesMes += interes;
 
                 // La cuota incluye el aporte, el interés
-                // y la parte que reduce el capital.
+                // y la parte que reduce el préstamo.
                 const amortizacion = Math.min(
                     saldo,
                     Math.max(0, cuota - aporteMinimo - interes)
@@ -1519,7 +1519,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     f.mes === 0 ? "Hoy" : "Mes " + f.mes
                 ),
                 datasets: [{
-                    label: "Capital pendiente",
+                    label: "Préstamo pendiente",
                     data: filas.map(f => f.saldo),
                     borderColor: "#0d6efd",
                     backgroundColor: "rgba(13, 110, 253, 0.12)",
@@ -1612,7 +1612,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (resultado.saldoInicial <= 0) {
             tiempo.textContent = "Sin deuda";
-            detalle.textContent = "No hay capital pendiente.";
+            detalle.textContent = "No hay préstamos pendientes.";
             mensaje.textContent =
                 "Se consideran los aportes de las acciones sin préstamo.";
         } else if (resultado.completada) {
@@ -1633,12 +1633,12 @@ document.addEventListener("DOMContentLoaded", function () {
             mensaje.textContent =
                 "Con estos importes no se cancela toda la deuda en el " +
                 "horizonte de 100 años. Verifica que cada cuota cubra " +
-                "el aporte y el interés, y permita amortizar capital.";
+                "el aporte y el interés, y permita amortizar préstamo.";
         }
 
         if (resultado.cuotaInsuficiente && resultado.saldoInicial > 0) {
             mensaje.textContent +=
-                " Hay meses o acciones sin amortización de capital.";
+                " Hay meses o acciones sin amortización de préstamo.";
         }
 
         actualizarGrafico(resultado.filas);
