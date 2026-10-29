@@ -16,6 +16,7 @@ from models.periodo import Periodo
 from models.solicitud_prestamo import SolicitudPrestamo
 from models.asistencia import Asistencia
 from models.transferencia import Transferencia
+from models.configuracion import Configuracion
 
 
 socio_portal_bp = Blueprint(
@@ -143,6 +144,74 @@ def mi_estado_cuenta(periodo_Id):
             )
             .all()
         )
+
+        
+        # =========================================================
+        # DATOS PARA EL SIMULADOR DE PAGO
+        # Lectura solamente: no modifica los préstamos
+        # =========================================================
+
+        configuracion_simulador = (
+            db.query(Configuracion)
+            .filter(Configuracion.estado == True)
+            .first()
+        )
+
+        aporte_minimo_simulador = float(
+            configuracion_simulador.aporte_minimo or 0
+        ) if configuracion_simulador else 0.0
+
+        tasa_interes_simulador = float(
+            configuracion_simulador.interes_mensual or 0
+        ) if configuracion_simulador else 0.01
+
+        # Consultamos los préstamos vigentes del socio,
+        # independientemente del período histórico seleccionado.
+        prestamos_simulador = (
+            db.query(Prestamo)
+            .filter(
+                Prestamo.socio_id == socio.id,
+                Prestamo.estado == "ACTIVO",
+                Prestamo.saldo_actual > 0
+            )
+            .order_by(
+                Prestamo.accion_id.asc(),
+                Prestamo.fecha_prestamo.asc(),
+                Prestamo.id.asc()
+            )
+            .all()
+        )
+
+        # Agrupar el capital pendiente por acción.
+        saldos_por_accion = {}
+
+        for prestamo in prestamos_simulador:
+            accion_id = prestamo.accion_id
+
+            if accion_id not in saldos_por_accion:
+                saldos_por_accion[accion_id] = 0.0
+
+            saldos_por_accion[accion_id] += float(
+                prestamo.saldo_actual or 0
+            )
+
+        acciones_simulador = []
+
+        for accion in acciones:
+            saldo_pendiente = round(
+                saldos_por_accion.get(accion.id, 0.0),
+                2
+            )
+
+            # Incluimos también las acciones sin préstamo,
+            # porque su aporte se suma al pago mensual total.
+            acciones_simulador.append({
+                "id": accion.id,
+                "numero": accion.numero_accion,
+                "estado": accion.estado,
+                "saldo": saldo_pendiente
+            })
+
 
         # =========================================================
         # MOVIMIENTOS 
@@ -492,7 +561,11 @@ def mi_estado_cuenta(periodo_Id):
             asistencia=asistencia,
             transferencias=transferencias_periodo,
             transferencias_recibidas=transferencias_recibidas_periodo,
-            resumen=resumen
+            resumen=resumen,
+            # Datos para la simulación; no se persisten
+            aporte_minimo_simulador=aporte_minimo_simulador,
+            tasa_interes_simulador=tasa_interes_simulador,
+            acciones_simulador=acciones_simulador
         )
 
     finally:
