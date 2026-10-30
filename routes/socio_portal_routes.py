@@ -269,12 +269,19 @@ def mi_estado_cuenta(periodo_Id):
         # PRÉSTAMOS - AVANCE HASTA EL PERÍODO SELECCIONADO
         # =========================================================
 
+        # =========================================================
+        # PRÉSTAMOS - SALDO RECONSTRUIDO HASTA EL PERÍODO SELECCIONADO
+        # Incluye multas trasladadas de períodos anteriores
+        # =========================================================
+
         for prestamo in prestamos:
 
             monto = float(prestamo.monto or 0)
 
-            # Amortización acumulada del préstamo
-            # hasta el período seleccionado
+            # -----------------------------------------------------
+            # 1. AMORTIZACIONES ACUMULADAS DEL PRÉSTAMO
+            # -----------------------------------------------------
+
             amortizado = sum(
                 float(m.amortizacion or 0)
                 for m in movimientos
@@ -282,13 +289,35 @@ def mi_estado_cuenta(periodo_Id):
                 and m.periodo_id <= periodo_Id
             )
 
-            # Evitar superar el monto original
+            # -----------------------------------------------------
+            # 2. MULTAS DE LA ACCIÓN DE PERÍODOS ANTERIORES
+            # -----------------------------------------------------
+
+            multas_trasladadas = sum(
+                float(m.multa or 0)
+                for m in movimientos
+                if m.accion_id == prestamo.accion_id
+                and m.periodo_id < periodo_Id
+                and (
+                    prestamo.periodo_id is None
+                    or m.periodo_id >= prestamo.periodo_id
+                )
+            )
+
+            # -----------------------------------------------------
+            # 3. SALDO RECONSTRUIDO
+            # -----------------------------------------------------
+
             amortizado = min(max(amortizado, 0), monto)
 
             saldo_al_periodo = max(
-                monto - amortizado,
+                monto + multas_trasladadas - amortizado,
                 0
             )
+
+            # -----------------------------------------------------
+            # 4. PORCENTAJE DE AVANCE DEL CAPITAL ORIGINAL
+            # -----------------------------------------------------
 
             porcentaje = (
                 (amortizado / monto) * 100
@@ -296,18 +325,17 @@ def mi_estado_cuenta(periodo_Id):
                 else 0
             )
 
-            porcentaje = min(
-                max(porcentaje, 0),
-                100
-            )
+            porcentaje = min(max(porcentaje, 0), 100)
+
+            # -----------------------------------------------------
+            # 5. VALORES PARA EL TEMPLATE
+            # -----------------------------------------------------
 
             prestamo.monto_float = monto
             prestamo.pagado_float = amortizado
+            prestamo.multas_trasladadas_float = multas_trasladadas
             prestamo.saldo_periodo_float = saldo_al_periodo
-            prestamo.porcentaje_avance = round(
-                porcentaje,
-                1
-            )
+            prestamo.porcentaje_avance = round(porcentaje, 1)
 
         # =========================================================
         # SOLICITUDES DEL PERÍODO

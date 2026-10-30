@@ -36,7 +36,7 @@
                         <div class="small opacity-75">
 
                             <i class="bi bi-card-text me-1"></i>
-                            Documento:
+                            DNI:
                             {{ socio.documento or 'No registrado' }}
 
                         </div>
@@ -563,7 +563,7 @@
         aria-expanded="false"
         aria-controls="contenidoSimuladorPrestamos"
     >
-        <i class="bi bi-calculator me-2"></i>
+        <i class="bi bi-calculator me-2" style="font-size: 0.75rem;"></i>
         Simular pago de préstamos
         <i
             class="bi bi-chevron-down ms-2"
@@ -593,10 +593,10 @@
                 </div>
 
                 <div>
-                    <h4 class="fw-bold mb-1">
+                    <h4 class="fw-bold mb-1" style="font-size: 0.9rem;">
                         Simula cómo pagar tus préstamos
                     </h4>
-                    <p class="text-muted mb-0">
+                    <p class="text-muted mb-0" style="font-size: 0.75rem;">
                         Ajusta tus cuotas y descubre cuánto pagarías
                         cada mes y en cuánto tiempo cancelarías tu deuda.
                     </p>
@@ -604,27 +604,27 @@
             </div>
 
             <div class="alert alert-info border-0 rounded-3 small">
-                <i class="bi bi-info-circle me-1"></i>
+                <i class="bi bi-info-circle me-1" style="font-size: 0.75rem;"></i>
                 Esta es una proyección referencial (no considera pago de sobres ni multas). Cambiar los importes
                 aquí no registra pagos ni modifica tu estado de cuenta.
             </div>
 
             <div id="simuladorSinDeuda"
                 class="alert alert-success d-none">
-                <i class="bi bi-check-circle me-2"></i>
+                <i class="bi bi-check-circle me-2" style="font-size: 0.75rem;"></i>
                 No tienes préstamos pendientes.
             </div>
 
             <div id="simuladorContenido">
 
-                <h6 class="fw-bold mb-3">
+                <h6 class="fw-bold mb-3" style="font-size: 0.75rem;">
                     1. Elige cuánto pagarás por cada acción
                 </h6>
 
                 <div id="simuladorAcciones"
                     class="row g-3 mb-4"></div>
 
-                <h6 class="fw-bold mb-3">
+                <h6 class="fw-bold mb-3" style="font-size: 0.75rem;">
                     2. Tu proyección de pago
                 </h6>
 
@@ -632,7 +632,7 @@
 
                     <div class="col-6 col-xl-3">
                         <div class="border rounded-4 p-3 h-100">
-                            <div class="small text-muted mb-1">
+                            <div class="small text-muted mb-1" style="font-size: 0.75rem;">
                                 Préstamo pendiente
                             </div>
                             <div id="simSaldoInicial"
@@ -644,7 +644,7 @@
 
                     <div class="col-6 col-xl-3">
                         <div class="border rounded-4 p-3 h-100">
-                            <div class="small text-muted mb-1">
+                            <div class="small text-muted mb-1" style="font-size: 0.75rem;">
                                 Pago del primer mes
                             </div>
                             <div id="simPagoMensual"
@@ -656,7 +656,7 @@
 
                     <div class="col-6 col-xl-3">
                         <div class="border rounded-4 p-3 h-100">
-                            <div class="small text-muted mb-1">
+                            <div class="small text-muted mb-1" style="font-size: 0.75rem;">
                                 Tiempo estimado
                             </div>
                             <div id="simTiempo"
@@ -670,7 +670,7 @@
 
                     <div class="col-6 col-xl-3">
                         <div class="border rounded-4 p-3 h-100">
-                            <div class="small text-muted mb-1">
+                            <div class="small text-muted mb-1" style="font-size: 0.75rem;">
                                 Intereses proyectados
                             </div>
                             <div id="simIntereses"
@@ -683,10 +683,10 @@
                 </div>
 
                 <div class="border rounded-4 p-3 mb-4">
-                    <h6 class="fw-bold mb-1">
+                    <h6 class="fw-bold mb-1" style="font-size: 0.75rem;">
                         Evolución de tu deuda
                     </h6>
-                    <p class="text-muted small mb-3">
+                    <p class="text-muted small mb-3" style="font-size: 0.75rem;">
                         Observa cómo disminuiría el préstamo pendiente
                         mes a mes.
                     </p>
@@ -700,13 +700,13 @@
 
                 <div class="d-flex flex-wrap gap-2 align-items-center
                             justify-content-between mb-2">
-                    <h6 class="fw-bold mb-0">
+                    <h6 class="fw-bold mb-0" style="font-size: 0.75rem;">
                         Detalle de la proyección
                     </h6>
 
                     <button type="button"
                             class="btn btn-sm btn-outline-primary"
-                            id="btnVerDetalleProyeccion">
+                            id="btnVerDetalleProyeccion" style="font-size: 0.75rem;">
                         Ver tabla mensual
                     </button>
                 </div>
@@ -718,10 +718,10 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Mes</th>
-                                    <th class="text-end">Pago total</th>
-                                    <th class="text-end">Intereses</th>
-                                    <th class="text-end">Capital amortizado</th>
-                                    <th class="text-end">Saldo restante</th>
+                                    <th class="text-end" style="font-size: 0.75rem;">Pago total</th>
+                                    <th class="text-end" style="font-size: 0.75rem;">Intereses</th>
+                                    <th class="text-end" style="font-size: 0.75rem;">Capital amortizado</th>
+                                    <th class="text-end" style="font-size: 0.75rem;">Saldo restante</th>
                                 </tr>
                             </thead>
                             <tbody id="tablaProyeccionPrestamo"></tbody>
@@ -738,9 +738,6 @@
     </section>
 
 </div>
-
-    
-   
 
 
     <!-- =====================================================
@@ -1347,8 +1344,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 input.type = "number";
                 input.id = etiqueta.htmlFor;
                 input.className = "form-control cuota-simulada";
-                input.min = "0";
-                input.step = "0.50";
+                input.min = 0;
+                input.step = 0.50;
                 input.inputMode = "decimal";
                 input.value = redondear(
                     aporteMinimo + interesEstimado + 100
