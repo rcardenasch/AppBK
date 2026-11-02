@@ -66,11 +66,8 @@ class AdquisicionAccionService:
         db,
         saldo
     ):
-
-        db = SessionLocal()
         saldo = (
-            AdquisicionAccionService
-            .D(saldo)
+            AdquisicionAccionService.D(saldo)
         )
 
         if saldo <= Decimal("0.00"):

@@ -185,12 +185,22 @@ if (!table){
 
         document.getElementById("btnCancelarGuardar").onclick = () => {
             modal.close();
+            ocultarLoading();
         };
     };
 
+    // =====================================================
+    // GUARDAR ASISTENCIA
+    // =====================================================
+
     document.getElementById("btnGuardar").onclick = () => {
+
         confirmarGuardar(() => {
+
             const periodoId = document.getElementById("btnGuardar").dataset.periodo;
+
+            // Activar spinner únicamente al confirmar el registro
+            mostrarLoading();
 
             fetch("/asistencias/guardar", {
                 method: "POST",
@@ -202,24 +212,56 @@ if (!table){
                     asistencias: Object.values(asistencias)
                 })
             })
-                .then(r => r.json())
-                .then(resp => {
-                    mostrarResultado(
-                        resp.ok,
-                        `
-                    <h5>${resp.mensaje}</h5>
-                    <hr>
-                    <b>Asistencias registradas:</b> ${resp.registrados}<br>
-                    <b>Tardanzas:</b> ${resp.tardanzas}<br>
-                    <b>Inasistencias:</b> ${resp.faltas}<br>
-                    <b>Total multas:</b>
-                    <span class="text-danger">
-                        S/${Number(resp.multas).toFixed(2)}
-                    </span>
+            .then(async response => {
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP ${response.status}`);
+                }
+
+                return response.json();
+
+            })
+            .then(resp => {
+
+                mostrarResultado(
+                    resp.ok,
                     `
-                    );
-                });
+                        <h5>${resp.mensaje}</h5>
+                        <hr>
+                        <b>Asistencias registradas:</b> ${resp.registrados}<br>
+                        <b>Tardanzas:</b> ${resp.tardanzas}<br>
+                        <b>Inasistencias:</b> ${resp.faltas}<br>
+                        <b>Total multas:</b>
+                        <span class="text-danger">
+                            S/${Number(resp.multas).toFixed(2)}
+                        </span>
+                    `
+                );
+
+            })
+            .catch(error => {
+
+                console.error("Error al guardar asistencia:", error);
+
+                mostrarResultado(
+                    false,
+                    `
+                        <h5>No se pudo registrar la asistencia.</h5>
+                        <p>${error.message}</p>
+                        <p>Verifica tu conexión e inténtalo nuevamente.</p>
+                    `
+                );
+
+            })
+            .finally(() => {
+
+                // Se ejecuta tanto si funciona como si ocurre un error
+                ocultarLoading();
+
+            });
+
         });
+
     };
 
     function mostrarResultado(ok, mensaje) {

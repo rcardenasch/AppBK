@@ -24,6 +24,7 @@ from sqlalchemy.exc import IntegrityError
 
 from database.connection import SessionLocal
 
+from models.periodo import Periodo
 from models.usuario import Usuario
 from models.socio import Socio
 from models.rol import Rol
@@ -758,6 +759,7 @@ def cambiar_password():
 
             usuario.debe_cambiar_password = False
 
+
             db.commit()
 
             flash(
@@ -765,9 +767,41 @@ def cambiar_password():
                 "success"
             )
 
+            # Redireccionar según el rol
+            if usuario.rol.nombre in ["Administrador", "Tesorero"]:
+
+                return redirect(
+                    url_for("dashboard.index")
+                )
+
+            elif usuario.rol.nombre == "Socio":
+
+                periodo = (
+                    db.query(Periodo)
+                    .order_by(
+                        Periodo.anio.desc(),
+                        Periodo.mes.desc()
+                    )
+                    .first()
+                )
+
+                if periodo:
+
+                    return redirect(
+                        url_for(
+                            "socio_portal.mi_estado_cuenta",
+                            periodo_Id=periodo.id
+                        )
+                    )
+
+                return redirect(
+                    url_for("auth.logout")
+                )
+
             return redirect(
-                url_for("usuarios.index")
+                url_for("auth.logout")
             )
+
 
         return render_template(
             "usuarios/cambiar_password.html"
