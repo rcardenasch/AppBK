@@ -2430,6 +2430,36 @@ def exportar_estado_operaciones_excel(periodo_id):
             ] = movimiento
 
         # ====================================================
+        # PRÉSTAMOS INICIALES
+        #
+        # Los préstamos con periodo_id NULL representan
+        # saldos iniciales registrados para cada acción.
+        # ====================================================
+
+        prestamos_iniciales = (
+            db.query(
+                Prestamo.accion_id,
+                func.coalesce(
+                    func.sum(Prestamo.monto),
+                    0
+                ).label("saldo_inicial")
+            )
+            .filter(
+                Prestamo.periodo_id.is_(None),
+                Prestamo.estado == "ACTIVO"
+            )
+            .group_by(
+                Prestamo.accion_id
+            )
+            .all()
+        )
+
+        saldo_inicial_por_accion = {
+            accion_id: to_decimal(saldo_inicial)
+            for accion_id, saldo_inicial in prestamos_iniciales
+        }
+                
+        # ====================================================
         # PRÉSTAMOS DEL AÑO
         #
         # MUY IMPORTANTE:
@@ -2690,15 +2720,30 @@ def exportar_estado_operaciones_excel(periodo_id):
                 # ====================================================
                 # SALDO INICIAL DE LA ACCIÓN
                 #
-                # Último saldo registrado antes de iniciar
-                # el año.
+                # Prioridad:
+                # 1. Último movimiento anterior al año del reporte.
+                # 2. Préstamos iniciales con periodo_id = NULL.
+                # 3. Si no existen, saldo inicial = 0.
                 # ====================================================
 
-                saldo_inicial_accion = Decimal("0.00")
-                movimiento_anterior = (ultimo_movimiento_anterior.get(accion.id))
+                movimiento_anterior = ultimo_movimiento_anterior.get(
+                    accion.id
+                )
+
                 if movimiento_anterior:
-                    saldo_inicial_accion = to_decimal(movimiento_anterior.saldo_prestamo)
-                saldo_inicial_general += (saldo_inicial_accion)
+
+                    saldo_inicial_accion = to_decimal(
+                        movimiento_anterior.saldo_prestamo
+                    )
+
+                else:
+
+                    saldo_inicial_accion = saldo_inicial_por_accion.get(
+                        accion.id,
+                        Decimal("0.00")
+                    )
+
+                saldo_inicial_general += saldo_inicial_accion
 
                 # ====================================================
                 # CABECERA ACCIÓN
