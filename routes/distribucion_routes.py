@@ -3223,7 +3223,7 @@ def exportar_estado_operaciones_excel(periodo_id):
             "Préstamos",
             "Multa",
             "Sobre",
-            "Observación"
+            "Monto Recaudado"
         ]
 
         for col, texto in enumerate(
@@ -3457,10 +3457,18 @@ def exportar_estado_operaciones_excel(periodo_id):
                 column=10
             ).value = datos["sobres"]
 
+            # MONTO RECAUDADO = CUOTA A PAGAR + SOBRE
+            monto_recaudado = (
+                datos["cuotas"]
+                + datos["sobres"]
+            ).quantize(
+                Decimal("0.01")
+            )
+
             ws.cell(
                 row=fila,
                 column=11
-            ).value = ""
+            ).value = monto_recaudado
 
             for col in range(1, 12):
 
@@ -3603,8 +3611,31 @@ def exportar_estado_operaciones_excel(periodo_id):
                 Decimal("0.00")
             )
         )
-        ws.cell(row=fila,column=11
-        ).value = ""
+        # TOTAL RECAUDADO DEL AÑO
+        monto_recaudado_anual = (
+            sum(
+                (
+                    resumen_mensual[m]["cuotas"]
+                    for m in range(1, 13)
+                ),
+                Decimal("0.00")
+            )
+            +
+            sum(
+                (
+                    resumen_mensual[m]["sobres"]
+                    for m in range(1, 13)
+                ),
+                Decimal("0.00")
+            )
+        ).quantize(
+            Decimal("0.01")
+        )
+
+        ws.cell(
+            row=fila,
+            column=11
+        ).value = monto_recaudado_anual
 
         for col in range(1, 12):
 
@@ -3614,7 +3645,7 @@ def exportar_estado_operaciones_excel(periodo_id):
             cell.border = border
             cell.alignment = Alignment(vertical="center")
 
-        for col in range(2, 11):
+        for col in range(2, 12):
 
             ws.cell(row=fila,column=col).number_format = "#,##0.00"
 
