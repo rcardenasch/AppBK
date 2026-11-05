@@ -3219,7 +3219,7 @@ def exportar_estado_operaciones_excel(periodo_id):
             "Intereses",
             "TOTAL",
             "Saldo de Préstamos",
-            "Cuota a pagar",
+            "Cuota pagada",
             "Préstamos",
             "Multa",
             "Sobre",
@@ -3483,7 +3483,7 @@ def exportar_estado_operaciones_excel(periodo_id):
                     vertical="center"
                 )
 
-            for col in range(2, 11):
+            for col in range(2, 12):
 
                 ws.cell(
                     row=fila,
