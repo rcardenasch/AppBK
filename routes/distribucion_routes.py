@@ -2284,7 +2284,7 @@ def exportar_estado_operaciones_excel(periodo_id):
                 Socio.estado == True
             )
             .order_by(
-                Socio.nombres
+                Socio.id.asc()
             )
             .all()
         )
@@ -2657,41 +2657,6 @@ def exportar_estado_operaciones_excel(periodo_id):
             if not acciones:
                 continue
 
-            # ====================================================
-            # CABECERA SOCIO
-            # ====================================================
-
-            ws.merge_cells(
-                start_row=fila,
-                start_column=1,
-                end_row=fila,
-                end_column=11
-            )
-
-            celda_socio = ws.cell(
-                row=fila,
-                column=1
-            )
-
-            celda_socio.value = (
-                f"Socio :    {socio.nombres}"
-            )
-
-            celda_socio.font = Font(
-                bold=True,
-                size=12
-            )
-
-            celda_socio.fill = PatternFill(
-                fill_type="solid",
-                fgColor=azul_claro
-            )
-
-            celda_socio.alignment = Alignment(
-                horizontal="left"
-            )
-
-            fila += 1
 
             # ====================================================
             # CADA ACCIÓN
@@ -2746,13 +2711,39 @@ def exportar_estado_operaciones_excel(periodo_id):
                 saldo_inicial_general += saldo_inicial_accion
 
                 # ====================================================
-                # CABECERA ACCIÓN
+                # CABECERA SOCIO + ACCIÓN
                 # ====================================================
-                ws.merge_cells(start_row=fila,start_column=1,end_row=fila,end_column=11)
-                celda_accion = ws.cell(row=fila,column=1)
-                celda_accion.value = (f"Acción {numero_accion}:")
-                celda_accion.font = Font(bold=True)
-                celda_accion.fill = PatternFill(fill_type="solid",fgColor=gris)
+
+                ws.merge_cells(
+                    start_row=fila,
+                    start_column=1,
+                    end_row=fila,
+                    end_column=11
+                )
+
+                celda_accion = ws.cell(
+                    row=fila,
+                    column=1
+                )
+
+                celda_accion.value = (
+                    f"Socio: {socio.nombres}    "
+                    f"Acción: {numero_accion}"
+                )
+
+                celda_accion.font = Font(
+                    bold=True,
+                    size=12
+                )
+
+                celda_accion.fill = PatternFill(
+                    fill_type="solid",
+                    fgColor=azul_claro
+                )
+
+                celda_accion.alignment = Alignment(
+                    horizontal="left"
+                )
 
                 fila += 1
 
