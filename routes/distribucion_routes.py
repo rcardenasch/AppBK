@@ -2445,8 +2445,8 @@ def exportar_estado_operaciones_excel(periodo_id):
                 ).label("saldo_inicial")
             )
             .filter(
-                Prestamo.periodo_id.is_(None),
-                Prestamo.estado == "ACTIVO"
+                Prestamo.periodo_id.is_(None)
+                #Prestamo.estado == "ACTIVO"
             )
             .group_by(
                 Prestamo.accion_id
