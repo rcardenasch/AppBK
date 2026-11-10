@@ -202,6 +202,7 @@ if (!table){
             // Activar spinner únicamente al confirmar el registro
             mostrarLoading();
 
+
             fetch("/asistencias/guardar", {
                 method: "POST",
                 headers: {
@@ -214,17 +215,37 @@ if (!table){
             })
             .then(async response => {
 
-                if (!response.ok) {
-                    throw new Error(`Error HTTP ${response.status}`);
+                // Leer primero el JSON, incluso cuando el servidor devuelve HTTP 400
+                let resp;
+
+                try {
+                    resp = await response.json();
+                } catch (e) {
+                    throw new Error("El servidor devolvió una respuesta no válida.");
                 }
 
-                return response.json();
+                // Si existe un error, utilizar el mensaje enviado por Flask
+                if (!response.ok || !resp.ok) {
+                    mostrarResultado(
+                        false,
+                        `
+                            <h5>${resp.mensaje || "No se pudo registrar la asistencia."}</h5>
+                        `
+                    );
+
+                    return null;
+                }
+
+                return resp;
 
             })
             .then(resp => {
 
+                // Evitar mostrar un segundo modal si hubo un error
+                if (!resp) return;
+
                 mostrarResultado(
-                    resp.ok,
+                    true,
                     `
                         <h5>${resp.mensaje}</h5>
                         <hr>
@@ -246,16 +267,13 @@ if (!table){
                 mostrarResultado(
                     false,
                     `
-                        <h5>No se pudo registrar la asistencia.</h5>
-                        <p>${error.message}</p>
-                        <p>Verifica tu conexión e inténtalo nuevamente.</p>
+                        <h5>${error.message}</h5>
                     `
                 );
 
             })
             .finally(() => {
 
-                // Se ejecuta tanto si funciona como si ocurre un error
                 ocultarLoading();
 
             });

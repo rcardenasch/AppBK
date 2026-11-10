@@ -94,7 +94,7 @@ def guardar():
 
     try:
 
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
 
         periodo_id = int(data["periodo_id"])
         asistencias = data["asistencias"]
@@ -113,13 +113,15 @@ def guardar():
             .filter(
                 Asistencia.periodo_id == periodo_id
             )
-            .count()
+            .first()
         )
 
         if existe:
-            raise Exception(
-                "La asistencia del período ya fue registrada."
-            )
+            return jsonify({
+                "ok": False,
+                "mensaje": "La asistencia del período ya fue registrada."
+            }), 400
+
 
         config = db.query(
             Configuracion

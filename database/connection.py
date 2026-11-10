@@ -5,8 +5,8 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.exc import OperationalError
 
 # Configuración de URLs
-#DATABASE_URL_LOCAL = "postgresql+psycopg2://postgres:123456@localhost:5433/BK_FAM" # PC-02-trabajo 
-DATABASE_URL_LOCAL = "postgresql+psycopg2://postgres:1234@localhost:5432/BK_FAM" # PC-01-Casa
+DATABASE_URL_LOCAL = "postgresql+psycopg2://postgres:123456@localhost:5433/BK_FAM" # PC-02-trabajo 
+#DATABASE_URL_LOCAL = "postgresql+psycopg2://postgres:1234@localhost:5432/BK_FAM" # PC-01-Casa
 DATABASE_URL_NEON = os.getenv("DATABASE_URL")
 
 # Configuración base para ambos engines
